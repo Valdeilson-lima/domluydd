@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PizzaVisualizer } from "./PizzaVisualizer";
 import { formatPrice } from "@/lib/utils";
 import { getPizzaByName, MODAL_IMAGES, salgadas, doces } from "@/data/pizzas";
 import type { Pizza, CartItem } from "@/types";
@@ -43,7 +42,6 @@ export function DetailModal({
   if (!pizza) return null;
 
   const catPizzas = pizza.category === "doce" ? doces : salgadas;
-  const isHalf = halfHalf && flavor1 !== flavor2;
   const showSecondFlavor = halfHalf;
 
   const getPrice = (name: string, s: string) => {
@@ -230,13 +228,6 @@ export function DetailModal({
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Pizza Visualizer */}
-            <PizzaVisualizer
-              flavor1={flavor1}
-              flavor2={flavor2}
-              isHalf={isHalf}
-            />
           </div>
         </div>
 
