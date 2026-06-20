@@ -33,7 +33,7 @@ export function InfoStrip() {
       </span>
       <span className="flex items-center gap-1.5">
         <Bike className="size-3.5 text-yellow-light sm:size-4" />
-        Delivery grátis
+        Taxa de entrega a partir de R$ 5
       </span>
       <span className="hidden items-center gap-1.5 sm:flex">
         <span className="text-yellow-light font-bold">★</span>
