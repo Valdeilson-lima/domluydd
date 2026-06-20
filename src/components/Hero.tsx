@@ -14,7 +14,7 @@ export function Hero() {
   const open = isOpen();
 
   return (
-    <section className="relative flex h-[220px] items-center justify-center overflow-hidden sm:h-[300px] md:h-[420px]">
+    <section className="relative flex h-55 items-center justify-center overflow-hidden sm:h-75 md:h-105">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -22,14 +22,15 @@ export function Hero() {
             "url(https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_960_720.jpg)",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/75 to-black/40" />
+      <div className="absolute inset-0 bg-linear-to-br from-black/80 via-black/60 to-black/30" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,black/40_100%)]" />
 
       <div className="relative z-2 flex flex-col items-center gap-4 px-5 text-center text-white sm:gap-5">
         <div>
-          <h1 className="font-display text-[clamp(1.8rem,6vw,5.5rem)] font-extrabold leading-none -tracking-[0.03em] text-red-primary drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)] mb-1.5 sm:mb-3">
+          <h1 className="font-display text-[clamp(2rem,7vw,5.5rem)] font-extrabold leading-none tracking-[-0.03em] text-red-primary drop-shadow-[0_4px_30px_rgba(0,0,0,0.6)] [text-shadow:0_2px_4px_rgba(0,0,0,0.5)] mb-2 sm:mb-3">
             Don Luydd
           </h1>
-          <p className="text-xs font-light opacity-95 leading-relaxed sm:text-base">
+          <p className="text-sm font-bold leading-relaxed text-white/90 drop-shadow-[0_2px_15px_rgba(0,0,0,0.6)] [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] sm:text-lg">
             A melhor pizza artesanal da cidade.
           </p>
         </div>
