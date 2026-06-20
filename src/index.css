@@ -1,0 +1,137 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Syne", sans-serif;
+  --font-body: "Sora", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-red-primary: #c41e24;
+  --color-red-dark: #8b0000;
+  --color-red-light: #e8303a;
+  --color-black: #1a1a1a;
+  --color-black-light: #2d2d2d;
+  --color-yellow: #f5a623;
+  --color-yellow-light: #ffd700;
+
+  --color-background: #1a1a1a;
+  --color-foreground: #ffffff;
+  --color-muted: #888888;
+  --color-border: rgba(255, 255, 255, 0.1);
+
+  --color-primary: #c41e24;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f5a623;
+  --color-secondary-foreground: #1a1a1a;
+  --color-accent: #e8303a;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #c41e24;
+  --color-destructive-foreground: #ffffff;
+  --color-card: #2d2d2d;
+  --color-card-foreground: #ffffff;
+  --color-popover: #2d2d2d;
+  --color-popover-foreground: #ffffff;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 999px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-red-primary);
+  color: white;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-yellow);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes modalIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes pop {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.3);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUpPanel {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pizzaSplit {
+    from {
+      width: 0;
+    }
+    to {
+      width: 4px;
+    }
+  }
+}
