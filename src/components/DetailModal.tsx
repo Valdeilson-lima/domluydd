@@ -81,7 +81,7 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] max-h-[90vh] p-0 gap-0 flex flex-col">
+      <DialogContent className="max-w-[560px] max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden">
         {/* Scrollable area */}
         <div className="overflow-y-auto flex-1">
           <div className="aspect-[16/9] w-full overflow-hidden bg-black shrink-0">
