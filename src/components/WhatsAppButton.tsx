@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { MessageCircle, Zap } from "lucide-react";
 
 const WHATSAPP_MSG = encodeURIComponent(
@@ -5,8 +6,28 @@ const WHATSAPP_MSG = encodeURIComponent(
 );
 
 export function WhatsAppButton() {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const el = document.querySelector("footer");
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setHidden(entry.isIntersecting),
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="fixed bottom-6 right-4 z-[400] sm:bottom-8 sm:right-8">
+    <div
+      className={`fixed bottom-6 right-4 z-[400] transition-all duration-300 sm:bottom-8 sm:right-8 ${
+        hidden
+          ? "opacity-0 pointer-events-none translate-y-4"
+          : "opacity-100 pointer-events-auto translate-y-0"
+      }`}
+    >
       <a
         href={`https://wa.me/5511999999999?text=${WHATSAPP_MSG}`}
         target="_blank"
