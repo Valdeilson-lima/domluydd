@@ -2,11 +2,13 @@ import { Clock, Bike } from "lucide-react";
 
 function isOpen() {
   const now = new Date();
+  const day = now.getDay();
+  if (day === 1) return false;
   const hour = now.getHours();
   const minute = now.getMinutes();
   const totalMinutes = hour * 60 + minute;
   const openMinutes = 18 * 60;
-  const closeMinutes = 23 * 60;
+  const closeMinutes = 22 * 60;
   return totalMinutes >= openMinutes && totalMinutes < closeMinutes;
 }
 
@@ -57,7 +59,7 @@ export function InfoStrip() {
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-white/6 bg-black-light/80 px-3 py-2 text-[0.65rem] text-white/80 backdrop-blur sm:gap-x-6 sm:gap-y-0 sm:px-4 sm:py-2.5 sm:text-sm">
       <span className="flex items-center gap-1">
         <Clock className="size-3 text-yellow-light sm:size-4" />
-        Seg–Dom 18h–23h
+        Ter–Dom 18h–22h
       </span>
       <span className="flex items-center gap-1">
         <Bike className="size-3 text-yellow-light sm:size-4" />
