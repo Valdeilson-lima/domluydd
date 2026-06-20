@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-4 text-center">
         <div className="flex items-center gap-2.5">
           <img
-            src="/src/assets/logo.png"
+            src="/logo.png"
             alt="Don Luydd Pizzaria"
             className="h-8 w-auto rounded-full"
           />

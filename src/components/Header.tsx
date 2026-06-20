@@ -21,7 +21,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
       <div className="mx-auto flex h-14 max-w-280 items-center justify-between gap-2.5 px-3 sm:h-16 sm:px-4">
         <div className="flex shrink-0 items-center gap-2 pr-3 relative after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:h-5 after:w-px after:bg-white/15 ">
           <img
-            src="/src/assets/logo.png"
+            src="/logo.png"
             alt="Don Luydd Pizzaria"
             className="h-9 w-auto rounded-full sm:h-10"
           />
