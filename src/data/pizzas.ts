@@ -1,7 +1,7 @@
 import type { Pizza } from "@/types";
 
 const PIZZA_IMAGES = [
-  "https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_960_720.jpg",
+  "/Pizza 2 Queijos.png",
   "https://cdn.pixabay.com/photo/2020/06/08/16/49/pizza-5275191_960_720.jpg",
   "https://cdn.pixabay.com/photo/2016/04/21/22/50/pizza-1344720_960_720.jpg",
   "https://cdn.pixabay.com/photo/2014/04/22/02/56/pizza-329523_960_720.jpg",
