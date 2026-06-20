@@ -9,6 +9,7 @@ import { CartSheet } from "@/components/CartSheet";
 import { CartBar } from "@/components/CartBar";
 import { CheckoutModal } from "@/components/CheckoutModal";
 import { Footer } from "@/components/Footer";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Toast } from "@/components/ui/toast";
 import { setToastFn } from "@/components/ui/toast-helpers";
 import { useCart } from "@/hooks/useCart";
@@ -177,6 +178,8 @@ export default function App() {
       </main>
 
       <Footer />
+
+      <WhatsAppButton />
 
       <CartBar
         itemCount={cart.length}
