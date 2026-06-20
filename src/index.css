@@ -134,4 +134,14 @@ body {
       width: 4px;
     }
   }
+
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -6px;
+    }
+  }
 }
