@@ -27,7 +27,7 @@ export function Footer() {
             </svg>
           </a>
           <a
-            href="https://wa.me/5511999999999"
+            href="https://wa.me/5583993740352"
             target="_blank"
             aria-label="WhatsApp"
             className="flex size-9.5 cursor-pointer items-center justify-center rounded-full bg-white/8 text-white transition-all duration-200 hover:bg-green-500 hover:-translate-y-0.5"
