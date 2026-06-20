@@ -20,7 +20,7 @@ export function CartBar({ itemCount, total, onOpen, hidden }: CartBarProps) {
         >
           <div className="relative">
             <ShoppingBag className="size-5 sm:size-6" />
-            <span className="absolute -right-1.5 -top-1.5 flex size-[18px] items-center justify-center rounded-full bg-yellow-light text-[0.6rem] font-bold text-black sm:size-5 sm:text-[0.65rem]">
+            <span className="absolute -right-1.5 -top-1.5 flex size-[18px] items-center justify-center rounded-full bg-yellow-light text-[0.6rem] font-bold text-black animate-[popIn_0.3s_cubic-bezier(0.22,1,0.36,1)] sm:size-5 sm:text-[0.65rem]">
               {itemCount}
             </span>
           </div>

@@ -253,9 +253,10 @@ export function DetailModal({
           <button
             onClick={handleAdd}
             type="button"
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-red-primary to-red-dark px-4 py-3 font-body text-xs font-bold text-white shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:gap-2.5 sm:py-4 sm:text-sm"
+            className="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-[10px] bg-gradient-to-r from-red-primary to-red-dark px-4 py-3 font-body text-xs font-bold text-white shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.97] sm:gap-2.5 sm:py-4 sm:text-sm"
           >
-            <ShoppingBag className="size-4 sm:size-5" />
+            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-white/15" />
+            <ShoppingBag className="size-4 transition-transform duration-200 group-active:scale-125 sm:size-5" />
             Adicionar ao carrinho
           </button>
         </div>

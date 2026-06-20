@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CheckCircle, ShoppingBag } from "lucide-react";
 
 interface ToastProps {
   open: boolean;
@@ -24,16 +23,21 @@ export function Toast({
 
   if (!open) return null;
 
+  const isAdded = message.includes("adicionada");
+
   return createPortal(
     <div
       role="status"
       aria-live="polite"
-      className={cn(
-        "fixed bottom-7 right-7 left-7 md:left-auto z-[500] flex items-center gap-3 rounded-[8px] bg-yellow px-5 py-3.5 text-sm font-bold text-black shadow-md transition-all duration-350",
-        open ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
-      )}
+      className="fixed bottom-24 right-4 left-4 z-[500] animate-[toastIn_0.4s_cubic-bezier(0.22,1,0.36,1)] sm:bottom-8 sm:right-8 sm:left-auto flex items-center gap-3 rounded-[14px] bg-gradient-to-r from-yellow to-yellow-light px-5 py-3.5 text-sm font-bold text-black shadow-2xl"
     >
-      <CheckCircle className="h-5 w-5 shrink-0" />
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/10">
+        {isAdded ? (
+          <CheckCircle className="size-5 text-green-800" />
+        ) : (
+          <ShoppingBag className="size-4" />
+        )}
+      </span>
       <span>{message}</span>
     </div>,
     document.body
