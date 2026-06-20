@@ -8,7 +8,7 @@ interface DrinkGridProps {
 
 export function DrinkGrid({ drinks, onSelect }: DrinkGridProps) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3 max-md:max-421-max-480:grid-cols-1">
+    <div className="flex flex-col gap-3 sm:gap-4">
       {drinks.map((drink) => (
         <DrinkCard key={drink.name} drink={drink} onSelect={onSelect} />
       ))}

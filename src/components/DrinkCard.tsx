@@ -1,3 +1,4 @@
+import { Wine } from "lucide-react";
 import type { Drink } from "@/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -6,18 +7,11 @@ interface DrinkCardProps {
   onSelect: (drink: Drink) => void;
 }
 
-const iconMap: Record<string, string> = {
+const iconBg: Record<string, string> = {
   coca: "bg-red-primary/20 text-red-light",
-  guarana: "bg-white/8 text-white",
+  guarana: "bg-white/15 text-white",
   fanta: "bg-yellow/20 text-yellow",
   cajuina: "bg-yellow-light/15 text-yellow-light",
-};
-
-const iconSymbol: Record<string, string> = {
-  coca: "C",
-  guarana: "G",
-  fanta: "F",
-  cajuina: "Cj",
 };
 
 export function DrinkCard({ drink, onSelect }: DrinkCardProps) {
@@ -32,18 +26,29 @@ export function DrinkCard({ drink, onSelect }: DrinkCardProps) {
           onSelect(drink);
         }
       }}
-      className="flex cursor-pointer items-center gap-3.5 rounded-[14px] border border-white/6 bg-black-light p-3.5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-yellow/30"
+      aria-label={drink.name}
+      className="group flex cursor-pointer overflow-hidden rounded-[14px] bg-black-light shadow-sm transition-all duration-300 border border-white/6 hover:shadow-md hover:-translate-y-0.5 hover:border-red-primary/30 focus-visible:outline-offset-[-3px]"
     >
       <div
-        className={`flex size-[42px] shrink-0 items-center justify-center rounded-[8px] text-sm font-bold ${iconMap[drink.icon] || "bg-white/8 text-white"}`}
+        className={`flex w-24 shrink-0 items-center justify-center sm:w-28 ${iconBg[drink.icon] || "bg-white/8 text-white"}`}
       >
-        {iconSymbol[drink.icon] || drink.name[0]}
+        <Wine className="size-7 sm:size-9" />
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold">{drink.name}</div>
-      </div>
-      <div className="font-mono text-base font-semibold text-yellow shrink-0">
-        R$ {formatPrice(drink.price)}
+      <div className="flex flex-1 flex-col justify-center gap-1 px-3 py-3 sm:px-4 sm:py-4">
+        <div className="font-display text-sm font-bold text-yellow sm:text-base">
+          {drink.name}
+        </div>
+        <div className="line-clamp-1 text-[0.72rem] text-muted leading-relaxed sm:text-xs">
+          {drink.desc}
+        </div>
+        <div className="mt-1">
+          <span className="inline-block rounded-[999px] border border-white/10 bg-white/5 px-2.5 py-0.5 font-mono text-[0.6rem] font-semibold text-white sm:text-[0.65rem]">
+            <span className="mr-0.5 font-body font-semibold text-muted">
+              Un
+            </span>
+            R$ {formatPrice(drink.price)}
+          </span>
+        </div>
       </div>
     </div>
   );

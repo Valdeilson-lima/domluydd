@@ -13,6 +13,7 @@ export interface Drink {
   name: string;
   icon: string;
   price: number;
+  desc: string;
 }
 
 export interface CartItemFlavor {

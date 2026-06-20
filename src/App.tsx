@@ -101,11 +101,19 @@ export default function App() {
       )
     : pizzaData;
 
+  const filteredDrinks = search
+    ? bebidas.filter(
+        (d) =>
+          d.name.toLowerCase().includes(search.toLowerCase()) ||
+          d.desc.toLowerCase().includes(search.toLowerCase())
+      )
+    : bebidas;
+
   return (
     <>
       <a
         href="#main-content"
-        className="absolute -top-[100px] left-4 z-[1000] rounded-[8px] bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4"
+        className="absolute -top-25 left-4 z-1000 rounded-sm bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4"
       >
         Pular para o conteúdo
       </a>
@@ -120,7 +128,7 @@ export default function App() {
 
       <main
         id="main-content"
-        className="mx-auto max-w-[1120px] px-4 py-6 pb-24 sm:px-5 sm:py-8 sm:pb-28"
+        className="mx-auto max-w-280 px-4 py-6 pb-24 sm:px-5 sm:py-8 sm:pb-28"
       >
         <SearchBar value={search} onChange={setSearch} />
 
@@ -132,7 +140,7 @@ export default function App() {
               }
             >
               <div className="mb-4 flex items-baseline justify-between gap-2 flex-wrap sm:mb-6">
-                <h2 className="font-display text-xl font-extrabold -tracking-[0.02em] sm:text-[1.6rem]">
+                <h2 className="font-display text-xl font-extrabold tracking-[-0.02em] sm:text-[1.6rem]">
                   {activeTab === "salgadas" ? "Salgadas" : "Doces"}
                 </h2>
                 <p className="text-[0.65rem] text-muted font-normal sm:text-xs">
@@ -164,14 +172,14 @@ export default function App() {
           ) : (
             <section aria-label="Bebidas">
               <div className="mb-4 flex items-baseline justify-between gap-2 flex-wrap sm:mb-6">
-                <h2 className="font-display text-xl font-extrabold -tracking-[0.02em] sm:text-[1.6rem]">
+                <h2 className="font-display text-xl font-extrabold tracking-[-0.02em] sm:text-[1.6rem]">
                   Bebidas
                 </h2>
                 <p className="text-[0.65rem] text-muted font-normal sm:text-xs">
                   Refrigerantes gelados para acompanhar
                 </p>
               </div>
-              <DrinkGrid drinks={bebidas} onSelect={handleDrinkSelect} />
+              <DrinkGrid drinks={filteredDrinks} onSelect={handleDrinkSelect} />
             </section>
           )}
         </div>
