@@ -17,7 +17,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-200 border-b border-yellow/20 bg-linear-to-b from-black to-black-light/95 backdrop-blur-md">
+    <header className="sticky top-0 z-200 border-b border-yellow/25 bg-linear-to-b from-[#591212] to-[#2a1010] backdrop-blur-md shadow-[0_4px_24px_rgba(89,18,18,0.25)]">
       <div className="mx-auto flex h-14 max-w-280 items-center justify-between gap-2.5 px-3 sm:h-16 sm:px-5">
         <div className="flex shrink-0 items-center gap-2.5 pr-2">
           <img
@@ -37,7 +37,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
 
         <nav
           className={cn(
-            "flex gap-1 overflow-x-auto flex-nowrap scrollbar-none max-sm:absolute max-sm:top-full max-sm:left-0 max-sm:right-0 max-sm:flex-col max-sm:gap-0 max-sm:bg-black-light max-sm:px-2.5 max-sm:pb-4 max-sm:pt-2 max-sm:shadow-lg max-sm:border-b max-sm:border-yellow/20 max-sm:z-199 max-sm:transition-all max-sm:duration-250",
+            "flex gap-1 overflow-x-auto flex-nowrap scrollbar-none max-sm:absolute max-sm:top-full max-sm:left-0 max-sm:right-0 max-sm:flex-col max-sm:gap-0 max-sm:bg-linear-to-b max-sm:from-[#2a1010] max-sm:to-[#1f1c1d] max-sm:px-2.5 max-sm:pb-4 max-sm:pt-2 max-sm:shadow-lg max-sm:border-b max-sm:border-yellow/20 max-sm:z-199 max-sm:transition-all max-sm:duration-250",
             menuOpen
               ? "max-sm:flex max-sm:opacity-100 max-sm:translate-y-0 max-sm:pointer-events-auto"
               : "max-sm:hidden max-sm:opacity-0 max-sm:-translate-y-2 max-sm:pointer-events-none"
