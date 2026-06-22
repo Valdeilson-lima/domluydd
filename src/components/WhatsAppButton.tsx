@@ -6,9 +6,15 @@ const WHATSAPP_MSG = encodeURIComponent(
 
 interface WhatsAppButtonProps {
   cartHasItems?: boolean;
+  hidden?: boolean;
 }
 
-export function WhatsAppButton({ cartHasItems = false }: WhatsAppButtonProps) {
+export function WhatsAppButton({
+  cartHasItems = false,
+  hidden = false,
+}: WhatsAppButtonProps) {
+  if (hidden) return null;
+
   return (
     <div
       className={`fixed right-4 z-400 transition-[bottom] duration-300 ${

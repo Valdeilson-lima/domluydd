@@ -239,7 +239,7 @@ export default function App() {
 
       <Footer />
 
-      <WhatsAppButton cartHasItems={itemCount > 0} />
+      <WhatsAppButton cartHasItems={itemCount > 0} hidden={anyOverlayOpen} />
 
       <CartBar
         itemCount={itemCount}
