@@ -50,7 +50,8 @@ export function Hero() {
               Don Luydd
             </h1>
             <p className="mt-3 max-w-md font-display text-base font-normal italic leading-snug text-cream-dim [font-variation-settings:'opsz'_72] sm:text-lg sm:mx-auto">
-              Massa de fermentação natural, forno a lenha, ingredientes na hora.
+              Massa de fermentação natural, forno elétrico, ingredientes na
+              hora.
             </p>
           </div>
 
@@ -102,7 +103,7 @@ export function InfoStrip() {
     {
       icon: Flame,
       label: "Forno",
-      value: "A lenha, na hora",
+      value: "Elétrico, na hora",
     },
   ];
 
