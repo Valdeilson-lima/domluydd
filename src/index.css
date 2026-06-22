@@ -1,36 +1,44 @@
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..600&family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Syne", sans-serif;
-  --font-body: "Sora", sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Sora", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --color-red-primary: #c41e24;
-  --color-red-dark: #8b0000;
-  --color-red-light: #e8303a;
-  --color-black: #1a1a1a;
-  --color-black-light: #2d2d2d;
-  --color-yellow: #f5a623;
-  --color-yellow-light: #ffd700;
+  --color-red-primary: #c5302a;
+  --color-red-dark: #7a1818;
+  --color-red-light: #e0533a;
 
-  --color-background: #1a1a1a;
-  --color-foreground: #ffffff;
-  --color-muted: #888888;
-  --color-border: rgba(255, 255, 255, 0.1);
+  --color-yellow: #e89a45;
+  --color-yellow-light: #f5c26b;
 
-  --color-primary: #c41e24;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f5a623;
-  --color-secondary-foreground: #1a1a1a;
-  --color-accent: #e8303a;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #c41e24;
-  --color-destructive-foreground: #ffffff;
-  --color-card: #2d2d2d;
-  --color-card-foreground: #ffffff;
-  --color-popover: #2d2d2d;
-  --color-popover-foreground: #ffffff;
+  --color-basil: #7ba36a;
+  --color-basil-dark: #4d6b3f;
+  --color-cream: #f5ebd8;
+  --color-cream-dim: #d9cdb6;
+
+  --color-black: #161009;
+  --color-black-light: #221810;
+  --color-black-elevated: #2c201780;
+
+  --color-background: #161009;
+  --color-foreground: #f5ebd8;
+  --color-muted: #a89a85;
+  --color-border: rgba(245, 235, 216, 0.08);
+
+  --color-primary: #c5302a;
+  --color-primary-foreground: #f5ebd8;
+  --color-secondary: #e89a45;
+  --color-secondary-foreground: #161009;
+  --color-accent: #e0533a;
+  --color-accent-foreground: #f5ebd8;
+  --color-destructive: #c5302a;
+  --color-destructive-foreground: #f5ebd8;
+  --color-card: #221810;
+  --color-card-foreground: #f5ebd8;
+  --color-popover: #221810;
+  --color-popover-foreground: #f5ebd8;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -44,11 +52,12 @@ body {
   color: var(--color-foreground);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
   background: var(--color-red-primary);
-  color: white;
+  color: #fff;
 }
 
 :focus-visible {
@@ -58,17 +67,43 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  background: rgba(245, 235, 216, 0.1);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #888;
+  background: rgba(232, 154, 69, 0.4);
+}
+
+/* Subtle oven-warm ambient glow on the page background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 50% 0%,
+      rgba(197, 48, 42, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 50% 100%,
+      rgba(232, 154, 69, 0.05),
+      transparent 70%
+    );
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -128,10 +163,34 @@ body {
 
   @keyframes pizzaSplit {
     from {
-      width: 0;
+      height: 0;
     }
     to {
-      width: 4px;
+      height: var(--wheel-split-h, 78%);
+    }
+  }
+
+  @keyframes wheelIn {
+    from {
+      opacity: 0;
+      scale: 0.7;
+      rotate: -12deg;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+      rotate: 0deg;
+    }
+  }
+
+  @keyframes sliceDraw {
+    from {
+      stroke-dashoffset: 60;
+      opacity: 0;
+    }
+    to {
+      stroke-dashoffset: 0;
+      opacity: 0.55;
     }
   }
 
@@ -167,6 +226,27 @@ body {
     }
     to {
       scale: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes pulseRing {
+    0% {
+      box-shadow: 0 0 0 0 rgba(123, 163, 106, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(123, 163, 106, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(123, 163, 106, 0);
     }
   }
 }

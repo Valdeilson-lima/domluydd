@@ -27,6 +27,7 @@ export interface CartItem {
   size: string;
   price: number;
   category: string;
+  qty: number;
 }
 
 export interface ModalState {

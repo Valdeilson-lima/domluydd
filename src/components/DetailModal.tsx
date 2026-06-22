@@ -8,23 +8,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPrice } from "@/lib/utils";
-import { getPizzaByName, MODAL_IMAGES, salgadas, doces } from "@/data/pizzas";
+import { getPizzaByName, salgadas, doces } from "@/data/pizzas";
 import type { Pizza, CartItem } from "@/types";
-import { ShoppingBag, SplitSquareHorizontal } from "lucide-react";
+import { SplitSquareHorizontal, Plus } from "lucide-react";
+import { PizzaVisualizer } from "./PizzaVisualizer";
 
 interface DetailModalProps {
   pizza: Pizza | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (item: Omit<CartItem, "id">) => void;
+  onAddToCart: (item: Omit<CartItem, "id" | "qty">) => void;
 }
 
 const SIZES = ["P", "M", "G"] as const;
 
 const SIZE_META = {
-  P: { fatias: 4, cor: "#c73b2a" },
-  M: { fatias: 6, cor: "#d4a54a" },
-  G: { fatias: 8, cor: "#3d7a4a" },
+  P: { fatias: 4, cor: "#c5302a" },
+  M: { fatias: 6, cor: "#e89a45" },
+  G: { fatias: 8, cor: "#7ba36a" },
 } as const;
 
 export function DetailModal({
@@ -34,7 +35,7 @@ export function DetailModal({
   onAddToCart,
 }: DetailModalProps) {
   const initialFlavor = pizza?.name ?? "";
-  const [size, setSize] = useState("M");
+  const [size, setSize] = useState<"P" | "M" | "G">("M");
   const [flavor1, setFlavor1] = useState(initialFlavor);
   const [flavor2, setFlavor2] = useState(initialFlavor);
   const [halfHalf, setHalfHalf] = useState(false);
@@ -79,33 +80,46 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden">
-        {/* Scrollable area */}
+      <DialogContent className="max-w-[560px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-[20px] border-yellow/15">
         <div className="overflow-y-auto flex-1">
-          <div className="aspect-[16/9] w-full overflow-hidden bg-black shrink-0">
-            <img
-              src={MODAL_IMAGES[pizza.imgIdx]}
-              alt={pizza.name}
-              className="size-full object-cover"
-            />
-          </div>
-
-          <div className="px-5 pt-5 pb-4 sm:px-7 sm:pt-7 sm:pb-5 space-y-5">
-            <div>
-              <h2 className="font-display text-xl font-extrabold text-yellow sm:text-[1.6rem]">
+          {/* Hero: the pizza wheel signature */}
+          <div className="relative bg-linear-to-br from-[#1a120b] via-[#241810] to-[#3a2014] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(232,154,69,0.12),transparent_70%)]" />
+            <div className="relative flex flex-col items-center gap-3">
+              <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-yellow/70">
+                {pizza.category === "doce" ? "Pizza Doce" : "Pizza Salgada"}
+              </span>
+              <h2 className="text-center font-display text-[1.7rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] sm:text-[2.1rem]">
                 {pizza.name}
               </h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted">
-                {pizza.desc}
-              </p>
             </div>
 
-            {/* Size Selector — pill-style circles */}
-            <div className="space-y-3">
-              <label className="block text-[0.75rem] font-semibold uppercase tracking-[0.5px] text-muted/80">
+            <div className="relative mt-2">
+              <PizzaVisualizer
+                flavor1={flavor1}
+                flavor2={flavor2}
+                isHalf={halfHalf}
+                size={size}
+                category={pizza.category}
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="border-t border-white/6 px-5 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
+            <p className="text-sm leading-relaxed text-cream-dim">
+              {pizza.desc}
+            </p>
+          </div>
+
+          {/* Configuration */}
+          <div className="space-y-5 px-5 pb-5 sm:px-7 sm:pb-6">
+            {/* Size Selector */}
+            <div className="space-y-2.5">
+              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
                 Tamanho
               </label>
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 {SIZES.map((s) => {
                   const price1 = getPrice(flavor1, s);
                   const price2 = getPrice(flavor2, s);
@@ -117,28 +131,31 @@ export function DetailModal({
                       key={s}
                       onClick={() => setSize(s)}
                       type="button"
-                      className={`relative flex-1 rounded-[14px] border-2 px-3 py-3.5 text-center transition-all duration-200 cursor-pointer ${
+                      className={`relative flex-1 cursor-pointer rounded-[12px] border px-2 py-3 text-center transition-all duration-200 ${
                         active
-                          ? "border-red-primary bg-red-primary/12 shadow-[0_0_0_1px_rgba(196,30,36,0.3)]"
-                          : "border-white/8 bg-white/[0.03] hover:border-white/20"
+                          ? "border-yellow/60 bg-yellow/10 shadow-[inset_0_0_0_1px_rgba(232,154,69,0.3)]"
+                          : "border-white/8 bg-white/[0.02] hover:border-white/20"
                       }`}
                     >
-                      {/* Size dot indicator */}
                       <span
-                        className="mx-auto mb-1.5 block size-3 rounded-full sm:size-3.5"
+                        className="mx-auto mb-1 block size-2.5 rounded-full"
                         style={{ background: meta.cor }}
                       />
                       <span
-                        className={`block text-sm font-extrabold leading-tight ${active ? "text-red-primary" : "text-white"}`}
+                        className={`block font-display text-base font-bold leading-tight ${
+                          active ? "text-yellow" : "text-cream"
+                        }`}
                       >
                         {s}
                       </span>
                       <span
-                        className={`block font-mono text-[0.7rem] font-semibold ${active ? "text-red-primary" : "text-muted"}`}
+                        className={`mt-0.5 block font-mono text-[0.65rem] font-semibold ${
+                          active ? "text-yellow" : "text-muted"
+                        }`}
                       >
                         R$ {formatPrice(maxP)}
                       </span>
-                      <span className="mt-0.5 block text-[0.55rem] text-muted/50">
+                      <span className="mt-0.5 block text-[0.55rem] uppercase tracking-wide text-muted/60">
                         {meta.fatias} fatias
                       </span>
                     </button>
@@ -148,46 +165,50 @@ export function DetailModal({
             </div>
 
             {/* Half-half toggle */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleToggleHalf}
-                className={`flex w-full cursor-pointer items-center gap-3 rounded-[12px] border-2 px-4 py-3 transition-all duration-200 ${
-                  halfHalf
-                    ? "border-red-primary bg-red-primary/8"
-                    : "border-white/8 bg-white/[0.02] hover:border-white/20"
+            <button
+              type="button"
+              onClick={handleToggleHalf}
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 transition-all duration-200 ${
+                halfHalf
+                  ? "border-yellow/50 bg-yellow/8"
+                  : "border-white/8 bg-white/[0.02] hover:border-white/20"
+              }`}
+            >
+              <SplitSquareHorizontal
+                className={`size-5 transition-colors duration-200 ${
+                  halfHalf ? "text-yellow" : "text-muted"
                 }`}
-              >
-                <SplitSquareHorizontal
-                  className={`size-5 transition-colors duration-200 ${halfHalf ? "text-red-primary" : "text-muted"}`}
-                />
-                <div className="flex-1 text-left">
-                  <span
-                    className={`text-sm font-bold transition-colors duration-200 ${halfHalf ? "text-white" : "text-muted"}`}
-                  >
-                    Meio a meio
-                  </span>
-                  <p className="text-[0.65rem] text-muted/60">
-                    Escolha dois sabores diferentes
-                  </p>
-                </div>
-                <div
-                  className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${
-                    halfHalf ? "bg-red-primary" : "bg-white/15"
+              />
+              <div className="flex-1 text-left">
+                <span
+                  className={`block text-sm font-bold transition-colors duration-200 ${
+                    halfHalf ? "text-cream" : "text-cream-dim"
                   }`}
                 >
-                  <div
-                    className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                      halfHalf ? "translate-x-[18px]" : "translate-x-0.5"
-                    }`}
-                  />
-                </div>
-              </button>
-            </div>
+                  Meio a meio
+                </span>
+                <p className="text-[0.68rem] text-muted">
+                  {halfHalf
+                    ? "Dois sabores, preço do maior"
+                    : "Toque para combinar dois sabores"}
+                </p>
+              </div>
+              <div
+                className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${
+                  halfHalf ? "bg-yellow" : "bg-white/15"
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 size-4 rounded-full bg-black shadow transition-transform duration-200 ${
+                    halfHalf ? "translate-x-[18px]" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </button>
 
             {/* Flavor 1 */}
             <div className="space-y-2">
-              <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.5px] text-muted/80">
+              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
                 {showSecondFlavor ? "1ª metade" : "Sabor"}
               </label>
               <Select value={flavor1} onValueChange={handleFlavor1Change}>
@@ -212,11 +233,11 @@ export function DetailModal({
                   : "max-h-0 opacity-0 pointer-events-none overflow-hidden"
               }`}
             >
-              <label className="block text-[0.7rem] font-semibold uppercase tracking-[0.5px] text-red-primary/80">
+              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-yellow/80">
                 2ª metade
               </label>
               <Select value={flavor2} onValueChange={setFlavor2}>
-                <SelectTrigger className="h-12 text-sm border-red-primary/30 focus:border-red-primary">
+                <SelectTrigger className="h-12 text-sm border-yellow/30 focus:border-yellow">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,23 +252,30 @@ export function DetailModal({
           </div>
         </div>
 
-        {/* Fixed bottom area: total + add button */}
-        <div className="shrink-0 border-t border-white/8 bg-black-light px-5 py-4 sm:px-7 sm:py-5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-muted">
-              Total do pedido
-            </span>
-            <span className="font-mono text-xl font-bold text-yellow-light sm:text-2xl">
-              R$ {formatPrice(total)}
+        {/* Fixed bottom area */}
+        <div className="shrink-0 border-t border-yellow/15 bg-linear-to-b from-black-light to-black px-5 py-4 sm:px-7 sm:py-5">
+          <div className="mb-3 flex items-end justify-between">
+            <div className="flex flex-col">
+              <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-muted">
+                Total
+              </span>
+              <span className="text-[0.65rem] text-muted/70">
+                {size} · {halfHalf ? "meio a meio" : "inteira"}
+              </span>
+            </div>
+            <span className="font-display text-[1.8rem] font-semibold italic leading-none text-yellow [font-variation-settings:'opsz'_144]">
+              <span className="not-italic font-mono text-base text-yellow/70 align-middle">
+                R${" "}
+              </span>
+              {formatPrice(total)}
             </span>
           </div>
           <button
             onClick={handleAdd}
             type="button"
-            className="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-[10px] bg-gradient-to-r from-red-primary to-red-dark px-4 py-3 font-body text-xs font-bold text-white shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.97] sm:gap-2.5 sm:py-4 sm:text-sm"
+            className="group flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-[12px] bg-linear-to-r from-red-primary to-red-dark px-4 py-3.5 font-body text-sm font-bold text-cream shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:py-4"
           >
-            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-white/15" />
-            <ShoppingBag className="size-4 transition-transform duration-200 group-active:scale-125 sm:size-5" />
+            <Plus className="size-5 transition-transform duration-200 group-active:scale-125" />
             Adicionar ao carrinho
           </button>
         </div>

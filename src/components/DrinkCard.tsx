@@ -4,17 +4,20 @@ import { formatPrice } from "@/lib/utils";
 
 interface DrinkCardProps {
   drink: Drink;
+  index: number;
   onSelect: (drink: Drink) => void;
 }
 
-const iconBg: Record<string, string> = {
-  coca: "bg-red-primary/20 text-red-light",
-  guarana: "bg-white/15 text-white",
-  fanta: "bg-yellow/20 text-yellow",
-  cajuina: "bg-yellow-light/15 text-yellow-light",
+const drinkStyle: Record<string, string> = {
+  coca: "ring-red-primary/40",
+  guarana: "ring-cream/20",
+  fanta: "ring-yellow/40",
+  cajuina: "ring-yellow-light/40",
 };
 
-export function DrinkCard({ drink, onSelect }: DrinkCardProps) {
+export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
+  const ring = drinkStyle[drink.icon] ?? "ring-white/15";
+
   return (
     <div
       role="listitem"
@@ -26,29 +29,46 @@ export function DrinkCard({ drink, onSelect }: DrinkCardProps) {
           onSelect(drink);
         }
       }}
-      aria-label={drink.name}
-      className="group flex cursor-pointer overflow-hidden rounded-[14px] bg-black-light shadow-sm transition-all duration-300 border border-white/6 hover:shadow-md hover:-translate-y-0.5 hover:border-red-primary/30 focus-visible:outline-offset-[-3px]"
+      aria-label={`${drink.name}, R$ ${formatPrice(drink.price)}`}
+      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+      className={`group flex cursor-pointer items-center gap-3 rounded-[14px] border border-white/6 bg-black-light p-3 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#2a1f16] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 animate-[fadeUp_0.4s_both] sm:p-4`}
     >
+      {/* Bottle mark */}
       <div
-        className={`flex w-24 shrink-0 items-center justify-center sm:w-28 ${iconBg[drink.icon] || "bg-white/8 text-white"}`}
+        className={`flex size-12 shrink-0 items-center justify-center rounded-full bg-black/40 ring-2 ${ring}`}
       >
-        <Wine className="size-7 sm:size-9" />
+        <Wine className="size-5 text-cream-dim" />
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-1 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="font-display text-sm font-bold text-yellow sm:text-base">
+
+      <div className="min-w-0 flex-1">
+        <h3 className="font-display text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36] sm:text-[1.05rem]">
           {drink.name}
-        </div>
-        <div className="line-clamp-1 text-[0.72rem] text-muted leading-relaxed sm:text-xs">
+        </h3>
+        <p className="mt-0.5 truncate text-[0.72rem] text-muted sm:text-[0.78rem]">
           {drink.desc}
-        </div>
-        <div className="mt-1">
-          <span className="inline-block rounded-[999px] border border-white/10 bg-white/5 px-2.5 py-0.5 font-mono text-[0.6rem] font-semibold text-white sm:text-[0.65rem]">
-            <span className="mr-0.5 font-body font-semibold text-muted">
-              Un
-            </span>
-            R$ {formatPrice(drink.price)}
-          </span>
-        </div>
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="font-mono text-sm font-semibold text-yellow sm:text-base">
+          R$ {formatPrice(drink.price)}
+        </span>
+        <span
+          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-muted transition-all duration-200 group-hover:border-yellow/60 group-hover:bg-yellow/15 group-hover:text-yellow"
+          aria-hidden
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="size-4"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </span>
       </div>
     </div>
   );

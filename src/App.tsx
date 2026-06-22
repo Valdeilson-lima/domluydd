@@ -28,14 +28,40 @@ export default function App() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  const { cart, addItem, removeItem, clearCart, total, cartOpen, toggleCart } =
-    useCart();
+  const {
+    cart,
+    addItem,
+    removeItem,
+    updateQty,
+    clearCart,
+    total,
+    itemCount,
+    cartOpen,
+    toggleCart,
+  } = useCart();
 
   useEffect(() => {
     setToastFn((msg: string) => {
       setToastMessage(msg);
       setToastOpen(true);
     });
+  }, []);
+
+  const anyOverlayOpen = detailOpen || cartOpen || checkoutOpen;
+
+  useEffect(() => {
+    if (anyOverlayOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [anyOverlayOpen]);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab as TabId);
+    setSearch("");
   }, []);
 
   const handlePizzaSelect = useCallback((id: string) => {
@@ -54,14 +80,14 @@ export default function App() {
         price: drink.price,
         category: "Bebida",
       });
-      setToastMessage(`${drink.name} adicionada!`);
+      setToastMessage(`${drink.name} adicionada`);
       setToastOpen(true);
     },
     [addItem]
   );
 
   const handleAddToCart = useCallback(
-    (item: Omit<CartItem, "id">) => {
+    (item: Omit<CartItem, "id" | "qty">) => {
       addItem(item);
       const isHalf =
         item.flavors.length > 1 &&
@@ -69,7 +95,7 @@ export default function App() {
       const itemName = isHalf
         ? item.flavors.map((f) => f.name).join(" + ")
         : item.flavors[0].name;
-      setToastMessage(`${itemName} (${item.size}) adicionada!`);
+      setToastMessage(`${itemName} (${item.size}) adicionada`);
       setToastOpen(true);
     },
     [addItem]
@@ -77,7 +103,7 @@ export default function App() {
 
   const handleCheckout = useCallback(() => {
     if (cart.length === 0) {
-      setToastMessage("Seu carrinho está vazio!");
+      setToastMessage("Seu carrinho está vazio");
       setToastOpen(true);
       return;
     }
@@ -92,6 +118,8 @@ export default function App() {
   }, [clearCart, toggleCart]);
 
   const pizzaData = activeTab === "salgadas" ? salgadas : doces;
+  const totalForTab =
+    activeTab === "bebidas" ? bebidas.length : pizzaData.length;
 
   const filteredPizzas = search
     ? pizzaData.filter(
@@ -109,6 +137,9 @@ export default function App() {
       )
     : bebidas;
 
+  const resultsCount =
+    activeTab === "bebidas" ? filteredDrinks.length : filteredPizzas.length;
+
   return (
     <>
       <a
@@ -118,10 +149,7 @@ export default function App() {
         Pular para o conteúdo
       </a>
 
-      <Header
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as TabId)}
-      />
+      <Header activeTab={activeTab} onTabChange={handleTabChange} />
 
       <Hero />
       <InfoStrip />
@@ -130,7 +158,12 @@ export default function App() {
         id="main-content"
         className="mx-auto max-w-280 px-4 py-6 pb-24 sm:px-5 sm:py-8 sm:pb-28"
       >
-        <SearchBar value={search} onChange={setSearch} />
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          resultsCount={resultsCount}
+          total={totalForTab}
+        />
 
         <div className="mt-5 sm:mt-7">
           {activeTab !== "bebidas" ? (
@@ -139,27 +172,40 @@ export default function App() {
                 activeTab === "salgadas" ? "Pizzas salgadas" : "Pizzas doces"
               }
             >
-              <div className="mb-4 flex items-baseline justify-between gap-2 flex-wrap sm:mb-6">
-                <h2 className="font-display text-xl font-extrabold tracking-[-0.02em] sm:text-[1.6rem]">
-                  {activeTab === "salgadas" ? "Salgadas" : "Doces"}
-                </h2>
-                <p className="text-[0.65rem] text-muted font-normal sm:text-xs">
-                  P{" "}
-                  <span
-                    className="mx-0.5 inline-block size-1.5 rounded-full align-middle sm:size-2"
-                    style={{ background: "#c73b2a" }}
-                  />
-                  4 fatias &middot; M
-                  <span
-                    className="mx-0.5 inline-block size-1.5 rounded-full align-middle sm:size-2"
-                    style={{ background: "#d4a54a" }}
-                  />
-                  6 fatias &middot; G
-                  <span
-                    className="mx-0.5 inline-block size-1.5 rounded-full align-middle sm:size-2"
-                    style={{ background: "#3d7a4a" }}
-                  />
-                  8 fatias
+              <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/6 pb-3 sm:mb-6 sm:pb-4">
+                <div className="flex items-baseline gap-2.5">
+                  <h2 className="font-display text-[1.6rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-[2rem]">
+                    {activeTab === "salgadas" ? "Salgadas" : "Doces"}
+                  </h2>
+                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-muted">
+                    {filteredPizzas.length}{" "}
+                    {filteredPizzas.length === 1 ? "sabor" : "sabores"}
+                  </span>
+                </div>
+                <p className="hidden items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-wider text-muted sm:flex sm:text-[0.65rem]">
+                  <span className="flex items-center gap-1">
+                    <span
+                      className="inline-block size-2 rounded-full"
+                      style={{ background: "#c5302a" }}
+                    />
+                    P · 4 fatias
+                  </span>
+                  <span className="text-border">·</span>
+                  <span className="flex items-center gap-1">
+                    <span
+                      className="inline-block size-2 rounded-full"
+                      style={{ background: "#e89a45" }}
+                    />
+                    M · 6
+                  </span>
+                  <span className="text-border">·</span>
+                  <span className="flex items-center gap-1">
+                    <span
+                      className="inline-block size-2 rounded-full"
+                      style={{ background: "#7ba36a" }}
+                    />
+                    G · 8
+                  </span>
                 </p>
               </div>
               <div className="space-y-3 sm:space-y-4">
@@ -171,12 +217,18 @@ export default function App() {
             </section>
           ) : (
             <section aria-label="Bebidas">
-              <div className="mb-4 flex items-baseline justify-between gap-2 flex-wrap sm:mb-6">
-                <h2 className="font-display text-xl font-extrabold tracking-[-0.02em] sm:text-[1.6rem]">
-                  Bebidas
-                </h2>
-                <p className="text-[0.65rem] text-muted font-normal sm:text-xs">
-                  Refrigerantes gelados para acompanhar
+              <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/6 pb-3 sm:mb-6 sm:pb-4">
+                <div className="flex items-baseline gap-2.5">
+                  <h2 className="font-display text-[1.6rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-[2rem]">
+                    Bebidas
+                  </h2>
+                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-muted">
+                    {filteredDrinks.length}{" "}
+                    {filteredDrinks.length === 1 ? "item" : "itens"}
+                  </span>
+                </div>
+                <p className="font-mono text-[0.6rem] uppercase tracking-wider text-muted sm:text-[0.65rem]">
+                  Geladas para acompanhar
                 </p>
               </div>
               <DrinkGrid drinks={filteredDrinks} onSelect={handleDrinkSelect} />
@@ -187,10 +239,10 @@ export default function App() {
 
       <Footer />
 
-      <WhatsAppButton />
+      <WhatsAppButton cartHasItems={itemCount > 0} />
 
       <CartBar
-        itemCount={cart.length}
+        itemCount={itemCount}
         total={total}
         onOpen={() => toggleCart(true)}
         hidden={detailOpen || cartOpen || checkoutOpen}
@@ -208,8 +260,10 @@ export default function App() {
         open={cartOpen}
         cart={cart}
         total={total}
+        itemCount={itemCount}
         onClose={() => toggleCart(false)}
         onRemove={removeItem}
+        onUpdateQty={updateQty}
         onCheckout={handleCheckout}
       />
 
