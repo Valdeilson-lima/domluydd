@@ -16,7 +16,7 @@ export function CartBar({ itemCount, total, onOpen, hidden }: CartBarProps) {
       <div className="mx-auto max-w-[1120px] px-3 pb-3 sm:px-5 sm:pb-5">
         <button
           onClick={onOpen}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-[16px] bg-linear-to-r from-red-primary to-red-dark px-5 py-3.5 text-cream shadow-lg ring-1 ring-yellow/20 transition-all duration-200 hover:shadow-xl hover:ring-yellow/40 active:scale-[0.98] sm:py-4"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-[16px] bg-linear-to-r from-red-dark to-red-primary px-5 py-3.5 text-cream shadow-lg ring-1 ring-yellow/20 transition-all duration-200 hover:shadow-xl hover:ring-yellow/40 active:scale-[0.98] sm:py-4"
         >
           <div className="relative flex shrink-0 items-center">
             <ShoppingBag className="size-5 sm:size-6" />

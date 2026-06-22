@@ -15,8 +15,8 @@ const SURFACE: Record<
   { left: { from: string; to: string }; right: { from: string; to: string } }
 > = {
   salgada: {
-    left: { from: "#591212", to: "#d90416" },
-    right: { from: "#f20505", to: "#d90416" },
+    left: { from: "#591212", to: "#a8151f" },
+    right: { from: "#d90416", to: "#f20505" },
   },
   doce: {
     left: { from: "#f28705", to: "#f28705" },
@@ -136,8 +136,8 @@ export function PizzaVisualizer({
                 y1={l.y1}
                 x2={l.x2}
                 y2={l.y2}
-                stroke="#f5ebd8"
-                strokeOpacity="0.35"
+                stroke="#faf6f0"
+                strokeOpacity="0.3"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 style={{
@@ -154,8 +154,8 @@ export function PizzaVisualizer({
               y1={-innerR}
               x2={0}
               y2={innerR}
-              stroke="#f5ebd8"
-              strokeOpacity="0.7"
+              stroke="#faf6f0"
+              strokeOpacity="0.6"
               strokeWidth="2.5"
               strokeLinecap="round"
               style={
@@ -169,8 +169,8 @@ export function PizzaVisualizer({
             />
           )}
 
-          <circle r={6} fill="#f5ebd8" opacity="0.85" />
-          <circle r={3} fill="#1a0606" opacity="0.4" />
+          <circle r={6} fill="#faf6f0" opacity="0.85" />
+          <circle r={3} fill="#141213" opacity="0.4" />
         </svg>
 
         <div className="pointer-events-none absolute inset-0 flex">

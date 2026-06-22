@@ -27,7 +27,7 @@ export function Hero() {
   const { open, nextLabel } = getOpenState();
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-br from-[#1a0606] via-[#2d0a0a] to-[#591212]">
+    <section className="relative overflow-hidden bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418]">
       <div
         className="absolute inset-0 opacity-30 bg-cover bg-center"
         style={{
@@ -36,7 +36,7 @@ export function Hero() {
         }}
       />
       <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/50 to-black/70" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(232,154,69,0.18),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(242,135,5,0.15),transparent_60%)]" />
 
       <div className="relative mx-auto flex max-w-280 flex-col items-start gap-5 px-5 py-9 sm:items-center sm:px-7 sm:py-14 sm:text-center md:py-20">
         <div className="flex flex-1 flex-col items-start gap-5 sm:items-center">

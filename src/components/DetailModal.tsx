@@ -83,8 +83,8 @@ export function DetailModal({
       <DialogContent className="max-w-[560px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-[20px] border-yellow/15">
         <div className="overflow-y-auto flex-1">
           {/* Hero: the pizza wheel signature */}
-          <div className="relative bg-linear-to-br from-[#1a0606] via-[#2d0a0a] to-[#591212] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(232,154,69,0.12),transparent_70%)]" />
+          <div className="relative bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(242,135,5,0.1),transparent_70%)]" />
             <div className="relative flex flex-col items-center gap-3">
               <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-yellow/70">
                 {pizza.category === "doce" ? "Pizza Doce" : "Pizza Salgada"}
@@ -133,7 +133,7 @@ export function DetailModal({
                       type="button"
                       className={`relative flex-1 cursor-pointer rounded-[12px] border px-2 py-3 text-center transition-all duration-200 ${
                         active
-                          ? "border-yellow/60 bg-yellow/10 shadow-[inset_0_0_0_1px_rgba(232,154,69,0.3)]"
+                          ? "border-yellow/60 bg-yellow/10 shadow-[inset_0_0_0_1px_rgba(242,183,5,0.3)]"
                           : "border-white/8 bg-white/[0.02] hover:border-white/20"
                       }`}
                     >
@@ -273,7 +273,7 @@ export function DetailModal({
           <button
             onClick={handleAdd}
             type="button"
-            className="group flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-[12px] bg-linear-to-r from-red-primary to-red-dark px-4 py-3.5 font-body text-sm font-bold text-cream shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:py-4"
+            className="group flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-[12px] bg-linear-to-r from-red-dark to-red-primary px-4 py-3.5 font-body text-sm font-bold text-cream shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:py-4"
           >
             <Plus className="size-5 transition-transform duration-200 group-active:scale-125" />
             Adicionar ao carrinho

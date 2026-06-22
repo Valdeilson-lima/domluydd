@@ -15,30 +15,30 @@
 
   --color-basil: #f2b705;
   --color-basil-dark: #f28705;
-  --color-cream: #f5ebd8;
-  --color-cream-dim: #e8d9bf;
+  --color-cream: #faf6f0;
+  --color-cream-dim: #d8cdc1;
 
-  --color-black: #1a0606;
-  --color-black-light: #2d0a0a;
-  --color-black-elevated: #59121280;
+  --color-black: #141213;
+  --color-black-light: #1f1c1d;
+  --color-black-elevated: #2a262780;
 
-  --color-background: #1a0606;
-  --color-foreground: #f5ebd8;
-  --color-muted: #b89a8a;
-  --color-border: rgba(245, 235, 216, 0.08);
+  --color-background: #141213;
+  --color-foreground: #faf6f0;
+  --color-muted: #9a9098;
+  --color-border: rgba(250, 246, 240, 0.08);
 
   --color-primary: #d90416;
-  --color-primary-foreground: #f5ebd8;
+  --color-primary-foreground: #faf6f0;
   --color-secondary: #f28705;
-  --color-secondary-foreground: #1a0606;
+  --color-secondary-foreground: #141213;
   --color-accent: #f20505;
-  --color-accent-foreground: #f5ebd8;
+  --color-accent-foreground: #faf6f0;
   --color-destructive: #d90416;
-  --color-destructive-foreground: #f5ebd8;
-  --color-card: #2d0a0a;
-  --color-card-foreground: #f5ebd8;
-  --color-popover: #2d0a0a;
-  --color-popover-foreground: #f5ebd8;
+  --color-destructive-foreground: #faf6f0;
+  --color-card: #1f1c1d;
+  --color-card-foreground: #faf6f0;
+  --color-popover: #1f1c1d;
+  --color-popover-foreground: #faf6f0;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -90,12 +90,12 @@ body::before {
   background:
     radial-gradient(
       ellipse 70% 50% at 50% 0%,
-      rgba(217, 4, 22, 0.1),
+      rgba(217, 4, 22, 0.06),
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 40% at 50% 100%,
-      rgba(242, 135, 5, 0.06),
+      rgba(242, 135, 5, 0.04),
       transparent 70%
     );
 }

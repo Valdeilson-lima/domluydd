@@ -38,7 +38,7 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
       }}
       aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}`}
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-      className="group flex cursor-pointer overflow-hidden rounded-[14px] bg-black-light border border-white/6 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#3a0f0f] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 data-[state=open]:border-yellow/60 animate-[fadeUp_0.4s_both]"
+      className="group flex cursor-pointer overflow-hidden rounded-[14px] bg-black-light border border-white/6 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#292526] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 data-[state=open]:border-yellow/60 animate-[fadeUp_0.4s_both]"
     >
       {/* Numbered stamp + image */}
       <div className="relative w-28 shrink-0 overflow-hidden sm:w-36">
