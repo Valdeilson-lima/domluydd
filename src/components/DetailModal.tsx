@@ -23,9 +23,9 @@ interface DetailModalProps {
 const SIZES = ["P", "M", "G"] as const;
 
 const SIZE_META = {
-  P: { fatias: 4, cor: "#c5302a" },
-  M: { fatias: 6, cor: "#e89a45" },
-  G: { fatias: 8, cor: "#7ba36a" },
+  P: { fatias: 4, cor: "#d90416" },
+  M: { fatias: 6, cor: "#f28705" },
+  G: { fatias: 8, cor: "#f2b705" },
 } as const;
 
 export function DetailModal({
@@ -83,7 +83,7 @@ export function DetailModal({
       <DialogContent className="max-w-[560px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-[20px] border-yellow/15">
         <div className="overflow-y-auto flex-1">
           {/* Hero: the pizza wheel signature */}
-          <div className="relative bg-linear-to-br from-[#1a120b] via-[#241810] to-[#3a2014] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
+          <div className="relative bg-linear-to-br from-[#1a0606] via-[#2d0a0a] to-[#591212] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(232,154,69,0.12),transparent_70%)]" />
             <div className="relative flex flex-col items-center gap-3">
               <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-yellow/70">

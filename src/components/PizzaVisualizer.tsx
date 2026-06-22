@@ -15,12 +15,12 @@ const SURFACE: Record<
   { left: { from: string; to: string }; right: { from: string; to: string } }
 > = {
   salgada: {
-    left: { from: "#7a1f1a", to: "#a82828" },
-    right: { from: "#b8362f", to: "#d94938" },
+    left: { from: "#591212", to: "#d90416" },
+    right: { from: "#f20505", to: "#d90416" },
   },
   doce: {
-    left: { from: "#a8631f", to: "#c87a2a" },
-    right: { from: "#d9963a", to: "#f0b25c" },
+    left: { from: "#f28705", to: "#f28705" },
+    right: { from: "#f2b705", to: "#f2b705" },
   },
 };
 
@@ -75,8 +75,8 @@ export function PizzaVisualizer({
         >
           <defs>
             <radialGradient id="crust" cx="50%" cy="50%" r="50%">
-              <stop offset="60%" stopColor="#f5c26b" />
-              <stop offset="100%" stopColor="#b87a32" />
+              <stop offset="60%" stopColor="#f2b705" />
+              <stop offset="100%" stopColor="#f28705" />
             </radialGradient>
             <linearGradient id="surface-left" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor={surface.left.from} />
@@ -109,7 +109,7 @@ export function PizzaVisualizer({
           <circle
             r={r}
             fill="none"
-            stroke="#7a4a1c"
+            stroke="#591212"
             strokeWidth="1.5"
             opacity="0.4"
           />
@@ -170,7 +170,7 @@ export function PizzaVisualizer({
           )}
 
           <circle r={6} fill="#f5ebd8" opacity="0.85" />
-          <circle r={3} fill="#161009" opacity="0.4" />
+          <circle r={3} fill="#1a0606" opacity="0.4" />
         </svg>
 
         <div className="pointer-events-none absolute inset-0 flex">

@@ -2,7 +2,7 @@ import { MessageCircle, Clock, Bike } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="relative mt-12 border-t border-yellow/20 bg-linear-to-b from-black to-[#0d0905] px-5 py-12 text-cream">
+    <footer className="relative mt-12 border-t border-yellow/20 bg-linear-to-b from-black to-[#1a0606] px-5 py-12 text-cream">
       <div className="mx-auto flex max-w-280 flex-col items-center gap-6 text-center">
         <div className="flex flex-col items-center gap-2.5">
           <img

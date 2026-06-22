@@ -27,7 +27,7 @@ export function Hero() {
   const { open, nextLabel } = getOpenState();
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-br from-[#1a120b] via-[#241810] to-[#3a2014]">
+    <section className="relative overflow-hidden bg-linear-to-br from-[#1a0606] via-[#2d0a0a] to-[#591212]">
       <div
         className="absolute inset-0 opacity-30 bg-cover bg-center"
         style={{

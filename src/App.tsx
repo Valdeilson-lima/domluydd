@@ -186,7 +186,7 @@ export default function App() {
                   <span className="flex items-center gap-1">
                     <span
                       className="inline-block size-2 rounded-full"
-                      style={{ background: "#c5302a" }}
+                      style={{ background: "#d90416" }}
                     />
                     P · 4 fatias
                   </span>
@@ -194,7 +194,7 @@ export default function App() {
                   <span className="flex items-center gap-1">
                     <span
                       className="inline-block size-2 rounded-full"
-                      style={{ background: "#e89a45" }}
+                      style={{ background: "#f28705" }}
                     />
                     M · 6
                   </span>
@@ -202,7 +202,7 @@ export default function App() {
                   <span className="flex items-center gap-1">
                     <span
                       className="inline-block size-2 rounded-full"
-                      style={{ background: "#7ba36a" }}
+                      style={{ background: "#f2b705" }}
                     />
                     G · 8
                   </span>

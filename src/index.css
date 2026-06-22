@@ -6,38 +6,38 @@
   --font-body: "Sora", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --color-red-primary: #c5302a;
-  --color-red-dark: #7a1818;
-  --color-red-light: #e0533a;
+  --color-red-primary: #d90416;
+  --color-red-dark: #591212;
+  --color-red-light: #f20505;
 
-  --color-yellow: #e89a45;
-  --color-yellow-light: #f5c26b;
+  --color-yellow: #f28705;
+  --color-yellow-light: #f2b705;
 
-  --color-basil: #7ba36a;
-  --color-basil-dark: #4d6b3f;
+  --color-basil: #f2b705;
+  --color-basil-dark: #f28705;
   --color-cream: #f5ebd8;
-  --color-cream-dim: #d9cdb6;
+  --color-cream-dim: #e8d9bf;
 
-  --color-black: #161009;
-  --color-black-light: #221810;
-  --color-black-elevated: #2c201780;
+  --color-black: #1a0606;
+  --color-black-light: #2d0a0a;
+  --color-black-elevated: #59121280;
 
-  --color-background: #161009;
+  --color-background: #1a0606;
   --color-foreground: #f5ebd8;
-  --color-muted: #a89a85;
+  --color-muted: #b89a8a;
   --color-border: rgba(245, 235, 216, 0.08);
 
-  --color-primary: #c5302a;
+  --color-primary: #d90416;
   --color-primary-foreground: #f5ebd8;
-  --color-secondary: #e89a45;
-  --color-secondary-foreground: #161009;
-  --color-accent: #e0533a;
+  --color-secondary: #f28705;
+  --color-secondary-foreground: #1a0606;
+  --color-accent: #f20505;
   --color-accent-foreground: #f5ebd8;
-  --color-destructive: #c5302a;
+  --color-destructive: #d90416;
   --color-destructive-foreground: #f5ebd8;
-  --color-card: #221810;
+  --color-card: #2d0a0a;
   --color-card-foreground: #f5ebd8;
-  --color-popover: #221810;
+  --color-popover: #2d0a0a;
   --color-popover-foreground: #f5ebd8;
 
   --radius-sm: 8px;
@@ -61,7 +61,7 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-yellow);
+  outline: 3px solid var(--color-yellow-light);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -78,10 +78,9 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 154, 69, 0.4);
+  background: rgba(242, 183, 5, 0.4);
 }
 
-/* Subtle oven-warm ambient glow on the page background */
 body::before {
   content: "";
   position: fixed;
@@ -91,12 +90,12 @@ body::before {
   background:
     radial-gradient(
       ellipse 70% 50% at 50% 0%,
-      rgba(197, 48, 42, 0.08),
+      rgba(217, 4, 22, 0.1),
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 40% at 50% 100%,
-      rgba(232, 154, 69, 0.05),
+      rgba(242, 135, 5, 0.06),
       transparent 70%
     );
 }
@@ -240,13 +239,13 @@ body::before {
 
   @keyframes pulseRing {
     0% {
-      box-shadow: 0 0 0 0 rgba(123, 163, 106, 0.5);
+      box-shadow: 0 0 0 0 rgba(242, 183, 5, 0.5);
     }
     70% {
-      box-shadow: 0 0 0 8px rgba(123, 163, 106, 0);
+      box-shadow: 0 0 0 8px rgba(242, 183, 5, 0);
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(123, 163, 106, 0);
+      box-shadow: 0 0 0 0 rgba(242, 183, 5, 0);
     }
   }
 }

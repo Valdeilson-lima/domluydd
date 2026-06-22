@@ -295,7 +295,7 @@ export function CheckoutModal({
                       <span
                         className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                           active
-                            ? "border-yellow bg-yellow shadow-[inset_0_0_0_3px_#161009]"
+                            ? "border-yellow bg-yellow shadow-[inset_0_0_0_3px_#1a0606]"
                             : "border-muted/60"
                         }`}
                       />
