@@ -48,6 +48,71 @@ export function CheckoutModal({
 
   const canSend = Boolean(bairro && address.trim());
 
+  const buildWhatsAppMessage = () => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}`;
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const line = "━━━━━━━━━━━━━━━━━━";
+    const lineThin = "─────────────────";
+
+    const itemsList = cart
+      .map((item, i) => {
+        const isHalf =
+          item.flavors.length > 1 &&
+          item.flavors[0].name !== item.flavors[1].name;
+        const name = isHalf
+          ? `${item.flavors[0].name} + ${item.flavors[1].name}`
+          : item.flavors[0].name;
+        const qtyStr = item.qty > 1 ? `${item.qty}x ` : "";
+        const lineTotal = item.price * item.qty;
+        return `*${i + 1}.* ${qtyStr}${name} _(${item.size})_\n     R$ ${formatPrice(lineTotal)}`;
+      })
+      .join("\n\n");
+
+    const paymentLabel = PAYMENT_LABELS[payment] ?? payment;
+    const itemCount = cart.reduce((s, i) => s + i.qty, 0);
+
+    let msg = "";
+    msg += `\u{1F355} *DON LUYDD PIZZARIA* \u{1F355}`;
+    msg += `\n${line}`;
+    msg += `\n\u{1F4C4} *NOVO PEDIDO*`;
+    msg += `\n\u{1F4C5} ${dateStr} \u00e0s ${timeStr}`;
+    msg += `\n\u{1F6D2} ${itemCount} ${itemCount === 1 ? "item" : "itens"}`;
+    msg += `\n${line}`;
+    msg += `\n\n\u{1F355} *ITENS DO PEDIDO*`;
+    msg += `\n\n${itemsList}`;
+    msg += `\n\n${line}`;
+    msg += `\n\u{1F4B0} *RESUMO*`;
+    msg += `\nSubtotal  R$ ${formatPrice(total)}`;
+    if (frete > 0) {
+      msg += `\nFrete     R$ ${formatPrice(frete)}`;
+    }
+    msg += `\n${lineThin}`;
+    msg += `\n*TOTAL    R$ ${formatPrice(totalComFrete)}*`;
+    msg += `\n${line}`;
+    msg += `\n\n\u{1F4CD} *ENTREGA*`;
+    msg += `\n\u{1F3E0} ${address.trim()}`;
+    msg += `\n\u{1F5FA}\u{FE0F} ${bairro}`;
+    msg += `\n${line}`;
+    msg += `\n\n\u{1F4B3} *PAGAMENTO*`;
+    msg += `\n${paymentLabel}`;
+
+    if (
+      payment === "Dinheiro" &&
+      changeValue &&
+      changeValue.num > totalComFrete
+    ) {
+      msg += `\n\u{1F4B5} Pago: R$ ${formatPrice(changeValue.num)}`;
+      msg += `\n\u{1FA99} Troco: R$ ${formatPrice(changeValue.change)}`;
+    }
+
+    msg += `\n${line}`;
+    msg += `\n\u{2728} _Pedido enviado pelo cardápio digital_`;
+
+    return msg;
+  };
+
   const handleSend = () => {
     if (!bairro) {
       showToast("Selecione o bairro de entrega");
@@ -58,50 +123,7 @@ export function CheckoutModal({
       return;
     }
 
-    const separator = "\n═══════════════════════\n";
-    const itemsList = cart
-      .map((item, i) => {
-        const isHalf =
-          item.flavors.length > 1 &&
-          item.flavors[0].name !== item.flavors[1].name;
-        const name = isHalf
-          ? `${item.flavors[0].name} + ${item.flavors[1].name}`
-          : item.flavors[0].name;
-        const qtyStr = item.qty > 1 ? `${item.qty}x ` : "";
-        return `${i + 1}. ${qtyStr}*${name}* (${item.size}) — R$ ${formatPrice(item.price * item.qty)}`;
-      })
-      .join("\n");
-
-    const paymentLabel = PAYMENT_LABELS[payment] ?? payment;
-
-    let msg = "";
-    msg += `\u{1F355} *NOVO PEDIDO* \u{1F355}`;
-    msg += `\nDon Luydd Pizzaria`;
-    msg += separator;
-    msg += `\n*ITENS*`;
-    msg += `\n${itemsList}`;
-    msg += `\n${separator}`;
-    msg += `\n*RESUMO*`;
-    msg += `\n\u{1F4B0} Subtotal: R$ ${formatPrice(total)}`;
-    if (frete > 0) msg += `\n\u{1F69A} Frete: R$ ${formatPrice(frete)}`;
-    msg += `\n*\u{1F4B0} Total: R$ ${formatPrice(totalComFrete)}*`;
-    msg += `\n${separator}`;
-    msg += `\n*ENTREGA*`;
-    msg += `\n\u{1F4CD} ${address.trim()}`;
-    msg += `\n\u{1F4E6} ${bairro}`;
-    msg += `\n${separator}`;
-    msg += `\n*PAGAMENTO*`;
-    msg += `\n\u{1F4B3} ${paymentLabel}`;
-
-    if (
-      payment === "Dinheiro" &&
-      changeValue &&
-      changeValue.num > totalComFrete
-    ) {
-      msg += `\n\u{1F4B5} Valor pago: R$ ${formatPrice(changeValue.num)}`;
-      msg += `\n\u{1FA99} Troco: R$ ${formatPrice(changeValue.change)}`;
-    }
-
+    const msg = buildWhatsAppMessage();
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
     setChangeAmount("");
     onOrderSent();
