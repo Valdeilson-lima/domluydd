@@ -158,7 +158,10 @@ export function CheckoutModal({
     }
 
     const msg = buildWhatsAppMessage();
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(
+      `https://wa.me/5583993740352?text=${encodeURIComponent(msg)}`,
+      "_blank"
+    );
     setChangeAmount("");
     onOrderSent();
     showToast("Pedido enviado com sucesso");
@@ -334,7 +337,7 @@ export function CheckoutModal({
                               setBairroOpen(false);
                               setBairroSearch("");
                             }}
-                            className={`flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left text-sm transition-colors duration-150 hover:bg-white/[0.04] ${
+                            className={`flex w-full cursor-pointer items-center gap-3 px-3 py-3 text-left text-sm transition-colors duration-150 hover:bg-white/4 ${
                               selected ? "bg-yellow/8" : ""
                             }`}
                           >
@@ -400,7 +403,7 @@ export function CheckoutModal({
                       className={`flex cursor-pointer items-center gap-2.5 rounded-[10px] border-2 p-3 text-left text-sm font-medium transition-all duration-200 select-none ${
                         active
                           ? "border-yellow/60 bg-yellow/10 text-cream"
-                          : "border-white/10 bg-white/[0.02] text-cream-dim hover:border-white/25"
+                          : "border-white/10 bg-white/2 text-cream-dim hover:border-white/25"
                       }`}
                     >
                       <span
@@ -451,7 +454,7 @@ export function CheckoutModal({
 
             {/* Drink suggestion */}
             {storeOpen && (
-              <div className="rounded-[12px] border border-white/6 bg-white/[0.02] p-3.5">
+              <div className="rounded-[12px] border border-white/6 bg-white/2 p-3.5">
                 <button
                   type="button"
                   onClick={() => setShowDrinks((v) => !v)}
