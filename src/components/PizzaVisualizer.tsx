@@ -65,7 +65,7 @@ export function PizzaVisualizer({
       <div className="relative animate-[wheelIn_0.5s_cubic-bezier(0.22,1,0.36,1)]">
         <svg
           viewBox="-110 -110 220 220"
-          className="size-[180px] drop-shadow-[0_12px_40px_rgba(0,0,0,0.5)] sm:size-[220px]"
+          className="size-45 drop-shadow-[0_12px_40px_rgba(0,0,0,0.5)] sm:size-55"
           role="img"
           aria-label={
             isHalf

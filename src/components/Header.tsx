@@ -17,7 +17,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-200 border-b border-yellow/25 bg-linear-to-b from-[#591212] to-[#2a1010] backdrop-blur-md shadow-[0_4px_24px_rgba(89,18,18,0.25)]">
+    <header className="sticky top-0 z-200 border-b border-yellow/25 bg-linear-to-b from-red-dark to-[#2a1010] backdrop-blur-md shadow-[0_4px_24px_rgba(89,18,18,0.25)]">
       <div className="mx-auto flex h-14 max-w-280 items-center justify-between gap-2.5 px-3 sm:h-16 sm:px-5">
         <div className="flex shrink-0 items-center gap-2.5 pr-2">
           <img
@@ -54,7 +54,7 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
                 }}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-2 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none sm:px-3.5 sm:py-2 sm:text-[0.72rem] max-sm:w-full max-sm:py-3 max-sm:text-sm max-sm:tracking-[0.1em]",
+                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-2 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none sm:px-3.5 sm:py-2 sm:text-[0.72rem] max-sm:w-full max-sm:py-3 max-sm:text-sm max-sm:tracking-widest",
                   active ? "text-yellow" : "text-muted hover:text-cream-dim"
                 )}
               >

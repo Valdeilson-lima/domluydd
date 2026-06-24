@@ -9,7 +9,7 @@ interface DrinkGridProps {
 export function DrinkGrid({ drinks, onSelect }: DrinkGridProps) {
   if (drinks.length === 0) {
     return (
-      <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.02] px-5 py-12 text-center">
+      <div className="rounded-md border border-dashed border-white/10 bg-white/2 px-5 py-12 text-center">
         <p className="font-body text-base font-semibold text-cream-dim">
           Nenhuma bebida encontrada
         </p>

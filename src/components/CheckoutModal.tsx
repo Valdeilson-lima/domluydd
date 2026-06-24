@@ -188,7 +188,7 @@ export function CheckoutModal({
             : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="w-full max-w-120 max-h-[92vh] overflow-y-auto rounded-[20px] border border-yellow/15 bg-linear-to-b from-black-light to-black shadow-2xl animate-[modalIn_0.3s_ease]">
+        <div className="w-full max-w-120 max-h-[92vh] overflow-y-auto rounded-lg border border-yellow/15 bg-linear-to-b from-black-light to-black shadow-2xl animate-[modalIn_0.3s_ease]">
           <div className="flex items-center justify-between border-b border-white/6 px-5 py-4 sm:px-6">
             <div>
               <p className="font-mono text-[0.55rem] font-semibold uppercase tracking-[0.25em] text-yellow/80">
@@ -203,7 +203,7 @@ export function CheckoutModal({
             </div>
             <button
               onClick={onClose}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/8 bg-white/[0.03] text-muted transition-all duration-200 hover:border-red-primary/40 hover:bg-red-primary/15 hover:text-red-light"
+              className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/8 bg-white/3 text-muted transition-all duration-200 hover:border-red-primary/40 hover:bg-red-primary/15 hover:text-red-light"
               aria-label="Fechar"
             >
               <X className="size-4" />
@@ -221,7 +221,7 @@ export function CheckoutModal({
             )}
 
             {/* Summary */}
-            <div className="rounded-[12px] border border-white/6 bg-white/[0.02] p-3.5">
+            <div className="rounded-[12px] border border-white/6 bg-white/2 p-3.5">
               <p className="mb-2 font-mono text-[0.55rem] font-semibold uppercase tracking-[0.2em] text-muted">
                 Resumo do pedido
               </p>
@@ -480,7 +480,7 @@ export function CheckoutModal({
                           onAddDrink(drink);
                           showToast(`${drink.name} adicionada`);
                         }}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-[10px] border border-white/8 bg-white/[0.03] px-3 py-2.5 text-left text-sm text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:bg-yellow/8 hover:text-cream"
+                        className="flex cursor-pointer items-center gap-2.5 rounded-[10px] border border-white/8 bg-white/3 px-3 py-2.5 text-left text-sm text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:bg-yellow/8 hover:text-cream"
                       >
                         <Wine className="size-4 shrink-0 text-muted" />
                         <div className="min-w-0 flex-1">

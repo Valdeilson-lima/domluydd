@@ -57,7 +57,7 @@ export function Hero() {
 
           {/* Status — the thesis */}
           <div
-            className={`mt-1 flex items-center gap-3 rounded-[14px] border px-4 py-3 backdrop-blur-md ${
+            className={`mt-1 flex items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-md ${
               open
                 ? "border-basil/40 bg-basil/12"
                 : "border-red-primary/40 bg-red-primary/12"

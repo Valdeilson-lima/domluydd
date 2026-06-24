@@ -1,7 +1,7 @@
 import { MessageCircle } from "lucide-react";
 
 const WHATSAPP_MSG = encodeURIComponent(
-  "Olá! Vi o cardápio digital e gostaria de tirar uma dúvida."
+  "Olá! Tudo bem? 😊 Acabei de acessar o cardápio digital e gostei bastante das opções. Gostaria de tirar algumas dúvidas sobre alguns produtos antes de fazer meu pedido. Poderiam me ajudar?"
 );
 
 interface WhatsAppButtonProps {

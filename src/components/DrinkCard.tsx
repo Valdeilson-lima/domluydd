@@ -31,7 +31,7 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
       }}
       aria-label={`${drink.name}, R$ ${formatPrice(drink.price)}`}
       style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-      className={`group flex cursor-pointer items-center gap-3 rounded-[14px] border border-white/6 bg-black-light p-3 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#292526] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 animate-[fadeUp_0.4s_both] sm:p-4`}
+      className={`group flex cursor-pointer items-center gap-3 rounded-md border border-white/6 bg-black-light p-3 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#292526] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 animate-[fadeUp_0.4s_both] sm:p-4`}
     >
       {/* Bottle mark */}
       <div
@@ -54,7 +54,7 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
           R$ {formatPrice(drink.price)}
         </span>
         <span
-          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-muted transition-all duration-200 group-hover:border-yellow/60 group-hover:bg-yellow/15 group-hover:text-yellow"
+          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/3 text-muted transition-all duration-200 group-hover:border-yellow/60 group-hover:bg-yellow/15 group-hover:text-yellow"
           aria-hidden
         >
           <svg

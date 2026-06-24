@@ -27,7 +27,7 @@ export function SearchBar({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Buscar por sabor ou ingrediente..."
           aria-label="Buscar no cardápio"
-          className="w-full rounded-[14px] border border-white/10 bg-black-light/80 pl-10 pr-10 py-3 font-body text-sm text-cream outline-none transition-all duration-200 placeholder:text-muted/70 focus:border-yellow/60 focus:bg-black-light focus:shadow-[0_0_0_3px_rgba(242,183,5,0.12)] sm:py-3.5"
+          className="w-full rounded-md border border-white/10 bg-black-light/80 pl-10 pr-10 py-3 font-body text-sm text-cream outline-none transition-all duration-200 placeholder:text-muted/70 focus:border-yellow/60 focus:bg-black-light focus:shadow-[0_0_0_3px_rgba(242,183,5,0.12)] sm:py-3.5"
         />
         {hasValue && (
           <button

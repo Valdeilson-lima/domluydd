@@ -80,7 +80,7 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-[20px] border-yellow/15">
+      <DialogContent className="max-w-140 max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-lg border-yellow/15">
         <div className="overflow-y-auto flex-1">
           {/* Hero: the pizza wheel signature */}
           <div className="relative bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
@@ -134,7 +134,7 @@ export function DetailModal({
                       className={`relative flex-1 cursor-pointer rounded-[12px] border px-2 py-3 text-center transition-all duration-200 ${
                         active
                           ? "border-yellow/60 bg-yellow/10 shadow-[inset_0_0_0_1px_rgba(242,183,5,0.3)]"
-                          : "border-white/8 bg-white/[0.02] hover:border-white/20"
+                          : "border-white/8 bg-white/2 hover:border-white/20"
                       }`}
                     >
                       <span
@@ -171,7 +171,7 @@ export function DetailModal({
               className={`flex w-full cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 transition-all duration-200 ${
                 halfHalf
                   ? "border-yellow/50 bg-yellow/8"
-                  : "border-white/8 bg-white/[0.02] hover:border-white/20"
+                  : "border-white/8 bg-white/2 hover:border-white/20"
               }`}
             >
               <SplitSquareHorizontal
@@ -200,7 +200,7 @@ export function DetailModal({
               >
                 <div
                   className={`absolute top-0.5 size-4 rounded-full bg-black shadow transition-transform duration-200 ${
-                    halfHalf ? "translate-x-[18px]" : "translate-x-0.5"
+                    halfHalf ? "translate-x-4.5" : "translate-x-0.5"
                   }`}
                 />
               </div>
@@ -229,7 +229,7 @@ export function DetailModal({
             <div
               className={`space-y-2 transition-all duration-300 ${
                 showSecondFlavor
-                  ? "max-h-[200px] opacity-100"
+                  ? "max-h-50 opacity-100"
                   : "max-h-0 opacity-0 pointer-events-none overflow-hidden"
               }`}
             >
