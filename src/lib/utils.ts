@@ -8,3 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 export function formatPrice(v: number) {
   return v.toFixed(2).replace(".", ",");
 }
+
+export function isStoreOpen() {
+  return true; // ← mude para `false` para simular loja fechada
+}

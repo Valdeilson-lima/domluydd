@@ -91,7 +91,7 @@ export function CartSheet({
           {cart.length === 0 ? (
             <div className="px-5 py-14 text-center">
               <Pizza className="mx-auto mb-3 size-12 text-muted/30" />
-              <p className="font-display text-base font-semibold text-cream-dim">
+              <p className="font-body text-base font-semibold text-cream-dim">
                 Seu carrinho está vazio
               </p>
               <span className="mt-1 block text-xs text-muted">
@@ -174,10 +174,8 @@ export function CartSheet({
                   Frete calculado no fechamento
                 </span>
               </div>
-              <span className="font-display text-[1.6rem] font-semibold italic leading-none text-yellow [font-variation-settings:'opsz'_144]">
-                <span className="not-italic font-mono text-sm text-yellow/70">
-                  R${" "}
-                </span>
+              <span className="font-body text-[1.6rem] font-bold leading-none text-yellow">
+                <span className="text-sm text-yellow/70">R$ </span>
                 {formatPrice(total)}
               </span>
             </div>

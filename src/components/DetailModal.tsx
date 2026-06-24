@@ -142,7 +142,7 @@ export function DetailModal({
                         style={{ background: meta.cor }}
                       />
                       <span
-                        className={`block font-display text-base font-bold leading-tight ${
+                        className={`block font-body text-base font-bold leading-tight ${
                           active ? "text-yellow" : "text-cream"
                         }`}
                       >
@@ -263,10 +263,8 @@ export function DetailModal({
                 {size} · {halfHalf ? "meio a meio" : "inteira"}
               </span>
             </div>
-            <span className="font-display text-[1.8rem] font-semibold italic leading-none text-yellow [font-variation-settings:'opsz'_144]">
-              <span className="not-italic font-mono text-base text-yellow/70 align-middle">
-                R${" "}
-              </span>
+            <span className="font-body text-[1.8rem] font-bold leading-none text-yellow">
+              <span className="text-base text-yellow/70 align-middle">R$ </span>
               {formatPrice(total)}
             </span>
           </div>

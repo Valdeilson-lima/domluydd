@@ -57,7 +57,7 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
       {/* Content */}
       <div className="flex flex-1 flex-col justify-center gap-1 px-3.5 py-3 sm:px-4 sm:py-4">
         <div className="flex items-baseline gap-2">
-          <h3 className="font-display text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36] sm:text-[1.05rem]">
+          <h3 className="font-body text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream sm:text-[1.05rem]">
             {pizza.name}
           </h3>
           {pizza.category === "doce" && (

@@ -1,14 +1,14 @@
 import { Clock, Bike, Flame } from "lucide-react";
+import { isStoreOpen } from "@/lib/utils";
 
 function getOpenState() {
+  const open = isStoreOpen();
   const now = new Date();
   const day = now.getDay();
   const totalMinutes = now.getHours() * 60 + now.getMinutes();
-  const isOpenToday =
-    day !== 1 && totalMinutes >= 18 * 60 && totalMinutes < 22 * 60;
 
   let nextLabel: string;
-  if (isOpenToday) {
+  if (open) {
     nextLabel = "Pedidos até 22h";
   } else if (day === 1) {
     nextLabel = "Abrimos terça às 18h";
@@ -20,7 +20,7 @@ function getOpenState() {
     nextLabel = day === 6 ? "Abrimos domingo às 18h" : "Abrimos amanhã às 18h";
   }
 
-  return { open: isOpenToday, nextLabel };
+  return { open, nextLabel };
 }
 
 export function Hero() {

@@ -29,7 +29,7 @@ export function CartBar({ itemCount, total, onOpen, hidden }: CartBarProps) {
             <div className="font-mono text-[0.6rem] uppercase tracking-wider opacity-75 sm:text-[0.65rem]">
               {itemCount} {itemCount === 1 ? "item" : "itens"}
             </div>
-            <div className="font-display text-base font-semibold italic leading-tight [font-variation-settings:'opsz'_72] sm:text-lg">
+            <div className="font-body text-base font-bold leading-tight sm:text-lg">
               R$ {formatPrice(total)}
             </div>
           </div>

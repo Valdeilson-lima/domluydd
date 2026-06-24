@@ -177,7 +177,7 @@ export function PizzaVisualizer({
           <div className="flex flex-1 items-center justify-center px-3">
             <span
               key={flavor1}
-              className="text-center font-display text-[0.62rem] font-semibold leading-tight text-cream sm:text-[0.72rem]"
+              className="text-center font-body text-[0.62rem] font-semibold leading-tight text-cream sm:text-[0.72rem]"
               style={{ animation: "fadeUp 0.3s ease-out both" }}
             >
               {l1.map((w, i) => (
@@ -191,7 +191,7 @@ export function PizzaVisualizer({
             <div className="flex flex-1 items-center justify-center px-3">
               <span
                 key={flavor2}
-                className="text-center font-display text-[0.62rem] font-semibold leading-tight text-cream sm:text-[0.72rem]"
+                className="text-center font-body text-[0.62rem] font-semibold leading-tight text-cream sm:text-[0.72rem]"
                 style={{ animation: "fadeUp 0.3s ease-out both" }}
               >
                 {l2.map((w, i) => (

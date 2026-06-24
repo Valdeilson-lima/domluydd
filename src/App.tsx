@@ -15,6 +15,7 @@ import { setToastFn } from "@/components/ui/toast-helpers";
 import { useCart } from "@/hooks/useCart";
 import { salgadas, doces, allPizzas } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
+import { isStoreOpen } from "@/lib/utils";
 import type { Pizza, Drink, CartItem } from "@/types";
 
 type TabId = "salgadas" | "doces" | "bebidas";
@@ -74,6 +75,11 @@ export default function App() {
 
   const handleDrinkSelect = useCallback(
     (drink: Drink) => {
+      if (!isStoreOpen()) {
+        setToastMessage("Loja fechada — volte no horário de funcionamento");
+        setToastOpen(true);
+        return;
+      }
       addItem({
         flavors: [{ name: drink.name, price: drink.price }],
         size: "Un",
@@ -88,6 +94,11 @@ export default function App() {
 
   const handleAddToCart = useCallback(
     (item: Omit<CartItem, "id" | "qty">) => {
+      if (!isStoreOpen()) {
+        setToastMessage("Loja fechada — volte no horário de funcionamento");
+        setToastOpen(true);
+        return;
+      }
       addItem(item);
       const isHalf =
         item.flavors.length > 1 &&
@@ -100,16 +111,6 @@ export default function App() {
     },
     [addItem]
   );
-
-  const handleCheckout = useCallback(() => {
-    if (cart.length === 0) {
-      setToastMessage("Seu carrinho está vazio");
-      setToastOpen(true);
-      return;
-    }
-    toggleCart(false);
-    setCheckoutOpen(true);
-  }, [cart, toggleCart]);
 
   const handleOrderSent = useCallback(() => {
     clearCart();
@@ -136,6 +137,23 @@ export default function App() {
           d.desc.toLowerCase().includes(search.toLowerCase())
       )
     : bebidas;
+
+  const storeOpen = isStoreOpen();
+
+  const handleCheckout = useCallback(() => {
+    if (!storeOpen) {
+      setToastMessage("Loja fechada — volte no horário de funcionamento");
+      setToastOpen(true);
+      return;
+    }
+    if (cart.length === 0) {
+      setToastMessage("Seu carrinho está vazio");
+      setToastOpen(true);
+      return;
+    }
+    toggleCart(false);
+    setCheckoutOpen(true);
+  }, [cart, toggleCart, storeOpen]);
 
   const resultsCount =
     activeTab === "bebidas" ? filteredDrinks.length : filteredPizzas.length;
@@ -239,13 +257,16 @@ export default function App() {
 
       <Footer />
 
-      <WhatsAppButton cartHasItems={itemCount > 0} hidden={anyOverlayOpen} />
+      <WhatsAppButton
+        cartHasItems={itemCount > 0}
+        hidden={anyOverlayOpen || !storeOpen}
+      />
 
       <CartBar
         itemCount={itemCount}
         total={total}
         onOpen={() => toggleCart(true)}
-        hidden={detailOpen || cartOpen || checkoutOpen}
+        hidden={detailOpen || cartOpen || checkoutOpen || !storeOpen}
       />
 
       <DetailModal
@@ -271,6 +292,8 @@ export default function App() {
         open={checkoutOpen}
         cart={cart}
         total={total}
+        storeOpen={storeOpen}
+        onAddDrink={handleDrinkSelect}
         onClose={() => setCheckoutOpen(false)}
         onOrderSent={handleOrderSent}
       />

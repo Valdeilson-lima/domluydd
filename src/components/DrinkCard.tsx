@@ -41,7 +41,7 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-display text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36] sm:text-[1.05rem]">
+        <h3 className="font-body text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream sm:text-[1.05rem]">
           {drink.name}
         </h3>
         <p className="mt-0.5 truncate text-[0.72rem] text-muted sm:text-[0.78rem]">

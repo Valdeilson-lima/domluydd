@@ -10,7 +10,7 @@ export function PizzaGrid({ pizzas, onSelect }: PizzaGridProps) {
   if (pizzas.length === 0) {
     return (
       <div className="rounded-[14px] border border-dashed border-white/10 bg-white/[0.02] px-5 py-12 text-center">
-        <p className="font-display text-base font-semibold text-cream-dim">
+        <p className="font-body text-base font-semibold text-cream-dim">
           Nada encontrado por aqui
         </p>
         <p className="mt-1 text-xs text-muted">
