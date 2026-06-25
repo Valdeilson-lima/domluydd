@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Select,
@@ -8,10 +8,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPrice } from "@/lib/utils";
-import { getPizzaByName, salgadas, doces } from "@/data/pizzas";
+import { getPizzaByName, salgadas, doces, MODAL_IMAGES } from "@/data/pizzas";
 import type { Pizza, CartItem } from "@/types";
 import { SplitSquareHorizontal, Plus } from "lucide-react";
-import { PizzaVisualizer } from "./PizzaVisualizer";
 
 interface DetailModalProps {
   pizza: Pizza | null;
@@ -39,6 +38,20 @@ export function DetailModal({
   const [flavor1, setFlavor1] = useState(initialFlavor);
   const [flavor2, setFlavor2] = useState(initialFlavor);
   const [halfHalf, setHalfHalf] = useState(false);
+
+  const flavor2Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (halfHalf && flavor2Ref.current) {
+      const t = setTimeout(() => {
+        flavor2Ref.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 320);
+      return () => clearTimeout(t);
+    }
+  }, [halfHalf]);
 
   if (!pizza) return null;
 
@@ -82,10 +95,18 @@ export function DetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-140 max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-lg border-yellow/15">
         <div className="overflow-y-auto flex-1">
-          {/* Hero: the pizza wheel signature */}
-          <div className="relative bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418] px-5 pt-6 pb-4 sm:px-7 sm:pt-8 sm:pb-5">
+          {/* Hero header */}
+          <div className="relative bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418] px-5 pt-6 pb-5 sm:px-7 sm:pt-7 sm:pb-6">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(242,135,5,0.1),transparent_70%)]" />
             <div className="relative flex flex-col items-center gap-3">
+              <div className="relative size-20 overflow-hidden rounded-full ring-2 ring-yellow/40 shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-24">
+                <img
+                  src={MODAL_IMAGES[pizza.imgIdx]}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+              </div>
               <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-yellow/70">
                 {pizza.category === "doce" ? "Pizza Doce" : "Pizza Salgada"}
               </span>
@@ -93,21 +114,11 @@ export function DetailModal({
                 {pizza.name}
               </h2>
             </div>
-
-            <div className="relative mt-2">
-              <PizzaVisualizer
-                flavor1={flavor1}
-                flavor2={flavor2}
-                isHalf={halfHalf}
-                size={size}
-                category={pizza.category}
-              />
-            </div>
           </div>
 
           {/* Description */}
           <div className="border-t border-white/6 px-5 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
-            <p className="text-sm leading-relaxed text-cream-dim">
+            <p className="font-body text-[0.95rem] leading-7 text-cream">
               {pizza.desc}
             </p>
           </div>
@@ -117,7 +128,7 @@ export function DetailModal({
             {/* Size Selector */}
             <div className="space-y-2.5">
               <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                Tamanho
+                Escolha o Tamanho
               </label>
               <div className="flex gap-2.5">
                 {SIZES.map((s) => {
@@ -185,7 +196,7 @@ export function DetailModal({
                     halfHalf ? "text-cream" : "text-cream-dim"
                   }`}
                 >
-                  Meio a meio
+                  Se preferir, toque para combinar dois sabores
                 </span>
                 <p className="text-[0.68rem] text-muted">
                   {halfHalf
@@ -227,6 +238,7 @@ export function DetailModal({
 
             {/* Flavor 2 (only when half-half) */}
             <div
+              ref={flavor2Ref}
               className={`space-y-2 transition-all duration-300 ${
                 showSecondFlavor
                   ? "max-h-50 opacity-100"
