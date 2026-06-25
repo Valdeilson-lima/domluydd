@@ -80,11 +80,14 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/5 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"
+            className="flex size-auto shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
           >
             {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+            <span className="font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em]">
+              {menuOpen ? "Fechar" : "Menu"}
+            </span>
           </button>
         </div>
       </div>
