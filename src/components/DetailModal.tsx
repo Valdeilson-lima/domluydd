@@ -199,9 +199,7 @@ export function DetailModal({
                   Se preferir, toque para combinar dois sabores
                 </span>
                 <p className="text-[0.68rem] text-muted">
-                  {halfHalf
-                    ? "Dois sabores, preço do maior"
-                    : "Toque para combinar dois sabores"}
+                  {halfHalf ? "Dois sabores, preço do maior" : ""}
                 </p>
               </div>
               <div
