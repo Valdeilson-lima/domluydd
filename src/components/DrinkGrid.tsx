@@ -1,5 +1,6 @@
 import type { Drink } from "@/types";
 import { DrinkCard } from "./DrinkCard";
+import { GlassWater } from "lucide-react";
 
 interface DrinkGridProps {
   drinks: Drink[];
@@ -9,7 +10,8 @@ interface DrinkGridProps {
 export function DrinkGrid({ drinks, onSelect }: DrinkGridProps) {
   if (drinks.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-white/10 bg-white/2 px-5 py-12 text-center">
+      <div className="rounded-md border border-dashed border-white/10 bg-white/2 px-5 py-14 text-center">
+        <GlassWater className="mx-auto mb-3 size-9 text-muted/40" />
         <p className="font-body text-base font-semibold text-cream-dim">
           Nenhuma bebida encontrada
         </p>
@@ -19,7 +21,7 @@ export function DrinkGrid({ drinks, onSelect }: DrinkGridProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-3.5">
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
       {drinks.map((drink, i) => (
         <DrinkCard
           key={drink.name}
@@ -28,6 +30,6 @@ export function DrinkGrid({ drinks, onSelect }: DrinkGridProps) {
           onSelect={onSelect}
         />
       ))}
-    </div>
+    </ul>
   );
 }

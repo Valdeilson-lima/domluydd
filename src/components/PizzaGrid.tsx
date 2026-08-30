@@ -1,5 +1,6 @@
 import type { Pizza } from "@/types";
 import { PizzaCard } from "./PizzaCard";
+import { SearchX } from "lucide-react";
 
 interface PizzaGridProps {
   pizzas: Pizza[];
@@ -9,7 +10,8 @@ interface PizzaGridProps {
 export function PizzaGrid({ pizzas, onSelect }: PizzaGridProps) {
   if (pizzas.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-white/10 bg-white/2 px-5 py-12 text-center">
+      <div className="rounded-md border border-dashed border-white/10 bg-white/2 px-5 py-14 text-center">
+        <SearchX className="mx-auto mb-3 size-9 text-muted/40" />
         <p className="font-body text-base font-semibold text-cream-dim">
           Nada encontrado por aqui
         </p>
@@ -21,10 +23,10 @@ export function PizzaGrid({ pizzas, onSelect }: PizzaGridProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-3.5">
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
       {pizzas.map((pizza, i) => (
         <PizzaCard key={pizza.id} pizza={pizza} index={i} onSelect={onSelect} />
       ))}
-    </div>
+    </ul>
   );
 }

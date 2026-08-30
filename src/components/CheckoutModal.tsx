@@ -1,5 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { X, MapPin, Home, Wine, ChevronDown, Search } from "lucide-react";
+import {
+  X,
+  MapPin,
+  Home,
+  Wine,
+  ChevronDown,
+  Search,
+  Banknote,
+  CreditCard,
+  Landmark,
+  Zap,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem, Drink } from "@/types";
 import { bairros } from "@/data/bairros";
@@ -16,7 +27,13 @@ interface CheckoutModalProps {
   onOrderSent: () => void;
 }
 
-const PAYMENTS = ["Dinheiro", "PIX", "Crédito", "Débito"] as const;
+const PAYMENTS = [
+  { id: "Dinheiro", label: "Dinheiro", icon: Banknote },
+  { id: "PIX", label: "PIX", icon: Zap },
+  { id: "Crédito", label: "Crédito", icon: CreditCard },
+  { id: "Débito", label: "Débito", icon: Landmark },
+] as const;
+
 const PAYMENT_LABELS: Record<string, string> = {
   Dinheiro: "Dinheiro",
   PIX: "PIX",
@@ -43,12 +60,15 @@ export function CheckoutModal({
   const bairroRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!open) {
+  // Reseta o estado da busca de bairro sempre que o modal abre (padrão recomendado)
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
       setBairroSearch("");
       setBairroOpen(false);
     }
-  }, [open]);
+  }
 
   useEffect(() => {
     if (!bairroOpen) return;
@@ -394,12 +414,13 @@ export function CheckoutModal({
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {PAYMENTS.map((opt) => {
-                  const active = payment === opt;
+                  const active = payment === opt.id;
+                  const Icon = opt.icon;
                   return (
                     <button
-                      key={opt}
+                      key={opt.id}
                       type="button"
-                      onClick={() => setPayment(opt)}
+                      onClick={() => setPayment(opt.id)}
                       className={`flex cursor-pointer items-center gap-2.5 rounded-[10px] border-2 p-3 text-left text-sm font-medium transition-all duration-200 select-none ${
                         active
                           ? "border-yellow/60 bg-yellow/10 text-cream"
@@ -413,7 +434,12 @@ export function CheckoutModal({
                             : "border-muted/60"
                         }`}
                       />
-                      <span className="min-w-0 flex-1">{opt}</span>
+                      <Icon
+                        className={`size-4 shrink-0 transition-colors duration-200 ${
+                          active ? "text-yellow" : "text-muted"
+                        }`}
+                      />
+                      <span className="min-w-0 flex-1">{opt.label}</span>
                     </button>
                   );
                 })}
@@ -478,7 +504,6 @@ export function CheckoutModal({
                         type="button"
                         onClick={() => {
                           onAddDrink(drink);
-                          showToast(`${drink.name} adicionada`);
                         }}
                         className="flex cursor-pointer items-center gap-2.5 rounded-[10px] border border-white/8 bg-white/3 px-3 py-2.5 text-left text-sm text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:bg-yellow/8 hover:text-cream"
                       >

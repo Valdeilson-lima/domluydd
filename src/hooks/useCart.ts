@@ -1,7 +1,25 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { CartItem } from "@/types";
 
-let nextId = 1;
+const STORAGE_KEY = "donluydd.cart.v1";
+
+function loadCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (i) =>
+        i &&
+        typeof i.id === "number" &&
+        Array.isArray(i.flavors) &&
+        typeof i.qty === "number"
+    );
+  } catch {
+    return [];
+  }
+}
 
 function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
   if (a.size !== b.size || a.category !== b.category) return false;
@@ -18,18 +36,29 @@ function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
 }
 
 export function useCart() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const addItem = useCallback((item: Omit<CartItem, "id" | "qty">) => {
+  // Persiste o carrinho para não perder o pedido ao recarregar a página
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+    } catch {
+      /* armazenamento indisponível — segue apenas em memória */
+    }
+  }, [cart]);
+
+  const addItem = useCallback((item: Omit<CartItem, "id" | "qty">, qty = 1) => {
+    if (qty <= 0) return;
     setCart((prev) => {
       const existing = prev.find((p) => itemsMatch(item, p));
       if (existing) {
         return prev.map((p) =>
-          p.id === existing.id ? { ...p, qty: p.qty + 1 } : p
+          p.id === existing.id ? { ...p, qty: p.qty + qty } : p
         );
       }
-      return [...prev, { ...item, id: nextId++, qty: 1 }];
+      const nextId = prev.reduce((max, p) => Math.max(max, p.id), 0) + 1;
+      return [...prev, { ...item, id: nextId, qty }];
     });
   }, []);
 

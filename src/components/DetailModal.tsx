@@ -10,13 +10,14 @@ import {
 import { formatPrice } from "@/lib/utils";
 import { getPizzaByName, salgadas, doces, MODAL_IMAGES } from "@/data/pizzas";
 import type { Pizza, CartItem } from "@/types";
-import { SplitSquareHorizontal, Plus } from "lucide-react";
+import { PizzaImage } from "./PizzaImage";
+import { SplitSquareHorizontal, Plus, Minus } from "lucide-react";
 
 interface DetailModalProps {
   pizza: Pizza | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (item: Omit<CartItem, "id" | "qty">) => void;
+  onAddToCart: (item: Omit<CartItem, "id" | "qty">, qty?: number) => void;
 }
 
 const SIZES = ["P", "M", "G"] as const;
@@ -38,6 +39,7 @@ export function DetailModal({
   const [flavor1, setFlavor1] = useState(initialFlavor);
   const [flavor2, setFlavor2] = useState(initialFlavor);
   const [halfHalf, setHalfHalf] = useState(false);
+  const [qty, setQty] = useState(1);
 
   const flavor2Ref = useRef<HTMLDivElement>(null);
 
@@ -79,15 +81,18 @@ export function DetailModal({
 
   const handleAdd = () => {
     const catLabel = pizza.category === "doce" ? "Doce" : "Salgada";
-    onAddToCart({
-      flavors: [
-        { name: flavor1, price: getPrice(flavor1, size) },
-        { name: flavor2, price: getPrice(flavor2, size) },
-      ],
-      size,
-      price: total,
-      category: catLabel,
-    });
+    onAddToCart(
+      {
+        flavors: [
+          { name: flavor1, price: getPrice(flavor1, size) },
+          { name: flavor2, price: getPrice(flavor2, size) },
+        ],
+        size,
+        price: total,
+        category: catLabel,
+      },
+      qty
+    );
     onOpenChange(false);
   };
 
@@ -100,10 +105,9 @@ export function DetailModal({
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(242,135,5,0.1),transparent_70%)]" />
             <div className="relative flex flex-col items-center gap-3">
               <div className="relative size-20 overflow-hidden rounded-full ring-2 ring-yellow/40 shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-24">
-                <img
+                <PizzaImage
                   src={MODAL_IMAGES[pizza.imgIdx]}
-                  alt=""
-                  className="h-full w-full object-cover"
+                  className="h-full w-full"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
               </div>
@@ -259,6 +263,35 @@ export function DetailModal({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Quantity */}
+            <div className="flex items-center justify-between rounded-[12px] border border-white/8 bg-white/2 px-4 py-3">
+              <span className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
+                Quantidade
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  disabled={qty <= 1}
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
+                  aria-label="Diminuir quantidade"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span className="min-w-8 text-center font-mono text-base font-bold text-cream">
+                  {qty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.min(20, q + 1))}
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90"
+                  aria-label="Aumentar quantidade"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -270,12 +303,13 @@ export function DetailModal({
                 Total
               </span>
               <span className="text-[0.65rem] text-muted/70">
+                {qty > 1 ? `${qty} × ` : ""}
                 {size} · {halfHalf ? "meio a meio" : "inteira"}
               </span>
             </div>
             <span className="font-body text-[1.8rem] font-bold leading-none text-yellow">
               <span className="text-base text-yellow/70 align-middle">R$ </span>
-              {formatPrice(total)}
+              {formatPrice(total * qty)}
             </span>
           </div>
           <button
@@ -284,7 +318,7 @@ export function DetailModal({
             className="group flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-[12px] bg-linear-to-r from-red-dark to-red-primary px-4 py-3.5 font-body text-sm font-bold text-cream shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:py-4"
           >
             <Plus className="size-5 transition-transform duration-200 group-active:scale-125" />
-            Adicionar ao carrinho
+            {qty > 1 ? `Adicionar ${qty} ao carrinho` : "Adicionar ao carrinho"}
           </button>
         </div>
       </DialogContent>

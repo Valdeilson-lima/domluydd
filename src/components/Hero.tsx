@@ -1,89 +1,128 @@
-import { Clock, Bike, Flame } from "lucide-react";
-import { isStoreOpen } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { Clock, Bike, Flame, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getStoreStatus } from "@/lib/utils";
+import { PIZZA_IMAGES } from "@/data/pizzas";
+import { PizzaImage } from "./PizzaImage";
 
-function getOpenState() {
-  const open = isStoreOpen();
-  const now = new Date();
-  const day = now.getDay();
-  const totalMinutes = now.getHours() * 60 + now.getMinutes();
-
-  let nextLabel: string;
-  if (open) {
-    nextLabel = "Pedidos até 22h";
-  } else if (day === 1) {
-    nextLabel = "Abrimos terça às 18h";
-  } else if (totalMinutes < 18 * 60) {
-    nextLabel = "Abrimos hoje às 18h";
-  } else if (day === 0) {
-    nextLabel = "Abrimos terça às 18h";
-  } else {
-    nextLabel = day === 6 ? "Abrimos domingo às 18h" : "Abrimos amanhã às 18h";
-  }
-
-  return { open, nextLabel };
-}
+const SLIDE_MS = 5000;
 
 export function Hero() {
-  const { open, nextLabel } = getOpenState();
+  const { open, nextLabel } = getStoreStatus();
+  const [slide, setSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Carrossel automático de pizzas
+  useEffect(() => {
+    if (paused) return;
+    const id = window.setInterval(() => {
+      setSlide((s) => (s + 1) % PIZZA_IMAGES.length);
+    }, SLIDE_MS);
+    return () => window.clearInterval(id);
+  }, [paused]);
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418]">
-      <div
-        className="absolute inset-0 opacity-30 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url(https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_960_720.jpg)",
-        }}
-      />
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/50 to-black/70" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(242,135,5,0.15),transparent_60%)]" />
+    <section
+      className="relative flex min-h-svh flex-col overflow-hidden bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418]"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      aria-label="Don Luydd Pizzaria"
+    >
+      {/* Slideshow de pizzas */}
+      <div className="absolute inset-0" aria-hidden="true">
+        {PIZZA_IMAGES.map((src, i) => (
+          <PizzaImage
+            key={src}
+            src={src}
+            className={cn(
+              "absolute inset-0 transition-opacity duration-1200 ease-out",
+              i === slide ? "opacity-100" : "opacity-0"
+            )}
+            imgClassName={
+              i === slide
+                ? "animate-[kenburns_9s_ease-out_forwards]"
+                : undefined
+            }
+          />
+        ))}
+      </div>
 
-      <div className="relative mx-auto flex max-w-280 flex-col items-start gap-5 px-5 py-9 sm:items-center sm:px-7 sm:py-14 sm:text-center md:py-20">
-        <div className="flex flex-1 flex-col items-start gap-5 sm:items-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-yellow/30 bg-black/40 px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-yellow/90 backdrop-blur-sm">
-            <Flame className="size-3" />
-            Pizzaria Artesanal
-          </span>
+      {/* Overlays para legibilidade */}
+      <div className="absolute inset-0 bg-linear-to-b from-black/50 via-black/55 to-black/75" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(242,135,5,0.16),transparent_60%)]" />
 
-          <div>
-            <h1 className="font-display text-[clamp(2.6rem,11vw,5.5rem)] font-semibold italic leading-[0.9] tracking-[-0.03em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] [text-shadow:0_4px_30px_rgba(0,0,0,0.5)]">
-              Don Luydd
-            </h1>
-            <p className="mt-3 max-w-md font-display text-base font-normal italic leading-snug text-cream-dim [font-variation-settings:'opsz'_72] sm:text-lg sm:mx-auto">
-              Massa de fermentação natural, forno elétrico, ingredientes na
-              hora.
-            </p>
-          </div>
+      {/* Conteúdo centralizado */}
+      <div className="relative mx-auto flex w-full max-w-280 flex-1 flex-col items-center justify-center gap-6 px-5 py-16 text-center sm:px-7">
+        <span className="inline-flex items-center gap-2 rounded-full border border-yellow/30 bg-black/40 px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-yellow/90 backdrop-blur-sm">
+          <Flame className="size-3" />
+          Pizzaria Artesanal
+        </span>
 
-          {/* Status — the thesis */}
-          <div
-            className={`mt-1 flex items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-md ${
-              open
-                ? "border-basil/40 bg-basil/12"
-                : "border-red-primary/40 bg-red-primary/12"
+        <div>
+          <h1 className="font-display text-[clamp(2.6rem,11vw,5.5rem)] font-semibold italic leading-[0.9] tracking-[-0.03em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] [text-shadow:0_4px_30px_rgba(0,0,0,0.5)]">
+            Don Luydd
+          </h1>
+          <p className="mx-auto mt-3 max-w-md font-display text-base font-normal italic leading-snug text-cream-dim [font-variation-settings:'opsz'_72] sm:text-lg">
+            Massa de fermentação natural, forno elétrico, ingredientes na hora.
+          </p>
+        </div>
+
+        {/* Status — the thesis */}
+        <div
+          className={`mt-1 flex items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-md ${
+            open
+              ? "border-basil/40 bg-basil/12"
+              : "border-red-primary/40 bg-red-primary/12"
+          }`}
+        >
+          <span
+            className={`relative flex size-3 shrink-0 rounded-full ${
+              open ? "bg-basil" : "bg-red-primary"
             }`}
-          >
-            <span
-              className={`relative flex size-3 shrink-0 rounded-full ${
-                open ? "bg-basil" : "bg-red-primary"
+            style={open ? { animation: "pulseRing 2s infinite" } : undefined}
+          />
+          <div className="text-left">
+            <p
+              className={`font-display text-lg font-bold leading-none sm:text-xl ${
+                open ? "text-basil" : "text-red-light"
               }`}
-              style={open ? { animation: "pulseRing 2s infinite" } : undefined}
-            />
-            <div className="text-left">
-              <p
-                className={`font-display text-lg font-bold leading-none sm:text-xl ${
-                  open ? "text-basil" : "text-red-light"
-                }`}
-              >
-                {open ? "Aberto agora" : "Fechado"}
-              </p>
-              <p className="mt-0.5 font-mono text-[0.65rem] uppercase tracking-wider text-cream-dim">
-                {nextLabel}
-              </p>
-            </div>
+            >
+              {open ? "Aberto agora" : "Fechado"}
+            </p>
+            <p className="mt-0.5 font-mono text-[0.65rem] uppercase tracking-wider text-cream-dim">
+              {nextLabel}
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Indicadores do carrossel */}
+      <div className="relative flex items-center justify-center gap-2 pb-6">
+        {PIZZA_IMAGES.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setSlide(i)}
+            aria-label={`Ver foto ${i + 1} de ${PIZZA_IMAGES.length}`}
+            aria-current={i === slide}
+            className={cn(
+              "h-1.5 cursor-pointer rounded-full transition-all duration-300",
+              i === slide
+                ? "w-6 bg-yellow"
+                : "w-1.5 bg-white/30 hover:bg-white/60"
+            )}
+          />
+        ))}
+      </div>
+
+      {/* Dica de rolagem */}
+      <a
+        href="#main-content"
+        className="relative mb-4 flex justify-center text-cream-dim/70 transition-colors duration-200 hover:text-yellow"
+        aria-label="Rolar para o cardápio"
+      >
+        <ChevronDown className="size-5 animate-[float_2.5s_ease-in-out_infinite]" />
+      </a>
     </section>
   );
 }

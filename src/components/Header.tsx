@@ -1,19 +1,28 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { salgadas, doces } from "@/data/pizzas";
+import { bebidas } from "@/data/drinks";
 
 interface HeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  itemCount?: number;
+  onCartOpen?: () => void;
 }
 
 const tabs = [
-  { id: "salgadas", label: "Salgadas", count: 32 },
-  { id: "doces", label: "Doces", count: 6 },
-  { id: "bebidas", label: "Bebidas", count: 4 },
+  { id: "salgadas", label: "Salgadas", count: salgadas.length },
+  { id: "doces", label: "Doces", count: doces.length },
+  { id: "bebidas", label: "Bebidas", count: bebidas.length },
 ];
 
-export function Header({ activeTab, onTabChange }: HeaderProps) {
+export function Header({
+  activeTab,
+  onTabChange,
+  itemCount = 0,
+  onCartOpen,
+}: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -78,6 +87,20 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          {onCartOpen && (
+            <button
+              onClick={onCartOpen}
+              className="relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/5 text-cream transition-colors duration-200 hover:bg-white/10 hover:text-yellow active:scale-90"
+              aria-label={`Abrir carrinho${itemCount > 0 ? `, ${itemCount} itens` : ""}`}
+            >
+              <ShoppingBag className="size-4.5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-red-primary font-mono text-[0.6rem] font-bold text-cream ring-2 ring-[#2a1010] animate-[popIn_0.3s_cubic-bezier(0.22,1,0.36,1)]">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="flex size-auto shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"

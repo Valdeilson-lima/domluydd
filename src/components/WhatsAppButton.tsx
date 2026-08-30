@@ -18,7 +18,7 @@ export function WhatsAppButton({
   return (
     <div
       className={`fixed right-4 z-400 transition-[bottom] duration-300 ${
-        cartHasItems ? "bottom-20 sm:bottom-8" : "bottom-6 sm:bottom-8"
+        cartHasItems ? "bottom-20 sm:bottom-24" : "bottom-6 sm:bottom-8"
       }`}
     >
       <a

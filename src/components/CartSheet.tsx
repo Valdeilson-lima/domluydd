@@ -52,7 +52,7 @@ export function CartSheet({
   return (
     <>
       <div
-        className="fixed inset-0 z-350 bg-black/65 backdrop-blur-sm transition-opacity duration-300 animate-[fadeIn_0.2s_ease]"
+        className="fixed inset-0 z-350 bg-black/65 backdrop-blur-sm transition-opacity duration-300 animate-[fadeIn_0.3s_ease]"
         onClick={onClose}
       />
 
@@ -62,12 +62,8 @@ export function CartSheet({
         aria-modal="true"
         aria-label="Carrinho de compras"
         tabIndex={-1}
-        className="fixed bottom-0 left-0 right-0 z-351 flex max-h-[88vh] flex-col rounded-t-3xl border-t border-yellow/25 bg-linear-to-b from-black-light to-black shadow-[-8px_0_40px_rgba(0,0,0,0.6)] animate-[slideUpPanel_0.35s_cubic-bezier(0.22,1,0.36,1)]"
+        className="fixed top-0 right-0 bottom-0 z-351 flex w-full max-w-md flex-col border-l border-yellow/25 bg-linear-to-b from-black-light to-black shadow-[-16px_0_48px_rgba(0,0,0,0.6)] animate-[slideInRight_0.55s_cubic-bezier(0.16,1,0.3,1)]"
       >
-        <div className="flex justify-center pt-2.5 pb-1">
-          <div className="h-1 w-10 rounded-full bg-yellow/30" />
-        </div>
-
         <div className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3.5 sm:px-5">
           <h3 className="flex items-center gap-2.5 font-display text-base font-semibold text-cream [font-variation-settings:'opsz'_36]">
             <ShoppingBag className="size-5 text-yellow" />
@@ -80,7 +76,7 @@ export function CartSheet({
           </h3>
           <button
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/8 bg-white/3 text-muted transition-all duration-200 hover:border-red-primary/40 hover:bg-red-primary/15 hover:text-red-light"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/3 text-muted transition-all duration-200 hover:rotate-90 hover:border-yellow/50 hover:bg-yellow/10 hover:text-yellow active:scale-90"
             aria-label="Fechar carrinho"
           >
             <X className="size-4" />
@@ -89,7 +85,7 @@ export function CartSheet({
 
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
           {cart.length === 0 ? (
-            <div className="px-5 py-14 text-center">
+            <div className="flex flex-col items-center px-5 py-14 text-center">
               <Pizza className="mx-auto mb-3 size-12 text-muted/30" />
               <p className="font-body text-base font-semibold text-cream-dim">
                 Seu carrinho está vazio
@@ -97,6 +93,13 @@ export function CartSheet({
               <span className="mt-1 block text-xs text-muted">
                 Escolha suas pizzas no cardápio
               </span>
+              <button
+                onClick={onClose}
+                className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-yellow/30 bg-yellow/10 px-5 py-2.5 font-body text-sm font-bold text-yellow transition-all duration-200 hover:bg-yellow/20 hover:shadow-[0_4px_16px_rgba(242,183,5,0.2)] active:scale-[0.97]"
+              >
+                <ArrowRight className="size-4 -scale-x-100" />
+                Explorar cardápio
+              </button>
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5">
@@ -125,7 +128,7 @@ export function CartSheet({
                       </div>
                       <button
                         onClick={() => onRemove(item.id)}
-                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-all duration-200 hover:bg-red-primary/20 hover:text-red-light"
+                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/8 bg-white/3 text-muted transition-all duration-200 hover:border-red-primary/50 hover:bg-red-primary/15 hover:text-red-light active:scale-90"
                         aria-label={`Remover ${flavorStr}`}
                       >
                         <Trash2 className="size-3.5" />
@@ -133,10 +136,10 @@ export function CartSheet({
                     </div>
 
                     <div className="mt-2.5 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center rounded-lg border border-white/10 bg-white/3 p-0.5 shadow-inner shadow-black/20">
                         <button
                           onClick={() => onUpdateQty(item.id, -1)}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-colors duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90"
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-md text-cream-dim transition-all duration-200 hover:bg-yellow/15 hover:text-yellow active:scale-90"
                           aria-label={`Diminuir quantidade de ${flavorStr}`}
                         >
                           <Minus className="size-3.5" />
@@ -146,7 +149,7 @@ export function CartSheet({
                         </span>
                         <button
                           onClick={() => onUpdateQty(item.id, 1)}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-colors duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90"
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-md text-cream-dim transition-all duration-200 hover:bg-yellow/15 hover:text-yellow active:scale-90"
                           aria-label={`Aumentar quantidade de ${flavorStr}`}
                         >
                           <Plus className="size-3.5" />
@@ -182,14 +185,14 @@ export function CartSheet({
             <div className="flex flex-col gap-2 sm:flex-row sm:gap-2.5">
               <button
                 onClick={onClose}
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-white/12 bg-transparent px-4 py-3 font-body text-xs font-bold text-cream-dim transition-all duration-200 hover:border-white/30 hover:text-cream active:scale-[0.98] sm:flex-1 sm:text-sm"
+                className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-white/15 bg-white/3 px-4 py-3 font-body text-xs font-bold text-cream transition-all duration-200 hover:border-yellow/40 hover:bg-yellow/8 hover:text-yellow active:scale-[0.98] sm:flex-1 sm:text-sm"
               >
-                <Plus className="size-4" />
+                <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
                 Adicionar mais
               </button>
               <button
                 onClick={onCheckout}
-                className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] bg-[#25d366] px-4 py-3 font-body text-xs font-bold text-white shadow-md transition-all duration-200 hover:bg-[#1da851] hover:shadow-[0_6px_20px_rgba(37,211,102,0.3)] active:scale-[0.98] sm:flex-2 sm:text-sm"
+                className="group flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-[12px] bg-linear-to-r from-[#1da851] to-[#25d366] px-4 py-3 font-body text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,211,102,0.25)] transition-all duration-200 hover:shadow-[0_8px_28px_rgba(37,211,102,0.4)] active:scale-[0.98] sm:flex-2 sm:text-sm"
               >
                 <svg
                   viewBox="0 0 24 24"

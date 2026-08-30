@@ -1,6 +1,6 @@
 import type { Pizza } from "@/types";
 
-const PIZZA_IMAGES = [
+export const PIZZA_IMAGES = [
   "/Pizza 2 Queijos.png",
   "https://cdn.pixabay.com/photo/2020/06/08/16/49/pizza-5275191_960_720.jpg",
   "https://cdn.pixabay.com/photo/2016/04/21/22/50/pizza-1344720_960_720.jpg",

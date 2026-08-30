@@ -33,7 +33,7 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-300 grid gap-4 border border-white/10 bg-black-light p-6 shadow-lg duration-200 left-4 right-4 w-auto top-[50%] -translate-y-1/2 sm:left-[50%] sm:right-auto sm:w-full sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-[20px]",
+        "fixed z-300 grid gap-4 border border-white/10 bg-black-light p-6 shadow-lg duration-200 left-4 right-4 w-auto top-[50%] -translate-y-1/2 sm:left-[50%] sm:right-auto sm:w-full sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-lg",
         className
       )}
       {...props}

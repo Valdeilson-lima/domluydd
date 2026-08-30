@@ -29,11 +29,3 @@ export interface CartItem {
   category: string;
   qty: number;
 }
-
-export interface ModalState {
-  pizza: Pizza | null;
-  size: string;
-  flavor1: string;
-  flavor2: string;
-  category: string;
-}

@@ -29,7 +29,7 @@ export function Toast({
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-24 right-4 left-4 z-[500] animate-[toastIn_0.4s_cubic-bezier(0.22,1,0.36,1)] sm:bottom-8 sm:right-8 sm:left-auto flex items-center gap-3 rounded-[14px] bg-gradient-to-r from-yellow to-yellow-light px-5 py-3.5 text-sm font-bold text-black shadow-2xl"
+      className="fixed bottom-24 right-4 left-4 z-500 animate-[toastIn_0.4s_cubic-bezier(0.22,1,0.36,1)] sm:bottom-24 sm:right-6 sm:left-auto flex items-center gap-3 rounded-md bg-linear-to-r from-yellow to-yellow-light px-5 py-3.5 text-sm font-bold text-black shadow-2xl"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-black/10">
         {isAdded ? (

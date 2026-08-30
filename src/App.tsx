@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Hero, InfoStrip } from "@/components/Hero";
 import { SearchBar } from "@/components/SearchBar";
@@ -93,20 +93,24 @@ export default function App() {
   );
 
   const handleAddToCart = useCallback(
-    (item: Omit<CartItem, "id" | "qty">) => {
+    (item: Omit<CartItem, "id" | "qty">, qty = 1) => {
       if (!isStoreOpen()) {
         setToastMessage("Loja fechada — volte no horário de funcionamento");
         setToastOpen(true);
         return;
       }
-      addItem(item);
+      addItem(item, qty);
       const isHalf =
         item.flavors.length > 1 &&
         item.flavors[0].name !== item.flavors[1].name;
       const itemName = isHalf
         ? item.flavors.map((f) => f.name).join(" + ")
         : item.flavors[0].name;
-      setToastMessage(`${itemName} (${item.size}) adicionada`);
+      setToastMessage(
+        qty > 1
+          ? `${qty}x ${itemName} (${item.size}) adicionadas`
+          : `${itemName} (${item.size}) adicionada`
+      );
       setToastOpen(true);
     },
     [addItem]
@@ -122,21 +126,23 @@ export default function App() {
   const totalForTab =
     activeTab === "bebidas" ? bebidas.length : pizzaData.length;
 
-  const filteredPizzas = search
-    ? pizzaData.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.desc.toLowerCase().includes(search.toLowerCase())
-      )
-    : pizzaData;
+  const filteredPizzas = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return pizzaData;
+    return pizzaData.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+    );
+  }, [pizzaData, search]);
 
-  const filteredDrinks = search
-    ? bebidas.filter(
-        (d) =>
-          d.name.toLowerCase().includes(search.toLowerCase()) ||
-          d.desc.toLowerCase().includes(search.toLowerCase())
-      )
-    : bebidas;
+  const filteredDrinks = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return bebidas;
+    return bebidas.filter(
+      (d) =>
+        d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q)
+    );
+  }, [search]);
 
   const storeOpen = isStoreOpen();
 
@@ -167,7 +173,12 @@ export default function App() {
         Pular para o conteúdo
       </a>
 
-      <Header activeTab={activeTab} onTabChange={handleTabChange} />
+      <Header
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        itemCount={itemCount}
+        onCartOpen={() => toggleCart(true)}
+      />
 
       <Hero />
       <InfoStrip />
