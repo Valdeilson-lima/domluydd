@@ -69,31 +69,38 @@ export function Hero() {
 
         {/* Status — the thesis */}
         <div
-          className={`mt-1 flex items-center gap-3 rounded-md border px-4 py-3 backdrop-blur-md ${
+          className={`mt-1 flex items-center gap-3.5 rounded-2xl border px-5 py-3 backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02] ${
             open
-              ? "border-basil/40 bg-basil/12"
-              : "border-red-primary/40 bg-red-primary/12"
+              ? "border-emerald-500/40 bg-emerald-950/25 text-emerald-400"
+              : "border-red-primary/40 bg-red-primary/12 text-red-light"
           }`}
         >
           <span
-            className={`relative flex size-3 shrink-0 rounded-full ${
-              open ? "bg-basil" : "bg-red-primary"
+            className={`relative flex size-3.5 shrink-0 rounded-full ${
+              open
+                ? "bg-emerald-400 shadow-[0_0_12px_#34d399]"
+                : "bg-red-primary"
             }`}
             style={open ? { animation: "pulseRing 2s infinite" } : undefined}
           />
           <div className="text-left">
-            <p
-              className={`font-display text-lg font-bold leading-none sm:text-xl ${
-                open ? "text-basil" : "text-red-light"
-              }`}
-            >
-              {open ? "Aberto agora" : "Fechado"}
+            <p className="font-display text-lg font-bold leading-none sm:text-xl">
+              {open ? "Aberto Agora" : "Fechado no Momento"}
             </p>
-            <p className="mt-0.5 font-mono text-[0.65rem] uppercase tracking-wider text-cream-dim">
+            <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-wider text-cream-dim/90">
               {nextLabel}
             </p>
           </div>
         </div>
+
+        {/* Primary Call to Action */}
+        <a
+          href="#main-content"
+          className="mt-2 inline-flex items-center gap-2.5 rounded-full bg-linear-to-r from-red-dark via-red-primary to-yellow px-7 py-3.5 font-body text-sm font-bold text-cream shadow-[0_8px_30px_rgba(217,4,22,0.45)] ring-1 ring-yellow/30 transition-all duration-300 hover:scale-105 hover:brightness-110 active:scale-95"
+        >
+          <span>Explorar Cardápio</span>
+          <ChevronDown className="size-4 animate-bounce" />
+        </a>
       </div>
 
       {/* Indicadores do carrossel */}

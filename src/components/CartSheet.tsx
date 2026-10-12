@@ -6,6 +6,7 @@ import {
   Plus,
   Minus,
   ArrowRight,
+  Wine,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { CartItem } from "@/types";
@@ -20,6 +21,7 @@ interface CartSheetProps {
   onRemove: (id: number) => void;
   onUpdateQty: (id: number, delta: number) => void;
   onCheckout: () => void;
+  onAddDrink?: (name: string, price: number) => void;
 }
 
 export function CartSheet({
@@ -49,162 +51,223 @@ export function CartSheet({
 
   if (!open) return null;
 
+  const hasDrink = cart.some((item) => item.category === "Bebida");
+
   return (
     <>
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-350 bg-black/65 backdrop-blur-sm transition-opacity duration-300 animate-[fadeIn_0.3s_ease]"
+        className="fixed inset-0 z-350 bg-black/75 backdrop-blur-sm transition-opacity duration-300 animate-[fadeIn_0.25s_ease]"
         onClick={onClose}
       />
 
+      {/* Drawer */}
       <div
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label="Carrinho de compras"
         tabIndex={-1}
-        className="fixed top-0 right-0 bottom-0 z-351 flex w-full max-w-md flex-col border-l border-yellow/25 bg-linear-to-b from-black-light to-black shadow-[-16px_0_48px_rgba(0,0,0,0.6)] animate-[slideInRight_0.55s_cubic-bezier(0.16,1,0.3,1)]"
+        className="fixed top-0 right-0 bottom-0 z-351 flex w-full max-w-md flex-col border-l border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[-16px_0_48px_rgba(0,0,0,0.7)] animate-[slideInRight_0.35s_cubic-bezier(0.16,1,0.3,1)]"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3.5 sm:px-5">
-          <h3 className="flex items-center gap-2.5 font-display text-base font-semibold text-cream [font-variation-settings:'opsz'_36]">
-            <ShoppingBag className="size-5 text-yellow" />
-            Seu pedido
-            {itemCount > 0 && (
-              <span className="rounded-full bg-red-primary px-2 py-0.5 font-mono text-[0.65rem] font-bold text-cream">
-                {itemCount}
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-yellow/15 text-yellow">
+              <ShoppingBag className="size-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-cream sm:text-lg">
+                Sua Sacola
+              </h3>
+              <span className="font-mono text-[0.62rem] uppercase tracking-wider text-muted">
+                {itemCount}{" "}
+                {itemCount === 1 ? "item adicionado" : "itens adicionados"}
               </span>
-            )}
-          </h3>
+            </div>
+          </div>
+
           <button
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/3 text-muted transition-all duration-200 hover:rotate-90 hover:border-yellow/50 hover:bg-yellow/10 hover:text-yellow active:scale-90"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/4 text-muted transition-all duration-200 hover:border-yellow/50 hover:bg-yellow/15 hover:text-yellow active:scale-90"
             aria-label="Fechar carrinho"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        {/* Content list */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center px-5 py-14 text-center">
-              <Pizza className="mx-auto mb-3 size-12 text-muted/30" />
-              <p className="font-body text-base font-semibold text-cream-dim">
-                Seu carrinho está vazio
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+              <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white/4 ring-1 ring-white/10">
+                <Pizza className="size-8 text-muted/50" />
+              </div>
+              <p className="font-display text-lg font-bold text-cream">
+                Sua sacola está vazia
               </p>
-              <span className="mt-1 block text-xs text-muted">
-                Escolha suas pizzas no cardápio
+              <span className="mt-1 max-w-xs text-xs text-muted leading-relaxed">
+                Explore nosso cardápio de pizzas artesanais de fermentação
+                natural e adicione seus sabores favoritos.
               </span>
               <button
                 onClick={onClose}
-                className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-yellow/30 bg-yellow/10 px-5 py-2.5 font-body text-sm font-bold text-yellow transition-all duration-200 hover:bg-yellow/20 hover:shadow-[0_4px_16px_rgba(242,183,5,0.2)] active:scale-[0.97]"
+                className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-yellow/15 px-5 py-2.5 font-mono text-xs font-bold text-yellow transition-all duration-200 hover:bg-yellow/25 active:scale-95"
               >
-                <ArrowRight className="size-4 -scale-x-100" />
-                Explorar cardápio
+                Ver cardápio
               </button>
             </div>
           ) : (
-            <ul className="flex flex-col gap-2.5">
+            <ul className="space-y-3">
               {cart.map((item) => {
                 const isHalf =
                   item.flavors.length > 1 &&
                   item.flavors[0].name !== item.flavors[1].name;
-                const flavorStr = isHalf
-                  ? item.flavors.map((f) => f.name).join(" + ")
-                  : item.flavors[0].name;
+                const isDrink = item.category === "Bebida";
+
                 return (
                   <li
                     key={item.id}
-                    className="rounded-[12px] border border-white/6 bg-white/3 p-3 transition-colors duration-200 hover:border-yellow/20"
+                    className="flex flex-col gap-2.5 rounded-2xl border border-white/8 bg-white/2 p-3.5 shadow-sm transition-all duration-200 hover:border-white/15"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold leading-tight text-cream">
-                          {flavorStr}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-wider text-muted">
-                          <span>Tam. {item.size}</span>
-                          <span className="text-border">·</span>
-                          <span>{item.category}</span>
-                        </p>
+                        {/* Title */}
+                        <div className="flex items-baseline gap-2">
+                          <h4 className="font-display text-sm font-bold text-cream sm:text-base">
+                            {isHalf
+                              ? `${item.flavors[0].name} + ${item.flavors[1].name}`
+                              : item.flavors[0].name}
+                          </h4>
+                        </div>
+
+                        {/* Badges */}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-cream-dim">
+                            {isDrink ? "Bebida" : `Tamanho ${item.size}`}
+                          </span>
+
+                          {isHalf && (
+                            <span className="rounded-md border border-yellow/30 bg-yellow/10 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-yellow">
+                              Meio a Meio
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Observation */}
+                        {item.observation && (
+                          <p className="mt-1.5 text-[0.68rem] italic text-muted/80 bg-black/30 rounded-md px-2 py-1 border border-white/5">
+                            Obs: &ldquo;{item.observation}&rdquo;
+                          </p>
+                        )}
                       </div>
-                      <button
-                        onClick={() => onRemove(item.id)}
-                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/8 bg-white/3 text-muted transition-all duration-200 hover:border-red-primary/50 hover:bg-red-primary/15 hover:text-red-light active:scale-90"
-                        aria-label={`Remover ${flavorStr}`}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+
+                      {/* Price */}
+                      <span className="font-mono text-sm font-bold text-yellow sm:text-base">
+                        R$ {formatPrice(item.price * item.qty)}
+                      </span>
                     </div>
 
-                    <div className="mt-2.5 flex items-center justify-between">
-                      <div className="flex items-center rounded-lg border border-white/10 bg-white/3 p-0.5 shadow-inner shadow-black/20">
+                    {/* Stepper Footer */}
+                    <div className="flex items-center justify-between border-t border-white/6 pt-2.5">
+                      <span className="text-[0.68rem] text-muted font-mono">
+                        R$ {formatPrice(item.price)} un.
+                      </span>
+
+                      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/60 p-1">
                         <button
-                          onClick={() => onUpdateQty(item.id, -1)}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-md text-cream-dim transition-all duration-200 hover:bg-yellow/15 hover:text-yellow active:scale-90"
-                          aria-label={`Diminuir quantidade de ${flavorStr}`}
+                          type="button"
+                          onClick={() => {
+                            if (item.qty === 1) {
+                              onRemove(item.id);
+                            } else {
+                              onUpdateQty(item.id, -1);
+                            }
+                          }}
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-red-light"
+                          aria-label={
+                            item.qty === 1 ? "Remover item" : "Diminuir"
+                          }
                         >
-                          <Minus className="size-3.5" />
+                          {item.qty === 1 ? (
+                            <Trash2 className="size-3.5" />
+                          ) : (
+                            <Minus className="size-3.5" />
+                          )}
                         </button>
-                        <span className="min-w-6 text-center font-mono text-sm font-bold text-cream">
+
+                        <span className="min-w-5 text-center font-mono text-xs font-bold text-cream">
                           {item.qty}
                         </span>
+
                         <button
+                          type="button"
                           onClick={() => onUpdateQty(item.id, 1)}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-md text-cream-dim transition-all duration-200 hover:bg-yellow/15 hover:text-yellow active:scale-90"
-                          aria-label={`Aumentar quantidade de ${flavorStr}`}
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
+                          aria-label="Aumentar"
                         >
                           <Plus className="size-3.5" />
                         </button>
                       </div>
-                      <span className="font-mono text-sm font-semibold text-yellow">
-                        R$ {formatPrice(item.price * item.qty)}
-                      </span>
                     </div>
                   </li>
                 );
               })}
             </ul>
           )}
+
+          {/* Quick Drink up-sell tip if no drinks added */}
+          {cart.length > 0 && !hasDrink && (
+            <div className="rounded-2xl border border-yellow/20 bg-linear-to-r from-yellow/10 via-yellow/5 to-transparent p-3.5">
+              <div className="flex items-center gap-2.5">
+                <Wine className="size-5 text-yellow shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-cream">
+                    Quer acompanhar com uma bebida bem gelada?
+                  </p>
+                  <p className="text-[0.68rem] text-muted">
+                    Temos Coca-Cola, Guaraná, Fanta e Cajuína na aba Bebidas.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Sticky Footer */}
         {cart.length > 0 && (
-          <div className="shrink-0 border-t border-yellow/15 bg-black/40 px-4 py-4 pb-6 sm:px-5">
-            <div className="mb-3 flex items-end justify-between">
-              <div className="flex flex-col">
-                <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                  Subtotal
-                </span>
-                <span className="text-[0.65rem] text-muted/70">
-                  Frete calculado no fechamento
+          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-5 space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted">
+                <span>Subtotal dos itens</span>
+                <span className="font-mono text-cream font-medium">
+                  R$ {formatPrice(total)}
                 </span>
               </div>
-              <span className="font-body text-[1.6rem] font-bold leading-none text-yellow">
-                <span className="text-sm text-yellow/70">R$ </span>
-                {formatPrice(total)}
-              </span>
+              <div className="flex items-center justify-between text-xs text-muted">
+                <span>Taxa de entrega</span>
+                <span className="text-yellow text-[0.68rem]">
+                  Calculada na próxima etapa
+                </span>
+              </div>
+              <div className="flex items-end justify-between border-t border-white/6 pt-2">
+                <span className="font-body text-base font-bold text-cream">
+                  Total
+                </span>
+                <span className="font-display text-2xl font-bold text-yellow sm:text-3xl">
+                  R$ {formatPrice(total)}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:gap-2.5">
-              <button
-                onClick={onClose}
-                className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-white/15 bg-white/3 px-4 py-3 font-body text-xs font-bold text-cream transition-all duration-200 hover:border-yellow/40 hover:bg-yellow/8 hover:text-yellow active:scale-[0.98] sm:flex-1 sm:text-sm"
-              >
-                <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
-                Adicionar mais
-              </button>
-              <button
-                onClick={onCheckout}
-                className="group flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-[12px] bg-linear-to-r from-[#1da851] to-[#25d366] px-4 py-3 font-body text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,211,102,0.25)] transition-all duration-200 hover:shadow-[0_8px_28px_rgba(37,211,102,0.4)] active:scale-[0.98] sm:flex-2 sm:text-sm"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="size-4 sm:size-5"
-                >
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                Finalizar pedido
-                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </button>
-            </div>
+
+            <button
+              onClick={onCheckout}
+              type="button"
+              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+            >
+              <span>Avançar para Entrega</span>
+              <ArrowRight className="size-4.5" />
+            </button>
           </div>
         )}
       </div>

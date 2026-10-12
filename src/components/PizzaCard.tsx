@@ -2,12 +2,22 @@ import type { Pizza } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { PizzaImage } from "./PizzaImage";
 import { PIZZA_IMAGES } from "@/data/pizzas";
+import { SlidersHorizontal, Flame } from "lucide-react";
 
 interface PizzaCardProps {
   pizza: Pizza;
   index: number;
   onSelect: (id: string) => void;
 }
+
+const HIGHLIGHT_FLAVORS = new Set([
+  "Calabresa",
+  "4 Queijos",
+  "Frango Catupiry",
+  "Marguerita",
+  "Portuguesa",
+  "Brigadeiro",
+]);
 
 function menuNumber(pizza: Pizza): string {
   const match = pizza.id.match(/-(\d+)$/);
@@ -16,6 +26,8 @@ function menuNumber(pizza: Pizza): string {
 }
 
 export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
+  const isHighlight = HIGHLIGHT_FLAVORS.has(pizza.name);
+
   return (
     <li
       role="button"
@@ -27,66 +39,80 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
           onSelect(pizza.id);
         }
       }}
-      aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}`}
-      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-      className="group flex cursor-pointer overflow-hidden rounded-md border border-white/6 bg-black-light shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#292526] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 animate-[fadeUp_0.4s_both]"
+      aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}. Toque para personalizar.`}
+      style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
+      className="group relative flex cursor-pointer overflow-hidden rounded-2xl border border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] shadow-sm outline-none transition-all duration-300 hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99] animate-[fadeUp_0.4s_both]"
     >
-      {/* Thumbnail */}
-      <div className="relative w-24 shrink-0 overflow-hidden sm:w-32">
+      {/* Thumbnail area with photo & overlays */}
+      <div className="relative w-28 shrink-0 overflow-hidden sm:w-36">
         <PizzaImage
           src={PIZZA_IMAGES[pizza.imgIdx]}
+          alt={pizza.name}
           className="h-full w-full"
-          imgClassName="transition-transform duration-500 group-hover:scale-105"
+          imgClassName="transition-transform duration-500 group-hover:scale-108"
         />
-        <div className="absolute inset-0 bg-linear-to-r from-black-light/70 via-transparent to-transparent" />
-        <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 font-mono text-[0.55rem] font-semibold tracking-wider text-yellow backdrop-blur-sm">
-          N°{menuNumber(pizza)}
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-black/20 to-[#1f1c1d]/90 sm:to-[#1f1c1d]/80" />
+
+        {/* Number Badge */}
+        <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-black/75 px-2 py-0.5 font-mono text-[0.58rem] font-bold tracking-wider text-yellow shadow-md backdrop-blur-md">
+          #{menuNumber(pizza)}
         </span>
+
+        {/* Highlight Tag */}
+        {isHighlight && (
+          <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-red-primary/90 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-cream shadow-md backdrop-blur-sm">
+            <Flame className="size-2.5 text-yellow" />
+            Favorita
+          </span>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-3.5 py-3 sm:px-4 sm:py-4">
-        <div className="flex items-baseline gap-2">
-          <h3 className="truncate font-body text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream sm:text-[1.05rem]">
-            {pizza.name}
-          </h3>
-          {pizza.category === "doce" && (
-            <span className="shrink-0 rounded-full bg-yellow/15 px-1.5 py-0.5 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-yellow">
-              doce
-            </span>
-          )}
-        </div>
-        <p className="line-clamp-2 text-[0.72rem] text-muted leading-relaxed sm:text-[0.78rem]">
-          {pizza.desc}
-        </p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {(["P", "M", "G"] as const).map((sz) => (
-            <span
-              key={sz}
-              className="inline-flex items-baseline gap-1 rounded-md border border-white/8 bg-white/3 px-2 py-0.5 font-mono text-[0.6rem] font-semibold text-cream-dim sm:text-[0.65rem]"
-            >
-              <span className="font-body text-[0.55rem] font-bold text-muted sm:text-[0.6rem]">
-                {sz}
+      {/* Main card content */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5 sm:p-4">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-display text-base font-bold italic leading-snug tracking-[-0.01em] text-cream transition-colors duration-200 group-hover:text-yellow sm:text-lg">
+              {pizza.name}
+            </h3>
+
+            {pizza.category === "doce" && (
+              <span className="shrink-0 rounded-full border border-yellow/30 bg-yellow/15 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-yellow">
+                Doce
               </span>
-              R$ {formatPrice(pizza[sz.toLowerCase() as "p" | "m" | "g"])}
-            </span>
-          ))}
-        </div>
-      </div>
+            )}
+          </div>
 
-      {/* Arrow affordance */}
-      <div className="flex shrink-0 items-center pr-3.5 sm:pr-4">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="size-4 text-muted/50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-yellow"
-        >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted/90 sm:text-[0.8rem]">
+            {pizza.desc}
+          </p>
+        </div>
+
+        {/* Sizes prices & CTA footer */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/6 pt-2.5">
+          {/* Price tiers */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {(["P", "M", "G"] as const).map((sz) => (
+              <span
+                key={sz}
+                className="inline-flex items-baseline gap-1 rounded-lg border border-white/8 bg-white/3 px-1.5 py-0.5 font-mono text-[0.62rem] font-medium text-cream-dim sm:px-2 sm:text-[0.68rem]"
+              >
+                <span className="font-bold text-muted text-[0.55rem] sm:text-[0.6rem]">
+                  {sz}
+                </span>
+                <span className="font-semibold text-yellow">
+                  R$ {formatPrice(pizza[sz.toLowerCase() as "p" | "m" | "g"])}
+                </span>
+              </span>
+            ))}
+          </div>
+
+          {/* Action indicator */}
+          <span className="flex items-center gap-1 text-[0.68rem] font-bold text-yellow/90 group-hover:text-yellow sm:text-xs">
+            <SlidersHorizontal className="size-3 transition-transform duration-200 group-hover:scale-110" />
+            <span className="hidden sm:inline">Montar pizza</span>
+            <span className="sm:hidden">Pedir</span>
+          </span>
+        </div>
       </div>
     </li>
   );

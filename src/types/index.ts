@@ -28,4 +28,5 @@ export interface CartItem {
   price: number;
   category: string;
   qty: number;
+  observation?: string;
 }

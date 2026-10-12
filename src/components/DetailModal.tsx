@@ -8,10 +8,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPrice } from "@/lib/utils";
-import { getPizzaByName, salgadas, doces, MODAL_IMAGES } from "@/data/pizzas";
+import { getPizzaByName, salgadas, doces } from "@/data/pizzas";
 import type { Pizza, CartItem } from "@/types";
-import { PizzaImage } from "./PizzaImage";
-import { SplitSquareHorizontal, Plus, Minus } from "lucide-react";
+import { PizzaVisualizer } from "./PizzaVisualizer";
+import {
+  SplitSquareHorizontal,
+  Plus,
+  Minus,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
 
 interface DetailModalProps {
   pizza: Pizza | null;
@@ -23,9 +29,27 @@ interface DetailModalProps {
 const SIZES = ["P", "M", "G"] as const;
 
 const SIZE_META = {
-  P: { fatias: 4, cor: "#d90416" },
-  M: { fatias: 6, cor: "#f28705" },
-  G: { fatias: 8, cor: "#f2b705" },
+  P: {
+    fatias: 4,
+    fatiasLabel: "4 fatias",
+    pessoas: "1 pessoa",
+    badge: "Individual",
+    cor: "#d90416",
+  },
+  M: {
+    fatias: 6,
+    fatiasLabel: "6 fatias",
+    pessoas: "2 a 3 pessoas",
+    badge: "Mais pedida",
+    cor: "#f28705",
+  },
+  G: {
+    fatias: 8,
+    fatiasLabel: "8 fatias",
+    pessoas: "3 a 4 pessoas",
+    badge: "Família",
+    cor: "#f2b705",
+  },
 } as const;
 
 export function DetailModal({
@@ -39,6 +63,7 @@ export function DetailModal({
   const [flavor1, setFlavor1] = useState(initialFlavor);
   const [flavor2, setFlavor2] = useState(initialFlavor);
   const [halfHalf, setHalfHalf] = useState(false);
+  const [observation, setObservation] = useState("");
   const [qty, setQty] = useState(1);
 
   const flavor2Ref = useRef<HTMLDivElement>(null);
@@ -48,9 +73,9 @@ export function DetailModal({
       const t = setTimeout(() => {
         flavor2Ref.current?.scrollIntoView({
           behavior: "smooth",
-          block: "center",
+          block: "nearest",
         });
-      }, 320);
+      }, 250);
       return () => clearTimeout(t);
     }
   }, [halfHalf]);
@@ -66,7 +91,10 @@ export function DetailModal({
     return p[s.toLowerCase() as "p" | "m" | "g"] || 0;
   };
 
-  const total = Math.max(getPrice(flavor1, size), getPrice(flavor2, size));
+  const price1 = getPrice(flavor1, size);
+  const price2 = getPrice(flavor2, size);
+  const unitPrice = Math.max(price1, price2);
+  const totalPrice = unitPrice * qty;
 
   const handleFlavor1Change = (val: string) => {
     setFlavor1(val);
@@ -83,13 +111,16 @@ export function DetailModal({
     const catLabel = pizza.category === "doce" ? "Doce" : "Salgada";
     onAddToCart(
       {
-        flavors: [
-          { name: flavor1, price: getPrice(flavor1, size) },
-          { name: flavor2, price: getPrice(flavor2, size) },
-        ],
+        flavors: halfHalf
+          ? [
+              { name: flavor1, price: price1 },
+              { name: flavor2, price: price2 },
+            ]
+          : [{ name: flavor1, price: price1 }],
         size,
-        price: total,
+        price: unitPrice,
         category: catLabel,
+        observation: observation.trim() || undefined,
       },
       qty
     );
@@ -98,227 +129,301 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-140 max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-lg border-yellow/15">
-        <div className="overflow-y-auto flex-1">
-          {/* Hero header */}
-          <div className="relative bg-linear-to-br from-[#141213] via-[#1f1c1d] to-[#3a1418] px-5 pt-6 pb-5 sm:px-7 sm:pt-7 sm:pb-6">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(242,135,5,0.1),transparent_70%)]" />
-            <div className="relative flex flex-col items-center gap-3">
-              <div className="relative size-20 overflow-hidden rounded-full ring-2 ring-yellow/40 shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:size-24">
-                <PizzaImage
-                  src={MODAL_IMAGES[pizza.imgIdx]}
-                  className="h-full w-full"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
-              </div>
-              <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-yellow/70">
-                {pizza.category === "doce" ? "Pizza Doce" : "Pizza Salgada"}
-              </span>
-              <h2 className="text-center font-display text-[1.7rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] sm:text-[2.1rem]">
-                {pizza.name}
-              </h2>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="border-t border-white/6 px-5 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
-            <p className="font-body text-[0.95rem] leading-7 text-cream">
+      <DialogContent className="max-w-lg max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-2xl border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto flex-1 overscroll-contain">
+          {/* Header Title Bar */}
+          <div className="relative border-b border-white/6 px-5 pt-5 pb-3 text-center sm:px-6">
+            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.25em] text-yellow/85">
+              {pizza.category === "doce"
+                ? "Pizza Doce Especial"
+                : "Pizza Artesanal Salgada"}
+            </span>
+            <h2 className="mt-1 font-display text-2xl font-bold italic tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_40] sm:text-3xl">
+              {pizza.name}
+            </h2>
+            <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted/90 sm:text-sm">
               {pizza.desc}
             </p>
           </div>
 
-          {/* Configuration */}
-          <div className="space-y-5 px-5 pb-5 sm:px-7 sm:pb-6">
-            {/* Size Selector */}
+          {/* Interactive Visualizer Signature Element */}
+          <div className="border-b border-white/6 bg-black/40">
+            <PizzaVisualizer
+              flavor1={flavor1}
+              flavor2={flavor2}
+              isHalfHalf={halfHalf}
+              size={size}
+              category={pizza.category}
+            />
+          </div>
+
+          {/* Configuration Sections */}
+          <div className="space-y-5 p-5 sm:p-6">
+            {/* 1. Escolha o Tamanho */}
             <div className="space-y-2.5">
-              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                Escolha o Tamanho
-              </label>
-              <div className="flex gap-2.5">
+              <div className="flex items-center justify-between">
+                <label className="font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                  1. Escolha o Tamanho
+                </label>
+                <span className="text-[0.65rem] font-medium text-muted">
+                  Massa de fermentação natural
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5">
                 {SIZES.map((s) => {
-                  const price1 = getPrice(flavor1, s);
-                  const price2 = getPrice(flavor2, s);
-                  const maxP = Math.max(price1, price2);
+                  const p1 = getPrice(flavor1, s);
+                  const p2 = getPrice(flavor2, s);
+                  const maxP = Math.max(p1, p2);
                   const active = size === s;
                   const meta = SIZE_META[s];
+
                   return (
                     <button
                       key={s}
                       onClick={() => setSize(s)}
                       type="button"
-                      className={`relative flex-1 cursor-pointer rounded-[12px] border px-2 py-3 text-center transition-all duration-200 ${
+                      className={`relative flex flex-col items-center justify-between rounded-xl border p-2.5 text-center transition-all duration-200 cursor-pointer ${
                         active
-                          ? "border-yellow/60 bg-yellow/10 shadow-[inset_0_0_0_1px_rgba(242,183,5,0.3)]"
-                          : "border-white/8 bg-white/2 hover:border-white/20"
+                          ? "border-yellow bg-yellow/12 shadow-[0_0_16px_rgba(242,183,5,0.2),inset_0_0_0_1px_rgba(242,183,5,0.5)] scale-[1.02]"
+                          : "border-white/10 bg-white/2 hover:border-white/20 hover:bg-white/4"
                       }`}
                     >
-                      <span
-                        className="mx-auto mb-1 block size-2.5 rounded-full"
-                        style={{ background: meta.cor }}
-                      />
-                      <span
-                        className={`block font-body text-base font-bold leading-tight ${
-                          active ? "text-yellow" : "text-cream"
-                        }`}
-                      >
-                        {s}
-                      </span>
-                      <span
-                        className={`mt-0.5 block font-mono text-[0.65rem] font-semibold ${
-                          active ? "text-yellow" : "text-muted"
-                        }`}
-                      >
+                      {/* Popular badge */}
+                      {s === "M" && (
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-yellow px-1.5 py-0.2 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-black">
+                          Popular
+                        </span>
+                      )}
+
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ background: meta.cor }}
+                        />
+                        <span
+                          className={`font-display text-lg font-bold leading-none ${
+                            active ? "text-yellow" : "text-cream"
+                          }`}
+                        >
+                          {s}
+                        </span>
+                      </div>
+
+                      <span className="mt-1 font-mono text-xs font-bold text-cream">
                         R$ {formatPrice(maxP)}
                       </span>
-                      <span className="mt-0.5 block text-[0.55rem] uppercase tracking-wide text-muted/60">
-                        {meta.fatias} fatias
-                      </span>
+
+                      <div className="mt-1 text-[0.62rem] text-muted">
+                        <span className="block leading-tight font-medium">
+                          {meta.fatiasLabel}
+                        </span>
+                        <span className="block leading-tight text-[0.55rem] text-muted/70">
+                          {meta.pessoas}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Half-half toggle */}
-            <button
-              type="button"
-              onClick={handleToggleHalf}
-              className={`flex w-full cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3.5 transition-all duration-200 ${
-                halfHalf
-                  ? "border-yellow/50 bg-yellow/8"
-                  : "border-white/8 bg-white/2 hover:border-white/20"
-              }`}
-            >
-              <SplitSquareHorizontal
-                className={`size-5 transition-colors duration-200 ${
-                  halfHalf ? "text-yellow" : "text-muted"
-                }`}
-              />
-              <div className="flex-1 text-left">
-                <span
-                  className={`block text-sm font-bold transition-colors duration-200 ${
-                    halfHalf ? "text-cream" : "text-cream-dim"
-                  }`}
-                >
-                  Se preferir, toque para combinar dois sabores
-                </span>
-                <p className="text-[0.68rem] text-muted">
-                  {halfHalf ? "Dois sabores, preço do maior" : ""}
-                </p>
-              </div>
-              <div
-                className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${
-                  halfHalf ? "bg-yellow" : "bg-white/15"
-                }`}
+            {/* 2. Meio a Meio Toggle */}
+            <div className="rounded-xl border border-white/8 bg-white/2 p-3.5 transition-all duration-200 hover:border-white/15">
+              <button
+                type="button"
+                onClick={handleToggleHalf}
+                className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
               >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                      halfHalf
+                        ? "border-yellow/50 bg-yellow/15 text-yellow"
+                        : "border-white/10 bg-white/5 text-muted"
+                    }`}
+                  >
+                    <SplitSquareHorizontal className="size-5" />
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-cream">
+                      Dividir pizza meio a meio?
+                    </span>
+                    <span className="block text-xs text-muted">
+                      {halfHalf
+                        ? "Você paga o valor do sabor mais caro"
+                        : "Toque para escolher dois sabores diferentes"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Switch toggle */}
                 <div
-                  className={`absolute top-0.5 size-4 rounded-full bg-black shadow transition-transform duration-200 ${
-                    halfHalf ? "translate-x-4.5" : "translate-x-0.5"
+                  className={`relative h-6 w-11 rounded-full transition-colors duration-200 shrink-0 ${
+                    halfHalf ? "bg-yellow" : "bg-white/15"
                   }`}
-                />
-              </div>
-            </button>
-
-            {/* Flavor 1 */}
-            <div className="space-y-2">
-              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                {showSecondFlavor ? "1ª metade" : "Sabor"}
-              </label>
-              <Select value={flavor1} onValueChange={handleFlavor1Change}>
-                <SelectTrigger className="h-12 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {catPizzas.map((p) => (
-                    <SelectItem key={p.id} value={p.name}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                >
+                  <div
+                    className={`absolute top-0.5 size-5 rounded-full bg-black shadow-md transition-transform duration-200 ${
+                      halfHalf ? "translate-x-5.5" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </button>
             </div>
 
-            {/* Flavor 2 (only when half-half) */}
-            <div
-              ref={flavor2Ref}
-              className={`space-y-2 transition-all duration-300 ${
-                showSecondFlavor
-                  ? "max-h-50 opacity-100"
-                  : "max-h-0 opacity-0 pointer-events-none overflow-hidden"
-              }`}
-            >
-              <label className="block font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-yellow/80">
-                2ª metade
-              </label>
-              <Select value={flavor2} onValueChange={setFlavor2}>
-                <SelectTrigger className="h-12 text-sm border-yellow/30 focus:border-yellow">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {catPizzas.map((p) => (
-                    <SelectItem key={p.id} value={p.name}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* 3. Seleção de Sabores */}
+            <div className="space-y-3">
+              {/* Sabor 1 */}
+              <div className="space-y-1.5">
+                <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                  <span>
+                    {showSecondFlavor ? "1ª Metade" : "Sabor da Pizza"}
+                  </span>
+                  <span className="font-mono text-yellow font-normal">
+                    R$ {formatPrice(price1)}
+                  </span>
+                </label>
+                <Select value={flavor1} onValueChange={handleFlavor1Change}>
+                  <SelectTrigger className="h-12 rounded-xl border-white/10 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 border-yellow/20 bg-[#1c191a] text-cream">
+                    {catPizzas.map((p) => (
+                      <SelectItem
+                        key={p.id}
+                        value={p.name}
+                        className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between gap-3 w-full">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="font-mono text-xs text-muted">
+                            R${" "}
+                            {formatPrice(
+                              p[size.toLowerCase() as "p" | "m" | "g"]
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sabor 2 (Meio a Meio) */}
+              {showSecondFlavor && (
+                <div
+                  ref={flavor2Ref}
+                  className="space-y-1.5 animate-[fadeUp_0.25s_ease]"
+                >
+                  <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-yellow">
+                    <span>2ª Metade</span>
+                    <span className="font-mono text-yellow font-normal">
+                      R$ {formatPrice(price2)}
+                    </span>
+                  </label>
+                  <Select value={flavor2} onValueChange={setFlavor2}>
+                    <SelectTrigger className="h-12 rounded-xl border-yellow/40 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64 border-yellow/20 bg-[#1c191a] text-cream">
+                      {catPizzas.map((p) => (
+                        <SelectItem
+                          key={p.id}
+                          value={p.name}
+                          className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between gap-3 w-full">
+                            <span className="font-medium">{p.name}</span>
+                            <span className="font-mono text-xs text-muted">
+                              R${" "}
+                              {formatPrice(
+                                p[size.toLowerCase() as "p" | "m" | "g"]
+                              )}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[0.68rem] text-muted flex items-center gap-1 pt-0.5">
+                    <Sparkles className="size-3 text-yellow" />
+                    Valor final baseado na metade de maior valor (R${" "}
+                    {formatPrice(unitPrice)})
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Quantity */}
-            <div className="flex items-center justify-between rounded-[12px] border border-white/8 bg-white/2 px-4 py-3">
-              <span className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                Quantidade
-              </span>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  disabled={qty <= 1}
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label="Diminuir quantidade"
-                >
-                  <Minus className="size-3.5" />
-                </button>
-                <span className="min-w-8 text-center font-mono text-base font-bold text-cream">
-                  {qty}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => Math.min(20, q + 1))}
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/3 text-cream-dim transition-all duration-200 hover:border-yellow/40 hover:text-yellow active:scale-90"
-                  aria-label="Aumentar quantidade"
-                >
-                  <Plus className="size-3.5" />
-                </button>
-              </div>
+            {/* 4. Observações para a cozinha */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <MessageSquare className="size-3 text-muted" />
+                Observações do pedido (opcional)
+              </label>
+              <textarea
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+                placeholder="Ex: sem cebola, massa bem assada, pouco orégano..."
+                rows={2}
+                maxLength={140}
+                className="w-full resize-none rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"
+              />
             </div>
           </div>
         </div>
 
-        {/* Fixed bottom area */}
-        <div className="shrink-0 border-t border-yellow/15 bg-linear-to-b from-black-light to-black px-5 py-4 sm:px-7 sm:py-5">
-          <div className="mb-3 flex items-end justify-between">
-            <div className="flex flex-col">
-              <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-muted">
-                Total
+        {/* Sticky Action Footer */}
+        <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <span className="font-mono text-[0.6rem] uppercase tracking-wider text-muted">
+                Preço final
               </span>
-              <span className="text-[0.65rem] text-muted/70">
-                {qty > 1 ? `${qty} × ` : ""}
-                {size} · {halfHalf ? "meio a meio" : "inteira"}
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="font-display text-2xl font-bold text-yellow sm:text-3xl">
+                  R$ {formatPrice(totalPrice)}
+                </span>
+                <span className="text-[0.65rem] text-muted">
+                  ({size} · {halfHalf ? "2 sabores" : "inteira"})
+                </span>
+              </div>
             </div>
-            <span className="font-body text-[1.8rem] font-bold leading-none text-yellow">
-              <span className="text-base text-yellow/70 align-middle">R$ </span>
-              {formatPrice(total * qty)}
-            </span>
+
+            {/* Quantity Stepper */}
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/60 p-1">
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                disabled={qty <= 1}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Diminuir quantidade"
+              >
+                <Minus className="size-4" />
+              </button>
+              <span className="min-w-6 text-center font-mono text-sm font-bold text-cream">
+                {qty}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.min(20, q + 1))}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
+                aria-label="Aumentar quantidade"
+              >
+                <Plus className="size-4" />
+              </button>
+            </div>
           </div>
+
           <button
             onClick={handleAdd}
             type="button"
-            className="group flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-[12px] bg-linear-to-r from-red-dark to-red-primary px-4 py-3.5 font-body text-sm font-bold text-cream shadow-md transition-all duration-200 hover:from-yellow hover:to-yellow-light hover:text-black active:scale-[0.98] sm:py-4"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-3.5 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
           >
-            <Plus className="size-5 transition-transform duration-200 group-active:scale-125" />
-            {qty > 1 ? `Adicionar ${qty} ao carrinho` : "Adicionar ao carrinho"}
+            <Plus className="size-5" />
+            Adicionar {qty > 1 ? `${qty} pizzas` : "ao pedido"} · R${" "}
+            {formatPrice(totalPrice)}
           </button>
         </div>
       </DialogContent>

@@ -1,4 +1,4 @@
-import { Wine, Snowflake } from "lucide-react";
+import { Wine, Snowflake, Plus } from "lucide-react";
 import type { Drink } from "@/types";
 import { formatPrice } from "@/lib/utils";
 
@@ -8,32 +8,38 @@ interface DrinkCardProps {
   onSelect: (drink: Drink) => void;
 }
 
-const drinkStyle: Record<string, { ring: string; dot: string; chip: string }> =
-  {
-    coca: {
-      ring: "ring-red-primary/50",
-      dot: "bg-red-primary",
-      chip: "bg-red-primary/12 text-red-light",
-    },
-    guarana: {
-      ring: "ring-emerald-400/40",
-      dot: "bg-emerald-400",
-      chip: "bg-emerald-400/10 text-emerald-300",
-    },
-    fanta: {
-      ring: "ring-orange-400/50",
-      dot: "bg-orange-400",
-      chip: "bg-orange-400/10 text-orange-300",
-    },
-    cajuina: {
-      ring: "ring-yellow-light/50",
-      dot: "bg-yellow-light",
-      chip: "bg-yellow-light/10 text-yellow",
-    },
-  };
+const DRINK_THEMES: Record<
+  string,
+  { ring: string; dot: string; chip: string; bg: string }
+> = {
+  coca: {
+    ring: "ring-red-500/40",
+    dot: "bg-red-500",
+    chip: "bg-red-500/12 text-red-400 border-red-500/20",
+    bg: "from-red-950/20 to-black-light",
+  },
+  guarana: {
+    ring: "ring-emerald-500/40",
+    dot: "bg-emerald-500",
+    chip: "bg-emerald-500/12 text-emerald-400 border-emerald-500/20",
+    bg: "from-emerald-950/20 to-black-light",
+  },
+  fanta: {
+    ring: "ring-amber-500/40",
+    dot: "bg-amber-500",
+    chip: "bg-amber-500/12 text-amber-400 border-amber-500/20",
+    bg: "from-amber-950/20 to-black-light",
+  },
+  cajuina: {
+    ring: "ring-yellow/40",
+    dot: "bg-yellow",
+    chip: "bg-yellow/12 text-yellow border-yellow/20",
+    bg: "from-yellow-950/20 to-black-light",
+  },
+};
 
 export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
-  const style = drinkStyle[drink.icon] ?? drinkStyle.coca;
+  const theme = DRINK_THEMES[drink.icon] ?? DRINK_THEMES.coca;
 
   return (
     <li
@@ -46,57 +52,49 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
           onSelect(drink);
         }
       }}
-      aria-label={`${drink.name}, R$ ${formatPrice(drink.price)}`}
-      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-      className="group flex cursor-pointer items-center gap-3 rounded-md border border-white/6 bg-black-light p-3 shadow-sm outline-none transition-all duration-300 hover:border-yellow/40 hover:bg-[#292526] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] focus-visible:border-yellow/60 focus-visible:-translate-y-0.5 animate-[fadeUp_0.4s_both] sm:p-4"
+      aria-label={`Adicionar ${drink.name}, R$ ${formatPrice(drink.price)}`}
+      style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
+      className="group relative flex cursor-pointer items-center gap-3.5 rounded-2xl border border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] p-3.5 shadow-sm outline-none transition-all duration-300 hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.4)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99] animate-[fadeUp_0.4s_both] sm:p-4"
     >
-      {/* Bottle mark com cor da marca */}
+      {/* Icon badge */}
       <div
-        className={`relative flex size-12 shrink-0 items-center justify-center rounded-full bg-black/40 ring-2 ${style.ring}`}
+        className={`relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-black/60 ring-2 ${theme.ring} shadow-md`}
       >
-        <Wine className="size-5 text-cream-dim" />
+        <Wine className="size-5 text-cream-dim transition-transform duration-300 group-hover:scale-110" />
         <span
-          className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-black-light ${style.dot}`}
+          className={`absolute -bottom-1 -right-1 size-3 rounded-full border-2 border-black ${theme.dot}`}
         />
       </div>
 
+      {/* Drink Details */}
       <div className="min-w-0 flex-1">
-        <h3 className="font-body text-[0.95rem] font-semibold leading-tight tracking-[-0.01em] text-cream sm:text-[1.05rem]">
-          {drink.name}
-        </h3>
-        <div className="mt-0.5 flex items-center gap-1.5">
-          <p className="truncate text-[0.72rem] text-muted sm:text-[0.78rem]">
-            {drink.desc}
-          </p>
+        <div className="flex items-center gap-2">
+          <h3 className="truncate font-display text-sm font-bold italic text-cream sm:text-base">
+            {drink.name}
+          </h3>
           <span
-            className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-mono text-[0.5rem] font-bold uppercase tracking-wider ${style.chip}`}
+            className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider ${theme.chip}`}
           >
             <Snowflake className="size-2.5" />
             Gelada
           </span>
         </div>
+        <p className="mt-0.5 truncate text-xs text-muted/80">{drink.desc}</p>
       </div>
 
+      {/* Price & Add Action */}
       <div className="flex shrink-0 items-center gap-3">
-        <span className="font-mono text-sm font-semibold text-yellow sm:text-base">
+        <span className="font-mono text-sm font-bold text-yellow sm:text-base">
           R$ {formatPrice(drink.price)}
         </span>
-        <span
-          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/3 text-muted transition-all duration-200 group-hover:border-yellow/60 group-hover:bg-yellow/15 group-hover:text-yellow"
+        <button
+          type="button"
+          tabIndex={-1}
+          className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/4 text-cream-dim transition-all duration-200 group-hover:border-yellow group-hover:bg-yellow group-hover:text-black group-hover:shadow-[0_0_12px_rgba(242,183,5,0.4)] active:scale-90"
           aria-hidden
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="size-4"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </span>
+          <Plus className="size-4.5" />
+        </button>
       </div>
     </li>
   );

@@ -23,6 +23,7 @@ function loadCart(): CartItem[] {
 
 function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
   if (a.size !== b.size || a.category !== b.category) return false;
+  if ((a.observation || "") !== (b.observation || "")) return false;
   if (a.flavors.length !== b.flavors.length) return false;
   const aNames = a.flavors
     .map((f) => f.name)

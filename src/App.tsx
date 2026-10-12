@@ -20,8 +20,31 @@ import type { Pizza, Drink, CartItem } from "@/types";
 
 type TabId = "salgadas" | "doces" | "bebidas";
 
+const TAGS_MAP: Record<TabId, string[]> = {
+  salgadas: [
+    "Todas",
+    "Mais Pedidas",
+    "Queijos",
+    "Frango",
+    "Calabresa",
+    "Especiais",
+  ],
+  doces: ["Todas", "Chocolate", "Frutas"],
+  bebidas: ["Todas", "Refrigerante 2L", "Refrigerante 1L", "Sem Açúcar"],
+};
+
+const HIGHLIGHT_FLAVORS = [
+  "Calabresa",
+  "4 Queijos",
+  "Frango Catupiry",
+  "Marguerita",
+  "Portuguesa",
+  "Brigadeiro",
+];
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("salgadas");
+  const [activeTag, setActiveTag] = useState<string>("Todas");
   const [search, setSearch] = useState("");
   const [selectedPizza, setSelectedPizza] = useState<Pizza | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -63,6 +86,7 @@ export default function App() {
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab as TabId);
     setSearch("");
+    setActiveTag("Todas");
   }, []);
 
   const handlePizzaSelect = useCallback((id: string) => {
@@ -86,7 +110,7 @@ export default function App() {
         price: drink.price,
         category: "Bebida",
       });
-      setToastMessage(`${drink.name} adicionada`);
+      setToastMessage(`${drink.name} adicionada à sacola`);
       setToastOpen(true);
     },
     [addItem]
@@ -104,12 +128,12 @@ export default function App() {
         item.flavors.length > 1 &&
         item.flavors[0].name !== item.flavors[1].name;
       const itemName = isHalf
-        ? item.flavors.map((f) => f.name).join(" + ")
+        ? `${item.flavors[0].name} + ${item.flavors[1].name}`
         : item.flavors[0].name;
       setToastMessage(
         qty > 1
-          ? `${qty}x ${itemName} (${item.size}) adicionadas`
-          : `${itemName} (${item.size}) adicionada`
+          ? `${qty}x ${itemName} (${item.size}) adicionadas à sacola`
+          : `${itemName} (${item.size}) adicionada à sacola`
       );
       setToastOpen(true);
     },
@@ -127,22 +151,87 @@ export default function App() {
     activeTab === "bebidas" ? bebidas.length : pizzaData.length;
 
   const filteredPizzas = useMemo(() => {
+    let list = pizzaData;
+
+    if (activeTag !== "Todas") {
+      if (activeTag === "Mais Pedidas") {
+        list = list.filter((p) => HIGHLIGHT_FLAVORS.includes(p.name));
+      } else if (activeTag === "Queijos") {
+        list = list.filter(
+          (p) =>
+            p.name.toLowerCase().includes("queijo") ||
+            p.name.toLowerCase().includes("catupiry") ||
+            p.desc.toLowerCase().includes("provolone") ||
+            p.desc.toLowerCase().includes("parmesão")
+        );
+      } else if (activeTag === "Frango") {
+        list = list.filter((p) => p.name.toLowerCase().includes("frango"));
+      } else if (activeTag === "Calabresa") {
+        list = list.filter((p) => p.name.toLowerCase().includes("calabresa"));
+      } else if (activeTag === "Especiais") {
+        list = list.filter(
+          (p) =>
+            p.name.toLowerCase().includes("moda") ||
+            p.name.toLowerCase().includes("crocante") ||
+            p.desc.toLowerCase().includes("bacon") ||
+            p.desc.toLowerCase().includes("ovo")
+        );
+      } else if (activeTag === "Chocolate") {
+        list = list.filter(
+          (p) =>
+            p.desc.toLowerCase().includes("chocolate") ||
+            p.name.toLowerCase().includes("brigadeiro") ||
+            p.name.toLowerCase().includes("prestígio")
+        );
+      } else if (activeTag === "Frutas") {
+        list = list.filter(
+          (p) =>
+            p.desc.toLowerCase().includes("goiabada") ||
+            p.name.toLowerCase().includes("romeu")
+        );
+      }
+    }
+
     const q = search.trim().toLowerCase();
-    if (!q) return pizzaData;
-    return pizzaData.filter(
+    if (!q) return list;
+    return list.filter(
       (p) =>
         p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
     );
-  }, [pizzaData, search]);
+  }, [pizzaData, search, activeTag]);
 
   const filteredDrinks = useMemo(() => {
+    let list = bebidas;
+
+    if (activeTag !== "Todas") {
+      if (activeTag === "Refrigerante 2L") {
+        list = list.filter(
+          (d) =>
+            d.desc.toLowerCase().includes("2 litros") ||
+            d.desc.toLowerCase().includes("2l")
+        );
+      } else if (activeTag === "Refrigerante 1L") {
+        list = list.filter(
+          (d) =>
+            d.desc.toLowerCase().includes("1 litro") ||
+            d.desc.toLowerCase().includes("1l")
+        );
+      } else if (activeTag === "Sem Açúcar") {
+        list = list.filter(
+          (d) =>
+            d.name.toLowerCase().includes("zero") ||
+            d.desc.toLowerCase().includes("zero")
+        );
+      }
+    }
+
     const q = search.trim().toLowerCase();
-    if (!q) return bebidas;
-    return bebidas.filter(
+    if (!q) return list;
+    return list.filter(
       (d) =>
         d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, activeTag]);
 
   const storeOpen = isStoreOpen();
 
@@ -164,13 +253,18 @@ export default function App() {
   const resultsCount =
     activeTab === "bebidas" ? filteredDrinks.length : filteredPizzas.length;
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setActiveTag("Todas");
+  }, []);
+
   return (
     <>
       <a
         href="#main-content"
-        className="absolute -top-25 left-4 z-1000 rounded-sm bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4"
+        className="absolute -top-25 left-4 z-1000 rounded-lg bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4 shadow-lg ring-2 ring-yellow"
       >
-        Pular para o conteúdo
+        Pular para o cardápio
       </a>
 
       <Header
@@ -185,82 +279,100 @@ export default function App() {
 
       <main
         id="main-content"
-        className="mx-auto max-w-280 px-4 py-6 pb-24 sm:px-5 sm:py-8 sm:pb-28"
+        className="mx-auto max-w-280 px-4 py-8 pb-28 sm:px-6 sm:py-10 sm:pb-32"
       >
+        {/* Search & Filter Bar */}
         <SearchBar
           value={search}
           onChange={setSearch}
           resultsCount={resultsCount}
           total={totalForTab}
+          tags={TAGS_MAP[activeTab]}
+          activeTag={activeTag}
+          onTagSelect={setActiveTag}
         />
 
-        <div className="mt-5 sm:mt-7">
+        {/* Catalog Section */}
+        <div className="mt-7 sm:mt-9">
           {activeTab !== "bebidas" ? (
             <section
               aria-label={
-                activeTab === "salgadas" ? "Pizzas salgadas" : "Pizzas doces"
+                activeTab === "salgadas"
+                  ? "Pizzas artesanais salgadas"
+                  : "Pizzas doces especiais"
               }
             >
-              <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/6 pb-3 sm:mb-6 sm:pb-4">
-                <div className="flex items-baseline gap-2.5">
-                  <h2 className="font-display text-[1.6rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-[2rem]">
-                    {activeTab === "salgadas" ? "Salgadas" : "Doces"}
+              {/* Category Header with legend */}
+              <div className="mb-6 flex flex-col gap-2 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5">
+                <div className="flex items-baseline gap-3">
+                  <h2 className="font-display text-2xl font-bold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-3xl">
+                    {activeTab === "salgadas"
+                      ? "Pizzas Salgadas"
+                      : "Pizzas Doces"}
                   </h2>
-                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-muted">
+                  <span className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-yellow/90">
                     {filteredPizzas.length}{" "}
-                    {filteredPizzas.length === 1 ? "sabor" : "sabores"}
+                    {filteredPizzas.length === 1 ? "opção" : "opções"}
                   </span>
                 </div>
-                <p className="hidden items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-wider text-muted sm:flex sm:text-[0.65rem]">
-                  <span className="flex items-center gap-1">
+
+                {/* Size guide legend */}
+                <div className="flex items-center gap-3 font-mono text-[0.62rem] uppercase tracking-wider text-muted sm:text-[0.68rem]">
+                  <span className="flex items-center gap-1.5">
                     <span
-                      className="inline-block size-2 rounded-full"
+                      className="size-2 rounded-full"
                       style={{ background: "#d90416" }}
                     />
-                    P · 4 fatias
+                    P · 4 fatias (1 pessoa)
                   </span>
-                  <span className="text-border">·</span>
-                  <span className="flex items-center gap-1">
+                  <span className="text-white/20">|</span>
+                  <span className="flex items-center gap-1.5">
                     <span
-                      className="inline-block size-2 rounded-full"
+                      className="size-2 rounded-full"
                       style={{ background: "#f28705" }}
                     />
-                    M · 6
+                    M · 6 fatias (2-3 pess.)
                   </span>
-                  <span className="text-border">·</span>
-                  <span className="flex items-center gap-1">
+                  <span className="text-white/20">|</span>
+                  <span className="flex items-center gap-1.5">
                     <span
-                      className="inline-block size-2 rounded-full"
+                      className="size-2 rounded-full"
                       style={{ background: "#f2b705" }}
                     />
-                    G · 8
-                  </span>
-                </p>
-              </div>
-              <div className="space-y-3 sm:space-y-4">
-                <PizzaGrid
-                  pizzas={filteredPizzas}
-                  onSelect={handlePizzaSelect}
-                />
-              </div>
-            </section>
-          ) : (
-            <section aria-label="Bebidas">
-              <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/6 pb-3 sm:mb-6 sm:pb-4">
-                <div className="flex items-baseline gap-2.5">
-                  <h2 className="font-display text-[1.6rem] font-semibold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-[2rem]">
-                    Bebidas
-                  </h2>
-                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-muted">
-                    {filteredDrinks.length}{" "}
-                    {filteredDrinks.length === 1 ? "item" : "itens"}
+                    G · 8 fatias (3-4 pess.)
                   </span>
                 </div>
-                <p className="font-mono text-[0.6rem] uppercase tracking-wider text-muted sm:text-[0.65rem]">
-                  Geladas para acompanhar
+              </div>
+
+              <PizzaGrid
+                pizzas={filteredPizzas}
+                onSelect={handlePizzaSelect}
+                onClearFilters={handleClearFilters}
+              />
+            </section>
+          ) : (
+            <section aria-label="Bebidas geladas">
+              <div className="mb-6 flex items-end justify-between border-b border-white/8 pb-4 sm:pb-5">
+                <div className="flex items-baseline gap-3">
+                  <h2 className="font-display text-2xl font-bold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-3xl">
+                    Bebidas
+                  </h2>
+                  <span className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-yellow/90">
+                    {filteredDrinks.length}{" "}
+                    {filteredDrinks.length === 1 ? "opção" : "opções"}
+                  </span>
+                </div>
+
+                <p className="font-mono text-[0.65rem] uppercase tracking-wider text-muted">
+                  Entregues bem geladas
                 </p>
               </div>
-              <DrinkGrid drinks={filteredDrinks} onSelect={handleDrinkSelect} />
+
+              <DrinkGrid
+                drinks={filteredDrinks}
+                onSelect={handleDrinkSelect}
+                onClearFilters={handleClearFilters}
+              />
             </section>
           )}
         </div>
