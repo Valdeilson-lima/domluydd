@@ -84,7 +84,7 @@ export function PizzaVisualizer({
         <div className="absolute inset-0 rounded-full border-[6px] border-[#36261b] bg-[#241711] shadow-[0_12px_36px_rgba(0,0,0,0.7),inset_0_2px_8px_rgba(255,255,255,0.08)] ring-1 ring-yellow/20" />
 
         {/* Artisanal Crust ring */}
-        <div className="absolute inset-1.5 rounded-full border-[4px] border-[#92400e]/70 bg-black overflow-hidden shadow-[inset_0_4px_12px_rgba(0,0,0,0.8)]">
+        <div className="absolute inset-1.5 rounded-full border-4 border-[#92400e]/70 bg-black overflow-hidden shadow-[inset_0_4px_12px_rgba(0,0,0,0.8)]">
           {!isHalfHalf ? (
             /* Single Flavor Pizza */
             <div className="relative size-full animate-[fadeUp_0.3s_ease]">
@@ -130,7 +130,7 @@ export function PizzaVisualizer({
               </div>
 
               {/* Middle golden cut line */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2 bg-linear-to-b from-yellow/90 via-yellow-light to-yellow/90 shadow-[0_0_8px_rgba(242,183,5,0.8)]" />
+              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-linear-to-b from-yellow/90 via-yellow-light to-yellow/90 shadow-[0_0_8px_rgba(242,183,5,0.8)]" />
 
               {/* Center Meio a Meio cutter badge */}
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-yellow/60 bg-black/85 px-1.5 py-0.5 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-yellow shadow-lg backdrop-blur-sm">
@@ -144,7 +144,7 @@ export function PizzaVisualizer({
             {sizeInfo.sliceDegree.map((deg) => (
               <div
                 key={deg}
-                className="absolute h-full w-[1px] bg-white/40"
+                className="absolute h-full w-px bg-white/40"
                 style={{ transform: `rotate(${deg}deg)` }}
               />
             ))}

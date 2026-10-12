@@ -17,13 +17,13 @@ export function CartBar({ itemCount, total, onOpen, hidden }: CartBarProps) {
         <button
           onClick={onOpen}
           type="button"
-          className="group flex w-full cursor-pointer items-center justify-between gap-3.5 rounded-2xl border border-yellow/30 bg-linear-to-r from-[#591212] via-[#d90416] to-[#f28705] p-3 text-cream shadow-[0_12px_32px_rgba(217,4,22,0.45)] ring-1 ring-white/10 transition-all duration-300 hover:brightness-110 hover:shadow-[0_16px_40px_rgba(242,135,5,0.5)] active:scale-[0.98] sm:p-3.5"
+          className="group flex w-full cursor-pointer items-center justify-between gap-3.5 rounded-2xl border border-yellow/30 bg-linear-to-r from-red-dark via-red-light to-orange p-3 text-cream shadow-[0_12px_32px_rgba(217,4,22,0.45)] ring-1 ring-white/10 transition-all duration-300 hover:brightness-110 hover:shadow-[0_16px_40px_rgba(242,135,5,0.5)] active:scale-[0.98] sm:p-3.5"
         >
           {/* Left: Bag icon + count */}
           <div className="flex items-center gap-3">
             <div className="relative flex size-11 items-center justify-center rounded-xl bg-black/40 text-yellow shadow-inner">
               <ShoppingBag className="size-5.5 transition-transform duration-200 group-hover:scale-110" />
-              <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-yellow font-mono text-[0.62rem] font-bold text-black ring-2 ring-[#591212] animate-[popIn_0.3s_cubic-bezier(0.22,1,0.36,1)]">
+              <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-yellow font-mono text-[0.62rem] font-bold text-black ring-2 ring-white animate-[popIn_0.3s_cubic-bezier(0.22,1,0.36,1)]">
                 {itemCount}
               </span>
             </div>
