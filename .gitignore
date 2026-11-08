@@ -1,4 +1,22 @@
+# dependencies
 node_modules/
+
+# next.js
+.next/
+out/
+
+# production & build
 dist/
-.vite/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# env & local
 *.local
+.env*.local
+
+# Next.js agent
+AGENTS.md
+
+# OS
+.DS_Store

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -8,8 +10,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPrice } from "@/lib/utils";
-import { getPizzaByName, salgadas, doces } from "@/data/pizzas";
-import type { Pizza, CartItem } from "@/types";
+import {
+  getPizzaByName,
+  salgadas,
+  doces,
+  CRUST_OPTIONS,
+  EXTRA_INGREDIENTS,
+  COMMON_REMOVALS,
+} from "@/data/pizzas";
+import type {
+  Pizza,
+  Drink,
+  CartItem,
+  CrustOption,
+  ExtraIngredient,
+} from "@/types";
 import { PizzaVisualizer } from "./PizzaVisualizer";
 import {
   SplitSquareHorizontal,
@@ -17,13 +32,17 @@ import {
   Minus,
   MessageSquare,
   Sparkles,
+  Share2,
+  Check,
 } from "lucide-react";
+import { showToast } from "@/components/ui/toast-helpers";
 
 interface DetailModalProps {
   pizza: Pizza | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddToCart: (item: Omit<CartItem, "id" | "qty">, qty?: number) => void;
+  onAddDrink?: (drink: Drink) => void;
 }
 
 const SIZES = ["P", "M", "G"] as const;
@@ -63,6 +82,11 @@ export function DetailModal({
   const [flavor1, setFlavor1] = useState(initialFlavor);
   const [flavor2, setFlavor2] = useState(initialFlavor);
   const [halfHalf, setHalfHalf] = useState(false);
+  const [selectedCrust, setSelectedCrust] = useState<CrustOption>(
+    CRUST_OPTIONS[0]
+  );
+  const [selectedExtras, setSelectedExtras] = useState<ExtraIngredient[]>([]);
+  const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
   const [observation, setObservation] = useState("");
   const [qty, setQty] = useState(1);
 
@@ -93,7 +117,10 @@ export function DetailModal({
 
   const price1 = getPrice(flavor1, size);
   const price2 = getPrice(flavor2, size);
-  const unitPrice = Math.max(price1, price2);
+  const basePizzaPrice = Math.max(price1, price2);
+  const crustPrice = selectedCrust.price;
+  const extrasPrice = selectedExtras.reduce((sum, e) => sum + e.price, 0);
+  const unitPrice = basePizzaPrice + crustPrice + extrasPrice;
   const totalPrice = unitPrice * qty;
 
   const handleFlavor1Change = (val: string) => {
@@ -107,8 +134,34 @@ export function DetailModal({
     if (!next) setFlavor2(flavor1);
   };
 
+  const toggleExtra = (extra: ExtraIngredient) => {
+    setSelectedExtras((prev) =>
+      prev.some((e) => e.id === extra.id)
+        ? prev.filter((e) => e.id !== extra.id)
+        : [...prev, extra]
+    );
+  };
+
+  const toggleRemoval = (removal: string) => {
+    setSelectedRemovals((prev) =>
+      prev.includes(removal)
+        ? prev.filter((r) => r !== removal)
+        : [...prev, removal]
+    );
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/pizza/${pizza.slug}`;
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      showToast("Link copiado para a área de transferência!");
+    } else {
+      showToast(url);
+    }
+  };
+
   const handleAdd = () => {
-    const catLabel = pizza.category === "doce" ? "Doce" : "Salgada";
+    const catLabel = pizza.category === "doce" ? "Pizza Doce" : "Pizza Salgada";
     onAddToCart(
       {
         flavors: halfHalf
@@ -121,6 +174,9 @@ export function DetailModal({
         price: unitPrice,
         category: catLabel,
         observation: observation.trim() || undefined,
+        crust: selectedCrust.price > 0 ? selectedCrust : undefined,
+        extras: selectedExtras.length > 0 ? selectedExtras : undefined,
+        removals: selectedRemovals.length > 0 ? selectedRemovals : undefined,
       },
       qty
     );
@@ -134,6 +190,15 @@ export function DetailModal({
         <div className="overflow-y-auto flex-1 overscroll-contain">
           {/* Header Title Bar */}
           <div className="relative border-b border-white/6 px-5 pt-5 pb-3 text-center sm:px-6">
+            <button
+              type="button"
+              onClick={handleShare}
+              title="Compartilhar sabor"
+              className="absolute left-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/4 text-muted transition-colors hover:border-yellow hover:text-yellow"
+            >
+              <Share2 className="size-4" />
+            </button>
+
             <span className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.25em] text-yellow/85">
               {pizza.category === "doce"
                 ? "Pizza Doce Especial"
@@ -159,7 +224,7 @@ export function DetailModal({
           </div>
 
           {/* Configuration Sections */}
-          <div className="space-y-5 p-5 sm:p-6">
+          <div className="space-y-6 p-5 sm:p-6">
             {/* 1. Escolha o Tamanho */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
@@ -167,7 +232,7 @@ export function DetailModal({
                   1. Escolha o Tamanho
                 </label>
                 <span className="text-[0.65rem] font-medium text-muted">
-                  Massa de fermentação natural
+                  Fermentação natural de 48h
                 </span>
               </div>
 
@@ -190,7 +255,6 @@ export function DetailModal({
                           : "border-white/10 bg-white/2 hover:border-white/20 hover:bg-white/4"
                       }`}
                     >
-                      {/* Popular badge */}
                       {s === "M" && (
                         <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-yellow px-1.5 py-0.2 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-black">
                           Popular
@@ -258,7 +322,6 @@ export function DetailModal({
                   </div>
                 </div>
 
-                {/* Switch toggle */}
                 <div
                   className={`relative h-6 w-11 rounded-full transition-colors duration-200 shrink-0 ${
                     halfHalf ? "bg-yellow" : "bg-white/15"
@@ -275,7 +338,6 @@ export function DetailModal({
 
             {/* 3. Seleção de Sabores */}
             <div className="space-y-3">
-              {/* Sabor 1 */}
               <div className="space-y-1.5">
                 <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
                   <span>
@@ -294,10 +356,13 @@ export function DetailModal({
                       <SelectItem
                         key={p.id}
                         value={p.name}
-                        className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer"
+                        disabled={p.available === false}
+                        className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer disabled:opacity-40"
                       >
                         <div className="flex items-center justify-between gap-3 w-full">
-                          <span className="font-medium">{p.name}</span>
+                          <span className="font-medium">
+                            {p.name} {p.available === false && "(Esgotado)"}
+                          </span>
                           <span className="font-mono text-xs text-muted">
                             R${" "}
                             {formatPrice(
@@ -311,7 +376,6 @@ export function DetailModal({
                 </Select>
               </div>
 
-              {/* Sabor 2 (Meio a Meio) */}
               {showSecondFlavor && (
                 <div
                   ref={flavor2Ref}
@@ -332,10 +396,13 @@ export function DetailModal({
                         <SelectItem
                           key={p.id}
                           value={p.name}
-                          className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer"
+                          disabled={p.available === false}
+                          className="py-2.5 focus:bg-yellow/15 focus:text-cream cursor-pointer disabled:opacity-40"
                         >
                           <div className="flex items-center justify-between gap-3 w-full">
-                            <span className="font-medium">{p.name}</span>
+                            <span className="font-medium">
+                              {p.name} {p.available === false && "(Esgotado)"}
+                            </span>
                             <span className="font-mono text-xs text-muted">
                               R${" "}
                               {formatPrice(
@@ -350,22 +417,149 @@ export function DetailModal({
                   <p className="text-[0.68rem] text-muted flex items-center gap-1 pt-0.5">
                     <Sparkles className="size-3 text-yellow" />
                     Valor final baseado na metade de maior valor (R${" "}
-                    {formatPrice(unitPrice)})
+                    {formatPrice(basePizzaPrice)})
                   </p>
                 </div>
               )}
             </div>
 
-            {/* 4. Observações para a cozinha */}
+            {/* 4. Bordas Recheadas (Ticket Médio) */}
+            <div className="space-y-2.5">
+              <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <span>2. Borda Recheada</span>
+                <span className="text-[0.65rem] text-muted">Opcional</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {CRUST_OPTIONS.map((crust) => {
+                  const isSelected = selectedCrust.id === crust.id;
+                  return (
+                    <button
+                      key={crust.id}
+                      type="button"
+                      onClick={() => setSelectedCrust(crust)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
+                          : "border-white/8 bg-white/2 text-cream hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`size-4 rounded-full border flex items-center justify-center ${
+                            isSelected
+                              ? "border-yellow bg-yellow text-black"
+                              : "border-white/20"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="size-2.5 stroke-3" />
+                          )}
+                        </div>
+                        <span className="text-xs font-medium">
+                          {crust.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs font-bold shrink-0">
+                        {crust.price === 0
+                          ? "Grátis"
+                          : `+ R$ ${formatPrice(crust.price)}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. Ingredientes Extras (Adicionais) */}
+            <div className="space-y-2.5">
+              <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <span>3. Adicionais Extras</span>
+                <span className="text-[0.65rem] text-muted">
+                  Turbine sua pizza
+                </span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {EXTRA_INGREDIENTS.map((extra) => {
+                  const isSelected = selectedExtras.some(
+                    (e) => e.id === extra.id
+                  );
+                  return (
+                    <button
+                      key={extra.id}
+                      type="button"
+                      onClick={() => toggleExtra(extra)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
+                          : "border-white/8 bg-white/2 text-cream hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`size-4 rounded-md border flex items-center justify-center ${
+                            isSelected
+                              ? "border-yellow bg-yellow text-black"
+                              : "border-white/20"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="size-2.5 stroke-3" />
+                          )}
+                        </div>
+                        <span className="text-xs font-medium">
+                          {extra.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs font-bold shrink-0">
+                        + R$ {formatPrice(extra.price)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 6. Remover Ingredientes Padrão */}
+            <div className="space-y-2">
+              <label className="flex items-center justify-between font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <span>4. Não gosta de algum ingrediente?</span>
+                <span className="text-[0.65rem] text-muted">
+                  Toque para remover
+                </span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {COMMON_REMOVALS.map((rem) => {
+                  const isRemoved = selectedRemovals.includes(rem);
+                  return (
+                    <button
+                      key={rem}
+                      type="button"
+                      onClick={() => toggleRemoval(rem)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                        isRemoved
+                          ? "border-red-primary bg-red-primary/20 text-red-light line-through"
+                          : "border-white/10 bg-white/3 text-muted hover:text-cream hover:border-white/20"
+                      }`}
+                    >
+                      {rem}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 7. Observações para a cozinha */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
                 <MessageSquare className="size-3 text-muted" />
-                Observações do pedido (opcional)
+                Outras observações (opcional)
               </label>
               <textarea
                 value={observation}
                 onChange={(e) => setObservation(e.target.value)}
-                placeholder="Ex: sem cebola, massa bem assada, pouco orégano..."
+                placeholder="Ex: massa bem passada, cortar em aperitivo, caprichar no orégano..."
                 rows={2}
                 maxLength={140}
                 className="w-full resize-none rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"

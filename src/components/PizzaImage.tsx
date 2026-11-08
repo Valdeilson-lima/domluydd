@@ -1,4 +1,7 @@
+"use client";
+
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /** Placeholder elegante (pizza em SVG) usado quando a imagem não carrega. */
@@ -24,7 +27,7 @@ interface PizzaImageProps {
   imgClassName?: string;
 }
 
-/** Imagem de pizza com fallback automático quando o endereço falha. */
+/** Imagem de pizza otimizada via Next.js Image com fallback automático. */
 export function PizzaImage({
   src,
   alt = "",
@@ -33,14 +36,17 @@ export function PizzaImage({
 }: PizzaImageProps) {
   const [failed, setFailed] = useState(false);
 
+  const finalSrc = failed ? FALLBACK_IMG : src;
+
   return (
     <div className={cn("relative overflow-hidden bg-black", className)}>
-      <img
-        src={failed ? FALLBACK_IMG : src}
+      <Image
+        src={finalSrc}
         alt={alt}
-        loading="lazy"
+        fill
+        sizes="(max-width: 640px) 120px, (max-width: 1024px) 160px, 320px"
         onError={() => setFailed(true)}
-        className={cn("h-full w-full object-cover", imgClassName)}
+        className={cn("object-cover", imgClassName)}
       />
     </div>
   );

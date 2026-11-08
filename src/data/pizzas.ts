@@ -1,4 +1,4 @@
-import type { Pizza } from "@/types";
+import type { Pizza, CrustOption, ExtraIngredient } from "@/types";
 
 export const PIZZA_IMAGES = [
   "/Pizza 2 Queijos.png",
@@ -17,6 +17,7 @@ interface RawPizza {
   p: number;
   m: number;
   g: number;
+  available?: boolean;
 }
 
 const rawSalgadas: RawPizza[] = [
@@ -291,12 +292,46 @@ const rawDoces: RawPizza[] = [
   },
 ];
 
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export const CRUST_OPTIONS: CrustOption[] = [
+  { id: "sem-borda", name: "Borda Tradicional (Sem recheio)", price: 0 },
+  { id: "catupiry", name: "Borda de Catupiry Original", price: 8 },
+  { id: "cheddar", name: "Borda de Cheddar Cremoso", price: 8 },
+  { id: "chocolate", name: "Borda de Chocolate ao Leite", price: 10 },
+  { id: "vulcao", name: "Borda Vulcão de Catupiry", price: 12 },
+];
+
+export const EXTRA_INGREDIENTS: ExtraIngredient[] = [
+  { id: "extra-bacon", name: "Bacon Crocante Extra", price: 5 },
+  { id: "extra-mussarela", name: "Queijo Mussarela Extra", price: 6 },
+  { id: "extra-catupiry", name: "Catupiry Original Extra", price: 5 },
+  { id: "extra-palmito", name: "Palmito Especial Extra", price: 6 },
+  { id: "extra-azeitonas", name: "Azeitonas Extras", price: 3 },
+];
+
+export const COMMON_REMOVALS: string[] = [
+  "Sem Cebola",
+  "Sem Azeitona",
+  "Sem Tomate",
+  "Sem Orégano",
+];
+
 function addIds(arr: RawPizza[], cat: "salgada" | "doce"): Pizza[] {
   return arr.map((item, i) => ({
     ...item,
     id: `${cat}-${i}`,
+    slug: slugify(item.name),
     category: cat,
     imgIdx: i % PIZZA_IMAGES.length,
+    available: item.available ?? true,
   }));
 }
 
@@ -308,4 +343,8 @@ export const allPizzas = [...salgadas, ...doces];
 
 export function getPizzaByName(name: string): Pizza | undefined {
   return allPizzas.find((p) => p.name === name);
+}
+
+export function getPizzaBySlug(slug: string): Pizza | undefined {
+  return allPizzas.find((p) => p.slug === slug);
 }

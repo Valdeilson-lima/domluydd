@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+"use client";
+
+import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 
@@ -9,19 +11,27 @@ interface ToastProps {
   duration?: number;
 }
 
+const emptySubscribe = () => () => {};
+
 export function Toast({
   open,
   onOpenChange,
   message,
   duration = 2600,
 }: ToastProps) {
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
   useEffect(() => {
     if (!open) return;
     const timer = setTimeout(() => onOpenChange(false), duration);
     return () => clearTimeout(timer);
   }, [open, onOpenChange, duration]);
 
-  if (!open) return null;
+  if (!open || !isMounted || typeof document === "undefined") return null;
 
   const isAdded = message.includes("adicionada");
 

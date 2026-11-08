@@ -1,3 +1,5 @@
+"use client";
+
 import {
   X,
   ShoppingBag,
@@ -7,10 +9,12 @@ import {
   Minus,
   ArrowRight,
   Wine,
+  Sparkles,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem } from "@/types";
+import type { CartItem, Drink } from "@/types";
 import { useEffect, useRef } from "react";
+import { bebidas } from "@/data/drinks";
 
 interface CartSheetProps {
   open: boolean;
@@ -21,7 +25,7 @@ interface CartSheetProps {
   onRemove: (id: number) => void;
   onUpdateQty: (id: number, delta: number) => void;
   onCheckout: () => void;
-  onAddDrink?: (name: string, price: number) => void;
+  onAddDrink?: (drink: Drink) => void;
 }
 
 export function CartSheet({
@@ -33,12 +37,9 @@ export function CartSheet({
   onRemove,
   onUpdateQty,
   onCheckout,
+  onAddDrink,
 }: CartSheetProps) {
-  const sheetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (open) sheetRef.current?.focus();
-  }, [open]);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -49,30 +50,35 @@ export function CartSheet({
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  if (!open) return null;
-
-  const hasDrink = cart.some((item) => item.category === "Bebida");
+  const hasDrink = cart.some((i) => i.category === "Bebida");
+  const quickDrinks = bebidas.slice(0, 2);
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-350 bg-black/75 backdrop-blur-sm transition-opacity duration-300 animate-[fadeIn_0.25s_ease]"
         onClick={onClose}
+        aria-hidden={!open}
+        className={`fixed inset-0 z-400 bg-black/75 backdrop-blur-sm transition-opacity duration-300 ${
+          open
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
       />
 
-      {/* Drawer */}
+      {/* Drawer Panel */}
       <div
-        ref={sheetRef}
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Carrinho de compras"
-        tabIndex={-1}
-        className="fixed top-0 right-0 bottom-0 z-351 flex w-full max-w-md flex-col border-l border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[-16px_0_48px_rgba(0,0,0,0.7)] animate-[slideInRight_0.35s_cubic-bezier(0.16,1,0.3,1)]"
+        className={`fixed inset-y-0 right-0 z-500 flex w-full max-w-md flex-col bg-[#161415] border-l border-yellow/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] transition-transform duration-300 ease-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 py-4">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-yellow/15 text-yellow">
               <ShoppingBag className="size-5" />
             </div>
@@ -154,6 +160,39 @@ export function CartSheet({
                           )}
                         </div>
 
+                        {/* Crust info */}
+                        {item.crust && (
+                          <div className="mt-1.5 flex items-center gap-1 text-[0.68rem] text-yellow">
+                            <Sparkles className="size-3 shrink-0" />
+                            <span>
+                              {item.crust.name} (+ R${" "}
+                              {formatPrice(item.crust.price)})
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Extras */}
+                        {item.extras && item.extras.length > 0 && (
+                          <p className="mt-1 text-[0.65rem] text-cream-dim">
+                            <strong className="text-yellow font-medium">
+                              Adicionais:
+                            </strong>{" "}
+                            {item.extras
+                              .map(
+                                (e) => `${e.name} (+R$ ${formatPrice(e.price)})`
+                              )
+                              .join(", ")}
+                          </p>
+                        )}
+
+                        {/* Removals */}
+                        {item.removals && item.removals.length > 0 && (
+                          <p className="mt-0.5 text-[0.65rem] text-red-300">
+                            <strong>Remoções:</strong>{" "}
+                            {item.removals.join(", ")}
+                          </p>
+                        )}
+
                         {/* Observation */}
                         {item.observation && (
                           <p className="mt-1.5 text-[0.68rem] italic text-muted/80 bg-black/30 rounded-md px-2 py-1 border border-white/5">
@@ -216,19 +255,40 @@ export function CartSheet({
             </ul>
           )}
 
-          {/* Quick Drink up-sell tip if no drinks added */}
-          {cart.length > 0 && !hasDrink && (
+          {/* Cross-selling: Quick Drink up-sell tip if no drinks added */}
+          {cart.length > 0 && !hasDrink && onAddDrink && (
             <div className="rounded-2xl border border-yellow/20 bg-linear-to-r from-yellow/10 via-yellow/5 to-transparent p-3.5">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 mb-2.5">
                 <Wine className="size-5 text-yellow shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-cream">
                     Quer acompanhar com uma bebida bem gelada?
                   </p>
                   <p className="text-[0.68rem] text-muted">
-                    Temos Coca-Cola, Guaraná, Fanta e Cajuína na aba Bebidas.
+                    Adicione com apenas 1 clique:
                   </p>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {quickDrinks.map((d) => (
+                  <button
+                    key={d.name}
+                    type="button"
+                    onClick={() => onAddDrink(d)}
+                    className="flex items-center justify-between p-2 rounded-xl border border-yellow/30 bg-black/40 hover:bg-yellow/15 text-left transition-colors cursor-pointer"
+                  >
+                    <div className="min-w-0 flex-1 pr-1">
+                      <span className="block text-xs font-bold text-cream truncate">
+                        {d.name}
+                      </span>
+                      <span className="block font-mono text-[0.65rem] text-yellow">
+                        R$ {formatPrice(d.price)}
+                      </span>
+                    </div>
+                    <Plus className="size-4 text-yellow shrink-0" />
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -245,9 +305,9 @@ export function CartSheet({
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-muted">
-                <span>Taxa de entrega</span>
+                <span>Entrega ou Retirada</span>
                 <span className="text-yellow text-[0.68rem]">
-                  Calculada na próxima etapa
+                  Escolha na próxima etapa
                 </span>
               </div>
               <div className="flex items-end justify-between border-t border-white/6 pt-2">
@@ -265,7 +325,7 @@ export function CartSheet({
               type="button"
               className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
             >
-              <span>Avançar para Entrega</span>
+              <span>Avançar para Pagamento & Entrega</span>
               <ArrowRight className="size-4.5" />
             </button>
           </div>

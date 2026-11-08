@@ -1,8 +1,9 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 import {
   X,
   MapPin,
-  Wine,
   ChevronDown,
   Search,
   Banknote,
@@ -10,12 +11,16 @@ import {
   Landmark,
   Zap,
   Receipt,
-  Sparkles,
+  Copy,
+  Check,
+  Bike,
+  Store,
+  User,
+  Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem, Drink } from "@/types";
 import { bairros } from "@/data/bairros";
-import { bebidas } from "@/data/drinks";
+import type { CartItem } from "@/types";
 import { showToast } from "@/components/ui/toast-helpers";
 
 interface CheckoutModalProps {
@@ -23,23 +28,25 @@ interface CheckoutModalProps {
   cart: CartItem[];
   total: number;
   storeOpen: boolean;
-  onAddDrink: (drink: Drink) => void;
   onClose: () => void;
   onOrderSent: () => void;
 }
 
+const PIX_KEY = "83993740352";
+const PIX_KEY_FORMATTED = "(83) 99374-0352";
+
 const PAYMENTS = [
-  { id: "Dinheiro", label: "Dinheiro", icon: Banknote },
   { id: "PIX", label: "PIX", icon: Zap },
+  { id: "Dinheiro", label: "Dinheiro", icon: Banknote },
   { id: "Crédito", label: "Crédito", icon: CreditCard },
   { id: "Débito", label: "Débito", icon: Landmark },
 ] as const;
 
 const PAYMENT_LABELS: Record<string, string> = {
-  Dinheiro: "Dinheiro",
-  PIX: "PIX",
-  Crédito: "Cartão de crédito",
-  Débito: "Cartão de débito",
+  Dinheiro: "Dinheiro (pagamento na entrega/retirada)",
+  PIX: "PIX (transferência instantânea)",
+  Crédito: "Cartão de Crédito (levar maquininha)",
+  Débito: "Cartão de Débito (levar maquininha)",
 };
 
 export function CheckoutModal({
@@ -47,30 +54,47 @@ export function CheckoutModal({
   cart,
   total,
   storeOpen,
-  onAddDrink,
   onClose,
   onOrderSent,
 }: CheckoutModalProps) {
+  const [deliveryType, setDeliveryType] = useState<"delivery" | "takeaway">(
+    "delivery"
+  );
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [cep, setCep] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
   const [address, setAddress] = useState("");
   const [complement, setComplement] = useState("");
   const [bairro, setBairro] = useState("");
   const [payment, setPayment] = useState<string>("PIX");
   const [changeAmount, setChangeAmount] = useState("");
-  const [showDrinks, setShowDrinks] = useState(false);
   const [bairroSearch, setBairroSearch] = useState("");
   const [bairroOpen, setBairroOpen] = useState(false);
+  const [pixCopied, setPixCopied] = useState(false);
+
   const bairroRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Reseta estado ao abrir
-  const [wasOpen, setWasOpen] = useState(open);
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (open) {
-      setBairroSearch("");
-      setBairroOpen(false);
+  // Carrega dados salvos do cliente no primeiro acesso
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("donluydd.customer.v1");
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.name) setName(data.name);
+        if (data.phone) setPhone(data.phone);
+        if (data.deliveryType) setDeliveryType(data.deliveryType);
+        if (data.cep) setCep(data.cep);
+        if (data.address) setAddress(data.address);
+        if (data.complement) setComplement(data.complement);
+        if (data.bairro) setBairro(data.bairro);
+        if (data.payment) setPayment(data.payment);
+      }
+    } catch {
+      /* ignore */
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (!bairroOpen) return;
@@ -83,15 +107,61 @@ export function CheckoutModal({
     return () => window.removeEventListener("mousedown", handler);
   }, [bairroOpen]);
 
+  if (!open) return null;
+
+  const handleLookupCep = async () => {
+    const clean = cep.replace(/\D/g, "");
+    if (clean.length !== 8) {
+      showToast("Informe um CEP válido com 8 dígitos");
+      return;
+    }
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        showToast("CEP não encontrado");
+      } else {
+        if (data.logradouro) setAddress(data.logradouro);
+        if (data.bairro) {
+          const match = bairros.find(
+            (b) => b.nome.toLowerCase() === data.bairro.toLowerCase()
+          );
+          if (match) {
+            setBairro(match.nome);
+          } else {
+            const partial = bairros.find((b) =>
+              b.nome.toLowerCase().includes(data.bairro.toLowerCase())
+            );
+            if (partial) setBairro(partial.nome);
+          }
+        }
+        showToast("Endereço preenchido pelo CEP!");
+      }
+    } catch {
+      showToast("Erro ao buscar CEP. Preencha manualmente.");
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
+  const copyPixKey = async () => {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(PIX_KEY);
+      setPixCopied(true);
+      showToast("Chave PIX copiada!");
+      setTimeout(() => setPixCopied(false), 3000);
+    }
+  };
+
   const bairrosFiltrados = bairros.filter(
     (b) =>
       !bairroSearch || b.nome.toLowerCase().includes(bairroSearch.toLowerCase())
   );
 
-  if (!open) return null;
-
   const bairroSelecionado = bairros.find((b) => b.nome === bairro);
-  const frete = bairroSelecionado?.frete ?? 0;
+  const frete =
+    deliveryType === "delivery" ? (bairroSelecionado?.frete ?? 0) : 0;
   const totalComFrete = total + frete;
 
   const changeValue = (() => {
@@ -101,7 +171,9 @@ export function CheckoutModal({
     return { num, change: num - totalComFrete };
   })();
 
-  const canSend = Boolean(bairro && address.trim());
+  const canSend = Boolean(
+    name.trim() && (deliveryType === "takeaway" || (bairro && address.trim()))
+  );
 
   const buildWhatsAppMessage = () => {
     const now = new Date();
@@ -116,24 +188,31 @@ export function CheckoutModal({
         const isHalf =
           item.flavors.length > 1 &&
           item.flavors[0].name !== item.flavors[1].name;
-        const name = isHalf
+        const nameStr = isHalf
           ? `${item.flavors[0].name} + ${item.flavors[1].name}`
           : item.flavors[0].name;
         const qtyStr = item.qty > 1 ? `${item.qty}x ` : "";
         const lineTotal = item.price * item.qty;
-        const obsStr = item.observation
-          ? `\n     _Obs: ${item.observation}_`
-          : "";
-        return `*${i + 1}.* ${qtyStr}${name} _(${item.size})_\n     R$ ${formatPrice(lineTotal)}${obsStr}`;
+
+        let details = `*${i + 1}.* ${qtyStr}${nameStr} _(${item.size})_\n     R$ ${formatPrice(lineTotal)}`;
+        if (item.crust) {
+          details += `\n     🧀 *Borda:* ${item.crust.name}`;
+        }
+        if (item.extras && item.extras.length > 0) {
+          details += `\n     🥓 *Extras:* ${item.extras.map((e) => e.name).join(", ")}`;
+        }
+        if (item.removals && item.removals.length > 0) {
+          details += `\n     ❌ *Sem:* ${item.removals.join(", ")}`;
+        }
+        if (item.observation) {
+          details += `\n     📝 _Obs: ${item.observation}_`;
+        }
+        return details;
       })
       .join("\n\n");
 
     const paymentLabel = PAYMENT_LABELS[payment] ?? payment;
     const itemCount = cart.reduce((s, i) => s + i.qty, 0);
-
-    const fullAddress = complement.trim()
-      ? `${address.trim()} (Comp: ${complement.trim()})`
-      : address.trim();
 
     let msg = "";
     msg += `🍕 *DON LUYDD PIZZARIA* 🍕`;
@@ -142,25 +221,48 @@ export function CheckoutModal({
     msg += `\n📅 ${dateStr} às ${timeStr}`;
     msg += `\n🛒 ${itemCount} ${itemCount === 1 ? "item" : "itens"}`;
     msg += `\n${line}`;
-    msg += `\n\n🍕 *ITENS DO PEDIDO*`;
+
+    msg += `\n\n👤 *DADOS DO CLIENTE*`;
+    msg += `\nNome: *${name.trim()}*`;
+    if (phone.trim()) msg += `\nTelefone: ${phone.trim()}`;
+    msg += `\nTipo: *${deliveryType === "delivery" ? "🛵 Entrega a Domicílio" : "🏬 Retirada no Balcão"}*`;
+
+    if (deliveryType === "delivery") {
+      const fullAddress = complement.trim()
+        ? `${address.trim()} (Comp: ${complement.trim()})`
+        : address.trim();
+      msg += `\n\n📍 *ENDEREÇO DE ENTREGA*`;
+      msg += `\n🏠 ${fullAddress}`;
+      msg += `\n🗺️ Bairro: ${bairro}`;
+      if (cep.trim()) msg += `\n📮 CEP: ${cep.trim()}`;
+    } else {
+      msg += `\n\n🏬 *RETIRADA NO BALCÃO*`;
+      msg += `\nCliente irá retirar na pizzaria (Sem taxa de entrega).`;
+    }
+
+    msg += `\n\n${line}`;
+    msg += `\n🍕 *ITENS DO PEDIDO*`;
     msg += `\n\n${itemsList}`;
     msg += `\n\n${line}`;
+
     msg += `\n💰 *RESUMO FINANCEIRO*`;
-    msg += `\nSubtotal:    R$ ${formatPrice(total)}`;
-    if (frete > 0) {
+    msg += `\nSubtotal:     R$ ${formatPrice(total)}`;
+    if (deliveryType === "delivery") {
       msg += `\nTaxa Entrega: R$ ${formatPrice(frete)} (${bairro})`;
+    } else {
+      msg += `\nTaxa Entrega: R$ 0,00 (Retirada no Balcão)`;
     }
     msg += `\n${lineThin}`;
     msg += `\n*TOTAL GERAL: R$ ${formatPrice(totalComFrete)}*`;
     msg += `\n${line}`;
-    msg += `\n\n📍 *ENDEREÇO DE ENTREGA*`;
-    msg += `\n🏠 ${fullAddress}`;
-    msg += `\n🗺️ Bairro: ${bairro}`;
-    msg += `\n${line}`;
+
     msg += `\n\n💳 *FORMA DE PAGAMENTO*`;
     msg += `\n${paymentLabel}`;
 
-    if (
+    if (payment === "PIX") {
+      msg += `\n🔑 Chave Pix: ${PIX_KEY_FORMATTED}`;
+      msg += `\n(Favor enviar o comprovante após a transferência)`;
+    } else if (
       payment === "Dinheiro" &&
       changeValue &&
       changeValue.num > totalComFrete
@@ -179,13 +281,73 @@ export function CheckoutModal({
 
   const handleSend = () => {
     if (!storeOpen) return;
-    if (!bairro) {
-      showToast("Selecione o bairro de entrega");
+    if (!name.trim()) {
+      showToast("Informe seu nome para o pedido");
       return;
     }
-    if (!address.trim()) {
-      showToast("Informe o endereço de entrega");
-      return;
+    if (deliveryType === "delivery") {
+      if (!bairro) {
+        showToast("Selecione o bairro de entrega");
+        return;
+      }
+      if (!address.trim()) {
+        showToast("Informe o endereço de entrega");
+        return;
+      }
+    }
+
+    // Salva dados no localStorage para próximas compras
+    try {
+      localStorage.setItem(
+        "donluydd.customer.v1",
+        JSON.stringify({
+          name,
+          phone,
+          deliveryType,
+          cep,
+          address,
+          complement,
+          bairro,
+          payment,
+        })
+      );
+      localStorage.setItem(
+        "donluydd.last_order.v1",
+        JSON.stringify({
+          id: String(Date.now()),
+          date: new Date().toISOString(),
+          items: cart,
+          total: totalComFrete,
+          deliveryType,
+        })
+      );
+    } catch {
+      /* ignore */
+    }
+
+    // Salva no Supabase via API Route
+    try {
+      fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: name,
+          customer_phone: phone,
+          delivery_type: deliveryType,
+          cep,
+          address,
+          complement,
+          bairro,
+          items: cart,
+          subtotal: total,
+          delivery_fee: frete,
+          total: totalComFrete,
+          payment_method: payment,
+          change_for: changeValue?.num || null,
+        }),
+      }).catch(() => {});
+    } catch {
+      /* ignore */
     }
 
     const msg = buildWhatsAppMessage();
@@ -195,12 +357,11 @@ export function CheckoutModal({
     );
     setChangeAmount("");
     onOrderSent();
-    showToast("Pedido enviado com sucesso");
+    showToast("Pedido enviado com sucesso para o WhatsApp!");
   };
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-450 bg-black/80 backdrop-blur-md transition-opacity duration-300 animate-[fadeIn_0.2s_ease]"
         onClick={onClose}
@@ -227,7 +388,7 @@ export function CheckoutModal({
                   id="checkout-title"
                   className="font-display text-lg font-bold text-cream sm:text-xl"
                 >
-                  Confirmar e Enviar Pedido
+                  Finalizar Pedido
                 </h3>
               </div>
             </div>
@@ -246,361 +407,311 @@ export function CheckoutModal({
             {!storeOpen && (
               <div className="rounded-xl border border-red-primary/40 bg-red-primary/10 p-4 text-center">
                 <p className="text-sm font-bold text-red-light">Loja fechada</p>
-                <p className="mt-0.5 text-xs text-cream-dim">
-                  Horário de atendimento: Terça a Domingo, das 18h às 22h.
+                <p className="mt-1 text-xs text-cream-dim">
+                  Você pode montar o pedido, mas o envio pelo WhatsApp só será
+                  processado quando a pizzaria abrir.
                 </p>
               </div>
             )}
 
-            {/* 1. Comanda / Resumo do Pedido */}
-            <div className="rounded-xl border border-white/8 bg-white/2 p-4 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-white/6 pb-2">
-                <span className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
-                  Resumo da Comanda
-                </span>
-                <span className="font-mono text-xs text-muted">
-                  {cart.length} {cart.length === 1 ? "item" : "itens"}
-                </span>
-              </div>
+            {/* 1. Toggle: Entrega vs Retirada no Balcão */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/60 border border-white/8">
+              <button
+                type="button"
+                onClick={() => setDeliveryType("delivery")}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  deliveryType === "delivery"
+                    ? "bg-yellow text-black shadow-md"
+                    : "text-muted hover:text-cream"
+                }`}
+              >
+                <Bike className="size-4" />
+                Entrega (Delivery)
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeliveryType("takeaway")}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  deliveryType === "takeaway"
+                    ? "bg-yellow text-black shadow-md"
+                    : "text-muted hover:text-cream"
+                }`}
+              >
+                <Store className="size-4" />
+                Retirada no Balcão
+              </button>
+            </div>
 
-              <ul className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                {cart.map((item) => {
-                  const isHalf =
-                    item.flavors.length > 1 &&
-                    item.flavors[0].name !== item.flavors[1].name;
-                  const name = isHalf
-                    ? `${item.flavors[0].name} + ${item.flavors[1].name}`
-                    : item.flavors[0].name;
+            {/* 2. Dados do Cliente */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <User className="size-3 text-muted" />
+                Seus Dados
+              </label>
 
-                  return (
-                    <li
-                      key={item.id}
-                      className="flex items-start justify-between gap-3 text-xs"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <span className="text-cream font-medium">
-                          <span className="font-mono text-yellow font-bold">
-                            {item.qty}x{" "}
-                          </span>
-                          {name}
-                        </span>
-                        <span className="text-muted text-[0.68rem] block">
-                          Tamanho {item.size}
-                          {item.observation && ` · Obs: "${item.observation}"`}
-                        </span>
-                      </div>
-                      <span className="shrink-0 font-mono font-semibold text-yellow">
-                        R$ {formatPrice(item.price * item.qty)}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* Totais */}
-              <div className="border-t border-white/6 pt-2 space-y-1">
-                <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Subtotal</span>
-                  <span className="font-mono text-cream-dim">
-                    R$ {formatPrice(total)}
-                  </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Seu nome completo *"
+                    className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  />
                 </div>
-                {bairro ? (
-                  <div className="flex items-center justify-between text-xs text-yellow">
-                    <span>Taxa de Entrega ({bairro})</span>
-                    <span className="font-mono font-bold">
-                      R$ {formatPrice(frete)}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between text-xs text-muted/70">
-                    <span>Taxa de Entrega</span>
-                    <span className="text-[0.68rem] italic">
-                      Selecione o bairro abaixo
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-end justify-between border-t border-white/6 pt-2">
-                  <span className="font-body text-sm font-bold text-cream">
-                    Total do Pedido
-                  </span>
-                  <span className="font-display text-xl font-bold text-yellow">
-                    R$ {formatPrice(totalComFrete)}
-                  </span>
+                <div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="WhatsApp / Telefone"
+                    className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  />
                 </div>
               </div>
             </div>
 
-            {/* 2. Endereço e Bairro de Entrega */}
-            <div className="space-y-3">
-              <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
-                <MapPin className="size-3.5 text-yellow" />
-                Local de Entrega
-              </label>
+            {/* 3. Seção de Endereço (ou Info de Retirada) */}
+            {deliveryType === "delivery" ? (
+              <div className="space-y-3">
+                <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                  <MapPin className="size-3 text-muted" />
+                  Endereço para Entrega
+                </label>
 
-              {/* Bairro Selector Dropdown */}
-              <div ref={bairroRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setBairroOpen((v) => !v)}
-                  className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-all duration-200 ${
-                    bairro
-                      ? "border-yellow/50 bg-black/60 text-cream"
-                      : "border-white/10 bg-black/40 text-muted/80 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <MapPin className="size-4 shrink-0 text-yellow" />
-                    <span className="truncate">
-                      {bairro || "Selecione seu bairro..."}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {bairro && (
-                      <span className="rounded-md bg-yellow/15 px-2 py-0.5 font-mono text-xs font-bold text-yellow">
-                        Taxa: R$ {formatPrice(frete)}
-                      </span>
+                {/* CEP com Busca Automática */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={cep}
+                    maxLength={9}
+                    onChange={(e) => setCep(e.target.value)}
+                    placeholder="CEP (ex: 58000-000)"
+                    className="w-36 rounded-xl border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLookupCep}
+                    disabled={cepLoading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {cepLoading ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Search className="size-3.5" />
                     )}
-                    <ChevronDown
-                      className={`size-4 text-muted transition-transform duration-200 ${
-                        bairroOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </div>
-                </button>
+                    Buscar CEP
+                  </button>
+                </div>
 
-                {/* Dropdown Menu */}
-                {bairroOpen && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1.5 rounded-xl border border-yellow/30 bg-[#1c191a] shadow-2xl overflow-hidden animate-[fadeUp_0.15s_ease]">
-                    <div className="flex items-center gap-2 border-b border-white/8 bg-black/40 px-3 py-2">
-                      <Search className="size-4 shrink-0 text-muted" />
+                {/* Bairro Dropdown */}
+                <div ref={bairroRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setBairroOpen((v) => !v)}
+                    className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream outline-none focus:border-yellow cursor-pointer"
+                  >
+                    <span className={bairro ? "text-cream" : "text-muted"}>
+                      {bairro
+                        ? `${bairro} (+ R$ ${formatPrice(frete)} frete)`
+                        : "Selecione seu Bairro *"}
+                    </span>
+                    <ChevronDown className="size-4 text-muted" />
+                  </button>
+
+                  {bairroOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-yellow/20 bg-[#1c191a] p-2 shadow-2xl">
                       <input
                         ref={searchRef}
                         type="text"
                         value={bairroSearch}
                         onChange={(e) => setBairroSearch(e.target.value)}
                         placeholder="Buscar bairro..."
-                        className="w-full bg-transparent py-1 font-body text-xs text-cream outline-none placeholder:text-muted/60"
+                        className="mb-2 w-full rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
                       />
+                      <ul className="space-y-1">
+                        {bairrosFiltrados.map((b) => (
+                          <li
+                            key={b.nome}
+                            onClick={() => {
+                              setBairro(b.nome);
+                              setBairroOpen(false);
+                            }}
+                            className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-2 text-xs text-cream-dim transition-colors hover:bg-yellow/15 hover:text-cream"
+                          >
+                            <span>{b.nome}</span>
+                            <span className="font-mono text-yellow">
+                              R$ {formatPrice(b.frete)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
-                      {bairrosFiltrados.length === 0 ? (
-                        <p className="px-3 py-4 text-center text-xs text-muted">
-                          Bairro não encontrado
-                        </p>
-                      ) : (
-                        bairrosFiltrados.map((b) => {
-                          const selected = bairro === b.nome;
-                          return (
-                            <button
-                              key={b.nome}
-                              type="button"
-                              onClick={() => {
-                                setBairro(b.nome);
-                                setBairroOpen(false);
-                                setBairroSearch("");
-                              }}
-                              className={`flex w-full cursor-pointer items-center justify-between px-3.5 py-2.5 text-left text-xs transition-colors hover:bg-yellow/10 ${
-                                selected
-                                  ? "bg-yellow/15 text-yellow font-bold"
-                                  : "text-cream-dim"
-                              }`}
-                            >
-                              <span>{b.nome}</span>
-                              <span className="font-mono text-yellow">
-                                R$ {formatPrice(b.frete)}
-                              </span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {/* Street & Number */}
-              <div className="space-y-1.5">
+                {/* Rua e Número */}
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Rua e número da residência (ex: Rua das Flores, 120)"
-                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-3 font-body text-xs sm:text-sm text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60"
+                  placeholder="Rua / Avenida e Número *"
+                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
-              </div>
 
-              {/* Complemento / Ponto de Referência */}
-              <div className="space-y-1.5">
+                {/* Complemento */}
                 <input
                   type="text"
                   value={complement}
                   onChange={(e) => setComplement(e.target.value)}
-                  placeholder="Complemento / Ponto de referência (ex: Apto 302, portão azul)"
-                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60"
+                  placeholder="Complemento / Ponto de referência (Apto, Bloco, etc.)"
+                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
               </div>
-            </div>
+            ) : (
+              <div className="rounded-xl border border-yellow/30 bg-yellow/10 p-3.5 space-y-1.5">
+                <div className="flex items-center gap-2 text-yellow font-bold text-xs">
+                  <Store className="size-4" />
+                  Retirada no Balcão (Frete Grátis)
+                </div>
+                <p className="text-xs text-cream-dim leading-relaxed">
+                  Endereço: <strong>Av. Epitácio Pessoa, 1200 - Centro</strong>
+                </p>
+                <p className="text-[0.68rem] text-muted">
+                  Tempo estimado de preparo: <strong>25 a 35 minutos</strong>.
+                  Avisaremos pelo WhatsApp assim que estiver pronto para
+                  retirar!
+                </p>
+              </div>
+            )}
 
-            {/* 3. Forma de Pagamento */}
-            <div className="space-y-2.5">
-              <label className="block font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+            {/* 4. Forma de Pagamento */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-1.5 font-mono text-[0.65rem] font-bold uppercase tracking-[0.2em] text-cream-dim">
+                <Banknote className="size-3 text-muted" />
                 Forma de Pagamento
               </label>
 
               <div className="grid grid-cols-2 gap-2">
-                {PAYMENTS.map((opt) => {
-                  const active = payment === opt.id;
-                  const Icon = opt.icon;
+                {PAYMENTS.map((p) => {
+                  const Icon = p.icon;
+                  const isSelected = payment === p.id;
                   return (
                     <button
-                      key={opt.id}
+                      key={p.id}
                       type="button"
-                      onClick={() => setPayment(opt.id)}
-                      className={`flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-left text-xs font-semibold transition-all duration-200 select-none ${
-                        active
-                          ? "border-yellow bg-yellow/15 text-cream shadow-[0_0_12px_rgba(242,183,5,0.2)]"
-                          : "border-white/8 bg-white/2 text-cream-dim hover:border-white/20"
+                      onClick={() => setPayment(p.id)}
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
+                          : "border-white/8 bg-white/2 text-cream hover:border-white/20"
                       }`}
                     >
-                      <span
-                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border transition-all ${
-                          active
-                            ? "border-yellow bg-yellow text-black"
-                            : "border-muted/50"
-                        }`}
-                      >
-                        {active && (
-                          <span className="size-1.5 rounded-full bg-black" />
-                        )}
-                      </span>
-                      <Icon
-                        className={`size-4 shrink-0 ${
-                          active ? "text-yellow" : "text-muted"
-                        }`}
-                      />
-                      <span className="truncate">{opt.label}</span>
+                      <Icon className="size-4 shrink-0" />
+                      <span className="text-xs font-bold">{p.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Troco para dinheiro */}
-              {payment === "Dinheiro" && (
-                <div className="rounded-xl border border-white/8 bg-white/2 p-3 space-y-2 animate-[fadeUp_0.2s_ease]">
-                  <label className="block font-mono text-[0.62rem] uppercase tracking-wider text-muted">
-                    Precisa de troco?
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={changeAmount}
-                      onChange={(e) => setChangeAmount(e.target.value)}
-                      placeholder="Valor para troco (ex: 50,00)"
-                      inputMode="decimal"
-                      className="flex-1 rounded-lg border border-white/10 bg-black/60 px-3 py-2 font-mono text-xs text-cream outline-none focus:border-yellow"
-                    />
+              {/* Box especial do PIX com chave Copia e Cola */}
+              {payment === "PIX" && (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <Zap className="size-3.5" />
+                      Chave PIX (Telefone)
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setChangeAmount("0")}
-                      className={`rounded-lg border px-3 py-1 font-mono text-xs font-semibold transition-colors cursor-pointer ${
-                        changeAmount === "0"
-                          ? "border-yellow bg-yellow/20 text-yellow"
-                          : "border-white/10 bg-white/5 text-muted hover:text-cream"
-                      }`}
+                      onClick={copyPixKey}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[0.68rem] font-bold transition-all cursor-pointer"
                     >
-                      Não preciso
+                      {pixCopied ? (
+                        <>
+                          <Check className="size-3 text-emerald-400" />
+                          Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-3" />
+                          Copiar Chave
+                        </>
+                      )}
                     </button>
                   </div>
+                  <div className="font-mono text-sm font-bold text-cream tracking-wider bg-black/50 p-2 rounded-lg border border-white/5">
+                    {PIX_KEY_FORMATTED}
+                  </div>
+                  <p className="text-[0.65rem] text-muted leading-tight">
+                    Você pode copiar a chave agora para agilizar o pagamento.
+                    Basta enviar o comprovante no WhatsApp ao finalizar o
+                    pedido.
+                  </p>
+                </div>
+              )}
 
-                  {changeValue && changeValue.num >= totalComFrete && (
-                    <p className="text-xs font-bold text-yellow flex items-center gap-1">
-                      <Sparkles className="size-3" />
-                      Troco calculado: R$ {formatPrice(changeValue.change)}
-                    </p>
-                  )}
-                  {changeValue && changeValue.num < totalComFrete && (
-                    <p className="text-xs font-bold text-red-light">
-                      Valor menor que o total do pedido (R${" "}
-                      {formatPrice(totalComFrete)})
+              {/* Campo de Troco para Dinheiro */}
+              {payment === "Dinheiro" && (
+                <div className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-1.5">
+                  <label className="block text-[0.68rem] font-medium text-cream-dim">
+                    Precisa de troco para quanto?
+                  </label>
+                  <input
+                    type="text"
+                    value={changeAmount}
+                    onChange={(e) => setChangeAmount(e.target.value)}
+                    placeholder="Ex: 50 ou 100 (ou digite 0 para não precisa)"
+                    className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs text-cream outline-none focus:border-yellow"
+                  />
+                  {changeValue && changeValue.change > 0 && (
+                    <p className="text-[0.68rem] text-yellow font-mono">
+                      Troco a devolver: R$ {formatPrice(changeValue.change)}
                     </p>
                   )}
                 </div>
               )}
             </div>
 
-            {/* 4. Sugestão rápida de bebida se faltar */}
-            {storeOpen && (
-              <div className="rounded-xl border border-white/8 bg-white/2 p-3">
-                <button
-                  type="button"
-                  onClick={() => setShowDrinks((v) => !v)}
-                  className="flex w-full cursor-pointer items-center justify-between text-left text-xs font-bold text-cream"
-                >
-                  <div className="flex items-center gap-2">
-                    <Wine className="size-4 text-yellow" />
-                    <span>Deseja adicionar bebidas geladas?</span>
-                  </div>
-                  <ChevronDown
-                    className={`size-4 text-muted transition-transform duration-200 ${
-                      showDrinks ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {showDrinks && (
-                  <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-white/6 pt-2.5 animate-[fadeUp_0.2s_ease]">
-                    {bebidas.map((drink) => (
-                      <button
-                        key={drink.name}
-                        type="button"
-                        onClick={() => onAddDrink(drink)}
-                        className="flex cursor-pointer items-center justify-between rounded-lg border border-white/8 bg-white/3 p-2 text-left hover:border-yellow/40 hover:bg-yellow/10 transition-colors"
-                      >
-                        <span className="text-xs font-medium text-cream truncate">
-                          {drink.name}
-                        </span>
-                        <span className="font-mono text-[0.68rem] text-yellow shrink-0">
-                          +R$ {formatPrice(drink.price)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {/* Resumo Financeiro */}
+            <div className="rounded-xl border border-white/8 bg-white/2 p-3.5 space-y-2">
+              <div className="flex justify-between text-xs text-muted">
+                <span>Subtotal dos itens ({cart.length})</span>
+                <span className="font-mono text-cream">
+                  R$ {formatPrice(total)}
+                </span>
               </div>
-            )}
+              <div className="flex justify-between text-xs text-muted">
+                <span>Taxa de entrega</span>
+                <span className="font-mono text-yellow font-medium">
+                  {deliveryType === "takeaway"
+                    ? "Grátis (Retirada)"
+                    : frete > 0
+                      ? `R$ ${formatPrice(frete)}`
+                      : "Selecione o bairro"}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-white/6 pt-2 font-bold">
+                <span className="text-sm text-cream">Total Geral</span>
+                <span className="font-display text-xl text-yellow">
+                  R$ {formatPrice(totalComFrete)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Sticky CTA Footer */}
-          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5 space-y-2">
+          {/* Action Footer */}
+          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5">
             <button
               onClick={handleSend}
               disabled={!canSend || !storeOpen}
-              className={`flex w-full items-center justify-center gap-2.5 rounded-xl px-5 py-4 font-body text-sm font-bold text-white shadow-[0_8px_24px_rgba(37,211,102,0.35)] transition-all duration-200 active:scale-[0.98] ${
-                canSend && storeOpen
-                  ? "cursor-pointer bg-[#25d366] hover:bg-[#20ba59] hover:brightness-105"
-                  : "cursor-not-allowed bg-[#25d366]/40 opacity-70"
-              }`}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-[#25d366] to-[#128c7e] px-5 py-4 font-body text-sm font-bold text-white shadow-[0_8px_24px_rgba(37,211,102,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="size-5 shrink-0"
-              >
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              <span>
-                {!storeOpen
-                  ? "Loja Fechada no Momento"
-                  : canSend
-                    ? `Enviar Pedido via WhatsApp · R$ ${formatPrice(totalComFrete)}`
-                    : "Preencha Bairro e Endereço"}
+              <span>Enviar Pedido pelo WhatsApp</span>
+              <span className="font-mono font-bold">
+                · R$ {formatPrice(totalComFrete)}
               </span>
             </button>
-            <p className="text-center font-mono text-[0.62rem] text-muted">
-              🔒 O pedido é revisado com nossa equipe diretamente no WhatsApp
-            </p>
           </div>
         </div>
       </div>

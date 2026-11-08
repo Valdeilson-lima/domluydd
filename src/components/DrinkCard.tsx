@@ -1,6 +1,9 @@
-import { Wine, Snowflake, Plus } from "lucide-react";
+"use client";
+
+import { Wine, Snowflake, Plus, Ban } from "lucide-react";
 import type { Drink } from "@/types";
 import { formatPrice } from "@/lib/utils";
+import { showToast } from "@/components/ui/toast-helpers";
 
 interface DrinkCardProps {
   drink: Drink;
@@ -40,21 +43,34 @@ const DRINK_THEMES: Record<
 
 export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
   const theme = DRINK_THEMES[drink.icon] ?? DRINK_THEMES.coca;
+  const isAvailable = drink.available !== false;
+
+  const handleClick = () => {
+    if (!isAvailable) {
+      showToast("Bebida temporariamente indisponível.");
+      return;
+    }
+    onSelect(drink);
+  };
 
   return (
     <li
       role="button"
-      tabIndex={0}
-      onClick={() => onSelect(drink)}
+      tabIndex={isAvailable ? 0 : -1}
+      onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect(drink);
+          handleClick();
         }
       }}
       aria-label={`Adicionar ${drink.name}, R$ ${formatPrice(drink.price)}`}
       style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
-      className="group relative flex cursor-pointer items-center gap-3.5 rounded-2xl border border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] p-3.5 shadow-sm outline-none transition-all duration-300 hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.4)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99] animate-[fadeUp_0.4s_both] sm:p-4"
+      className={`group relative flex items-center gap-3.5 rounded-2xl border p-3.5 shadow-sm outline-none transition-all duration-300 animate-[fadeUp_0.4s_both] sm:p-4 ${
+        isAvailable
+          ? "cursor-pointer border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.4)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99]"
+          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-[30%]"
+      }`}
     >
       {/* Icon badge */}
       <div
@@ -72,12 +88,19 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
           <h3 className="truncate font-display text-sm font-bold italic text-cream sm:text-base">
             {drink.name}
           </h3>
-          <span
-            className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider ${theme.chip}`}
-          >
-            <Snowflake className="size-2.5" />
-            Gelada
-          </span>
+          {isAvailable ? (
+            <span
+              className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider ${theme.chip}`}
+            >
+              <Snowflake className="size-2.5" />
+              Gelada
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-red-500/30 bg-black/80 px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400">
+              <Ban className="size-2.5" />
+              Esgotado
+            </span>
+          )}
         </div>
         <p className="mt-0.5 truncate text-xs text-muted/80">{drink.desc}</p>
       </div>
@@ -90,7 +113,8 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
         <button
           type="button"
           tabIndex={-1}
-          className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/4 text-cream-dim transition-all duration-200 group-hover:border-yellow group-hover:bg-yellow group-hover:text-black group-hover:shadow-[0_0_12px_rgba(242,183,5,0.4)] active:scale-90"
+          disabled={!isAvailable}
+          className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/4 text-cream-dim transition-all duration-200 group-hover:border-yellow group-hover:bg-yellow group-hover:text-black group-hover:shadow-[0_0_12px_rgba(242,183,5,0.4)] active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
           aria-hidden
         >
           <Plus className="size-4.5" />

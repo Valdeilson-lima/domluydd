@@ -1,9 +1,12 @@
+"use client";
+
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Hero, InfoStrip } from "@/components/Hero";
 import { SearchBar } from "@/components/SearchBar";
 import { PizzaGrid } from "@/components/PizzaGrid";
 import { DrinkGrid } from "@/components/DrinkGrid";
+import { ComboGrid } from "@/components/ComboGrid";
 import { DetailModal } from "@/components/DetailModal";
 import { CartSheet } from "@/components/CartSheet";
 import { CartBar } from "@/components/CartBar";
@@ -15,12 +18,14 @@ import { setToastFn } from "@/components/ui/toast-helpers";
 import { useCart } from "@/hooks/useCart";
 import { salgadas, doces, allPizzas } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
+import { combos } from "@/data/combos";
 import { isStoreOpen } from "@/lib/utils";
-import type { Pizza, Drink, CartItem } from "@/types";
+import type { Pizza, Drink, CartItem, Combo, PastOrder } from "@/types";
 
-type TabId = "salgadas" | "doces" | "bebidas";
+type TabId = "combos" | "salgadas" | "doces" | "bebidas";
 
 const TAGS_MAP: Record<TabId, string[]> = {
+  combos: ["Todos"],
   salgadas: [
     "Todas",
     "Mais Pedidas",
@@ -51,6 +56,7 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [lastOrder, setLastOrder] = useState<PastOrder | null>(null);
 
   const {
     cart,
@@ -58,6 +64,7 @@ export default function App() {
     removeItem,
     updateQty,
     clearCart,
+    repeatOrder,
     total,
     itemCount,
     cartOpen,
@@ -69,6 +76,30 @@ export default function App() {
       setToastMessage(msg);
       setToastOpen(true);
     });
+
+    try {
+      const raw = localStorage.getItem("donluydd.last_order.v1");
+      if (raw) {
+        setLastOrder(JSON.parse(raw));
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // Auto-abre a pizza se vier com parâmetro ?pizza=slug na URL
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pizzaParam = params.get("pizza");
+      if (pizzaParam) {
+        const found = allPizzas.find(
+          (p) => p.id === pizzaParam || p.slug === pizzaParam
+        );
+        if (found) {
+          setSelectedPizza(found);
+          setDetailOpen(true);
+        }
+      }
+    }
   }, []);
 
   const anyOverlayOpen = detailOpen || cartOpen || checkoutOpen;
@@ -116,6 +147,37 @@ export default function App() {
     [addItem]
   );
 
+  const handleComboSelect = useCallback(
+    (combo: Combo) => {
+      if (!isStoreOpen()) {
+        setToastMessage("Loja fechada — volte no horário de funcionamento");
+        setToastOpen(true);
+        return;
+      }
+      addItem({
+        flavors: [{ name: combo.name, price: combo.price }],
+        size: "Combo Promocional",
+        price: combo.price,
+        category: "Combo",
+        observation: combo.items.join(" + "),
+      });
+      setToastMessage(`${combo.name} adicionado à sacola!`);
+      setToastOpen(true);
+    },
+    [addItem]
+  );
+
+  const handleRepeatLastOrder = useCallback(() => {
+    if (!lastOrder || !lastOrder.items.length) {
+      setToastMessage("Nenhum pedido anterior encontrado.");
+      setToastOpen(true);
+      return;
+    }
+    repeatOrder(lastOrder.items);
+    setToastMessage("Último pedido recarregado na sua sacola!");
+    setToastOpen(true);
+  }, [lastOrder, repeatOrder]);
+
   const handleAddToCart = useCallback(
     (item: Omit<CartItem, "id" | "qty">, qty = 1) => {
       if (!isStoreOpen()) {
@@ -144,11 +206,24 @@ export default function App() {
     clearCart();
     toggleCart(false);
     setCheckoutOpen(false);
+
+    try {
+      const raw = localStorage.getItem("donluydd.last_order.v1");
+      if (raw) {
+        setLastOrder(JSON.parse(raw));
+      }
+    } catch {
+      /* ignore */
+    }
   }, [clearCart, toggleCart]);
 
   const pizzaData = activeTab === "salgadas" ? salgadas : doces;
   const totalForTab =
-    activeTab === "bebidas" ? bebidas.length : pizzaData.length;
+    activeTab === "combos"
+      ? combos.length
+      : activeTab === "bebidas"
+        ? bebidas.length
+        : pizzaData.length;
 
   const filteredPizzas = useMemo(() => {
     let list = pizzaData;
@@ -251,7 +326,11 @@ export default function App() {
   }, [cart, toggleCart, storeOpen]);
 
   const resultsCount =
-    activeTab === "bebidas" ? filteredDrinks.length : filteredPizzas.length;
+    activeTab === "combos"
+      ? combos.length
+      : activeTab === "bebidas"
+        ? filteredDrinks.length
+        : filteredPizzas.length;
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -272,6 +351,8 @@ export default function App() {
         onTabChange={handleTabChange}
         itemCount={itemCount}
         onCartOpen={() => toggleCart(true)}
+        onRepeatLastOrder={handleRepeatLastOrder}
+        hasLastOrder={Boolean(lastOrder)}
       />
 
       <Hero />
@@ -294,7 +375,25 @@ export default function App() {
 
         {/* Catalog Section */}
         <div className="mt-7 sm:mt-9">
-          {activeTab !== "bebidas" ? (
+          {activeTab === "combos" ? (
+            <section aria-label="Combos promocionais">
+              <div className="mb-6 flex flex-col gap-2 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5">
+                <div className="flex items-baseline gap-3">
+                  <h2 className="font-display text-2xl font-bold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-3xl">
+                    Combos Promocionais
+                  </h2>
+                  <span className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-yellow/90">
+                    Mais economia
+                  </span>
+                </div>
+                <p className="font-mono text-[0.65rem] uppercase tracking-wider text-muted">
+                  Pizzas selecionadas + bebida com desconto exclusivo
+                </p>
+              </div>
+
+              <ComboGrid combos={combos} onSelect={handleComboSelect} />
+            </section>
+          ) : activeTab !== "bebidas" ? (
             <section
               aria-label={
                 activeTab === "salgadas"
@@ -302,7 +401,6 @@ export default function App() {
                   : "Pizzas doces especiais"
               }
             >
-              {/* Category Header with legend */}
               <div className="mb-6 flex flex-col gap-2 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5">
                 <div className="flex items-baseline gap-3">
                   <h2 className="font-display text-2xl font-bold italic leading-none tracking-[-0.02em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_30] sm:text-3xl">
@@ -316,7 +414,6 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* Size guide legend */}
                 <div className="flex items-center gap-3 font-mono text-[0.62rem] uppercase tracking-wider text-muted sm:text-[0.68rem]">
                   <span className="flex items-center gap-1.5">
                     <span
@@ -398,6 +495,7 @@ export default function App() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onAddToCart={handleAddToCart}
+        onAddDrink={handleDrinkSelect}
       />
 
       <CartSheet
@@ -409,6 +507,7 @@ export default function App() {
         onRemove={removeItem}
         onUpdateQty={updateQty}
         onCheckout={handleCheckout}
+        onAddDrink={handleDrinkSelect}
       />
 
       <CheckoutModal
@@ -416,7 +515,6 @@ export default function App() {
         cart={cart}
         total={total}
         storeOpen={storeOpen}
-        onAddDrink={handleDrinkSelect}
         onClose={() => setCheckoutOpen(false)}
         onOrderSent={handleOrderSent}
       />

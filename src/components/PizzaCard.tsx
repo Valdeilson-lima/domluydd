@@ -1,8 +1,11 @@
+"use client";
+
 import type { Pizza } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { PizzaImage } from "./PizzaImage";
 import { PIZZA_IMAGES } from "@/data/pizzas";
-import { SlidersHorizontal, Flame } from "lucide-react";
+import { SlidersHorizontal, Flame, Ban } from "lucide-react";
+import { showToast } from "@/components/ui/toast-helpers";
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -27,21 +30,34 @@ function menuNumber(pizza: Pizza): string {
 
 export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
   const isHighlight = HIGHLIGHT_FLAVORS.has(pizza.name);
+  const isAvailable = pizza.available !== false;
+
+  const handleClick = () => {
+    if (!isAvailable) {
+      showToast("Este sabor está temporariamente esgotado hoje.");
+      return;
+    }
+    onSelect(pizza.id);
+  };
 
   return (
     <li
       role="button"
-      tabIndex={0}
-      onClick={() => onSelect(pizza.id)}
+      tabIndex={isAvailable ? 0 : -1}
+      onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect(pizza.id);
+          handleClick();
         }
       }}
-      aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}. Toque para personalizar.`}
+      aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}.${!isAvailable ? " Esgotado hoje." : " Toque para personalizar."}`}
       style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
-      className="group relative flex cursor-pointer overflow-hidden rounded-2xl border border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] shadow-sm outline-none transition-all duration-300 hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99] animate-[fadeUp_0.4s_both]"
+      className={`group relative flex overflow-hidden rounded-2xl border transition-all duration-300 outline-none animate-[fadeUp_0.4s_both] ${
+        isAvailable
+          ? "cursor-pointer border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] shadow-sm hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99]"
+          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-[35%]"
+      }`}
     >
       {/* Thumbnail area with photo & overlays */}
       <div className="relative w-28 shrink-0 overflow-hidden sm:w-36">
@@ -58,11 +74,18 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
           #{menuNumber(pizza)}
         </span>
 
-        {/* Highlight Tag */}
-        {isHighlight && (
-          <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-red-primary/90 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-cream shadow-md backdrop-blur-sm">
-            <Flame className="size-2.5 text-yellow" />
-            Favorita
+        {/* Highlight Tag or Sold Out */}
+        {isAvailable ? (
+          isHighlight && (
+            <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-red-primary/90 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-cream shadow-md backdrop-blur-sm">
+              <Flame className="size-2.5 text-yellow" />
+              Favorita
+            </span>
+          )
+        ) : (
+          <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/85 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400 shadow-md border border-red-500/30">
+            <Ban className="size-2.5" />
+            Esgotado
           </span>
         )}
       </div>
@@ -108,9 +131,17 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
 
           {/* Action indicator */}
           <span className="flex items-center gap-1 text-[0.68rem] font-bold text-yellow/90 group-hover:text-yellow sm:text-xs">
-            <SlidersHorizontal className="size-3 transition-transform duration-200 group-hover:scale-110" />
-            <span className="hidden sm:inline">Montar pizza</span>
-            <span className="sm:hidden">Pedir</span>
+            {isAvailable ? (
+              <>
+                <SlidersHorizontal className="size-3 transition-transform duration-200 group-hover:scale-110" />
+                <span className="hidden sm:inline">Montar pizza</span>
+                <span className="sm:hidden">Pedir</span>
+              </>
+            ) : (
+              <span className="text-red-400 font-mono text-[0.68rem]">
+                Indisponível
+              </span>
+            )}
           </span>
         </div>
       </div>

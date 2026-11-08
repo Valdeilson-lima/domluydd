@@ -25,32 +25,51 @@ O **Don Luydd Pizzaria — Cardápio Digital** é uma aplicação web single-pag
 
 ## Tecnologias
 
-|                                            |                                                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| **React 19**                               | Interface de usuário                                                      |
-| **TypeScript 6**                           | Tipagem estática                                                          |
-| **Vite 8**                                 | Build tool e dev server                                                   |
-| **Tailwind CSS 4**                         | Estilização utilitária                                                    |
-| **Radix UI**                               | Componentes headless acessíveis (Dialog, Select, Tabs, Toast, RadioGroup) |
-| **Lucide React**                           | Ícones                                                                    |
-| **class-variance-authority**               | Variantes de componentes                                                  |
-| **ESLint + Prettier + Husky + commitlint** | Qualidade e padronização de código                                        |
+|                                            |                                                             |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| **Next.js 16 (App Router)**                | Framework React com Turbopack e SSR/SSG                     |
+| **React 19**                               | Interface de usuário                                        |
+| **Supabase (PostgreSQL + Realtime)**       | Banco de dados na nuvem e streaming de pedidos ao vivo      |
+| **TypeScript**                             | Tipagem estática                                            |
+| **Tailwind CSS 4**                         | Estilização utilitária com PostCSS                          |
+| **Radix UI**                               | Componentes headless acessíveis (Dialog, Select, Tabs, etc) |
+| **Lucide React**                           | Ícones                                                      |
+| **class-variance-authority**               | Variantes de componentes                                    |
+| **ESLint + Prettier + Husky + commitlint** | Qualidade e padronização de código                          |
 
 ## Como usar
 
 ```bash
-# Instalar dependências
+# 1. Instalar dependências
 npm install
 
-# Iniciar servidor de desenvolvimento
+# 2. Configurar variáveis de ambiente do Supabase (opcional para modo local)
+cp .env.example .env.local
+
+# 3. Iniciar servidor de desenvolvimento (Next.js Turbopack)
 npm run dev
 
-# Build de produção
+# 4. Build de produção
 npm run build
 
-# Preview do build
-npm run preview
+# 5. Iniciar servidor de produção
+npm run start
 ```
+
+## Painel da Cozinha & Gestão (`/admin`)
+
+- Acesse `http://localhost:3000/admin`
+- **PIN Padrão:** `1234`
+- Acompanhamento em tempo real de novos pedidos com alerta sonoro
+- Atualização de status: _Pendente_ ➔ _No Forno_ ➔ _A Caminho/Pronto_ ➔ _Concluído_
+- Botão para imprimir comanda térmica de produção
+- Notificação de status direto no WhatsApp do cliente
+
+## Configuração do Supabase
+
+1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
+2. No painel do Supabase, abra o **SQL Editor** e execute o script `supabase/schema.sql`.
+3. Copie a **URL do Projeto** e a **Anon Key** para o seu arquivo `.env.local`.
 
 ## Como funciona
 

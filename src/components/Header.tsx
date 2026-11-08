@@ -1,17 +1,24 @@
+"use client";
+
 import { useState } from "react";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, ShoppingBag, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { salgadas, doces } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
+import { combos } from "@/data/combos";
 
 interface HeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   itemCount?: number;
   onCartOpen?: () => void;
+  onRepeatLastOrder?: () => void;
+  hasLastOrder?: boolean;
 }
 
 const tabs = [
+  { id: "combos", label: "Combos", count: combos.length, isPromo: true },
   { id: "salgadas", label: "Salgadas", count: salgadas.length },
   { id: "doces", label: "Doces", count: doces.length },
   { id: "bebidas", label: "Bebidas", count: bebidas.length },
@@ -22,6 +29,8 @@ export function Header({
   onTabChange,
   itemCount = 0,
   onCartOpen,
+  onRepeatLastOrder,
+  hasLastOrder = false,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -29,10 +38,12 @@ export function Header({
     <header className="sticky top-0 z-200 border-b border-yellow/25 bg-linear-to-b from-red-dark to-[#2a1010] backdrop-blur-md shadow-[0_4px_24px_rgba(89,18,18,0.25)]">
       <div className="mx-auto flex h-14 max-w-280 items-center justify-between gap-2.5 px-3 sm:h-16 sm:px-5">
         <div className="flex shrink-0 items-center gap-2.5 pr-2">
-          <img
+          <Image
             src="/logo.png"
             alt="Don Luydd Pizzaria"
-            className="h-9 w-auto rounded-full ring-1 ring-yellow/30 sm:h-10"
+            width={40}
+            height={40}
+            className="h-9 w-9 rounded-full ring-1 ring-yellow/30 sm:h-10 sm:w-10 object-cover"
           />
           <div className="flex flex-col leading-tight">
             <span className="font-display text-[0.95rem] font-semibold italic leading-none tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36,'SOFT'_30] sm:text-base">
@@ -63,12 +74,17 @@ export function Header({
                 }}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-2 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none sm:px-3.5 sm:py-2 sm:text-[0.72rem] max-sm:w-full max-sm:py-3 max-sm:text-sm max-sm:tracking-widest",
+                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-2 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none sm:px-3 sm:py-2 sm:text-[0.72rem] max-sm:w-full max-sm:py-3 max-sm:text-sm max-sm:tracking-widest flex items-center justify-between",
                   active ? "text-yellow" : "text-muted hover:text-cream-dim"
                 )}
               >
-                <span className="flex items-baseline gap-1.5">
+                <span className="flex items-center gap-1.5">
                   {tab.label}
+                  {tab.isPromo && (
+                    <span className="rounded-full bg-red-primary px-1.5 py-0.2 font-mono text-[0.5rem] font-bold text-white uppercase tracking-normal">
+                      Promo
+                    </span>
+                  )}
                   <span className="hidden text-[0.6rem] font-normal tracking-normal text-muted/60 sm:inline">
                     {tab.count}
                   </span>
@@ -86,7 +102,19 @@ export function Header({
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {hasLastOrder && onRepeatLastOrder && (
+            <button
+              onClick={onRepeatLastOrder}
+              type="button"
+              title="Repetir último pedido"
+              className="flex items-center gap-1.5 rounded-lg border border-yellow/30 bg-yellow/10 px-2.5 py-1.5 text-xs font-bold text-yellow transition-all hover:bg-yellow/20 active:scale-95 cursor-pointer max-sm:hidden"
+            >
+              <RotateCcw className="size-3.5" />
+              <span>Repetir Pedido</span>
+            </button>
+          )}
+
           {onCartOpen && (
             <button
               onClick={onCartOpen}
@@ -101,6 +129,7 @@ export function Header({
               )}
             </button>
           )}
+
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="flex size-auto shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"

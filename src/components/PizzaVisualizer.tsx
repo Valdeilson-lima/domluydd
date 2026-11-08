@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import { getPizzaByName, PIZZA_IMAGES } from "@/data/pizzas";
 import { cn } from "@/lib/utils";

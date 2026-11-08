@@ -1,9 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import type { CartItem } from "@/types";
 
 const STORAGE_KEY = "donluydd.cart.v1";
 
-function loadCart(): CartItem[] {
+let cartState: CartItem[] = [];
+let initialized = false;
+const listeners = new Set<() => void>();
+
+function loadFromStorage(): CartItem[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -21,9 +26,54 @@ function loadCart(): CartItem[] {
   }
 }
 
+function getCartSnapshot(): CartItem[] {
+  if (!initialized && typeof window !== "undefined") {
+    initialized = true;
+    cartState = loadFromStorage();
+  }
+  return cartState;
+}
+
+const SERVER_SNAPSHOT: CartItem[] = [];
+function getServerSnapshot(): CartItem[] {
+  return SERVER_SNAPSHOT;
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+function updateCart(updater: (prev: CartItem[]) => CartItem[]) {
+  cartState = updater(getCartSnapshot());
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cartState));
+    } catch {
+      /* armazenamento indisponível — segue apenas em memória */
+    }
+  }
+  listeners.forEach((l) => l());
+}
+
 function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
   if (a.size !== b.size || a.category !== b.category) return false;
   if ((a.observation || "") !== (b.observation || "")) return false;
+  if ((a.crust?.name || "") !== (b.crust?.name || "")) return false;
+  const aExtras = (a.extras || [])
+    .map((e) => e.name)
+    .sort()
+    .join("|");
+  const bExtras = (b.extras || [])
+    .map((e) => e.name)
+    .sort()
+    .join("|");
+  if (aExtras !== bExtras) return false;
+  const aRemovals = (a.removals || []).sort().join("|");
+  const bRemovals = (b.removals || []).sort().join("|");
+  if (aRemovals !== bRemovals) return false;
   if (a.flavors.length !== b.flavors.length) return false;
   const aNames = a.flavors
     .map((f) => f.name)
@@ -37,21 +87,16 @@ function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
 }
 
 export function useCart() {
-  const [cart, setCart] = useState<CartItem[]>(loadCart);
+  const cart = useSyncExternalStore(
+    subscribe,
+    getCartSnapshot,
+    getServerSnapshot
+  );
   const [cartOpen, setCartOpen] = useState(false);
-
-  // Persiste o carrinho para não perder o pedido ao recarregar a página
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-    } catch {
-      /* armazenamento indisponível — segue apenas em memória */
-    }
-  }, [cart]);
 
   const addItem = useCallback((item: Omit<CartItem, "id" | "qty">, qty = 1) => {
     if (qty <= 0) return;
-    setCart((prev) => {
+    updateCart((prev) => {
       const existing = prev.find((p) => itemsMatch(item, p));
       if (existing) {
         return prev.map((p) =>
@@ -64,11 +109,11 @@ export function useCart() {
   }, []);
 
   const removeItem = useCallback((id: number) => {
-    setCart((prev) => prev.filter((p) => p.id !== id));
+    updateCart((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
   const updateQty = useCallback((id: number, delta: number) => {
-    setCart((prev) =>
+    updateCart((prev) =>
       prev
         .map((p) =>
           p.id === id ? { ...p, qty: Math.max(0, p.qty + delta) } : p
@@ -78,7 +123,17 @@ export function useCart() {
   }, []);
 
   const clearCart = useCallback(() => {
-    setCart([]);
+    updateCart(() => []);
+  }, []);
+
+  const repeatOrder = useCallback((items: CartItem[]) => {
+    updateCart(() =>
+      items.map((item, idx) => ({
+        ...item,
+        id: idx + 1,
+      }))
+    );
+    setCartOpen(true);
   }, []);
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
@@ -94,6 +149,7 @@ export function useCart() {
     removeItem,
     updateQty,
     clearCart,
+    repeatOrder,
     total,
     itemCount,
     cartOpen,
