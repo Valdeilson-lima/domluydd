@@ -206,16 +206,16 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[94dvh] sm:max-h-[88vh] p-0 gap-0 flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+      <DialogContent className="max-h-[92dvh] sm:max-h-[88vh] p-0 gap-0 flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
         {/* Scrollable Body */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
           {/* Header Title Bar */}
-          <div className="relative border-b border-white/6 px-5 pt-5 pb-3 text-center sm:px-6">
+          <div className="relative border-b border-white/6 px-12 pt-4 pb-3 text-center sm:px-14">
             <button
               type="button"
               onClick={handleShare}
               title="Compartilhar sabor"
-              className="absolute left-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-colors hover:border-yellow hover:text-yellow"
+              className="absolute left-3.5 top-3.5 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-colors hover:border-yellow hover:text-yellow"
             >
               <Share2 className="size-4" />
             </button>
