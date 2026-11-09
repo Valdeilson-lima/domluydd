@@ -63,9 +63,33 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
 
   const isAvailable = pizza.available !== false;
   const imgSrc = PIZZA_IMAGES[pizza.imgIdx];
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: pizza.name,
+    description: pizza.desc,
+    image: `https://donluydd.com.br${imgSrc}`,
+    brand: { "@type": "Brand", name: "Don Luydd Pizzaria" },
+    category: pizza.category === "doce" ? "Pizza doce" : "Pizza salgada",
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "BRL",
+      lowPrice: pizza.p,
+      highPrice: pizza.g,
+      offerCount: 3,
+      availability: isAvailable
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: `https://donluydd.com.br/pizza/${pizza.slug}`,
+    },
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       {/* Top Header */}
       <header className="sticky top-0 z-50 border-b border-yellow/20 bg-[#1a1415]/90 backdrop-blur-md px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between">

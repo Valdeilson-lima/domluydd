@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: "Don Luydd Pizzaria — Cardápio Digital",
   description:
     "Cardápio Digital da Don Luydd Pizzaria. Peça sua pizza artesanal de fermentação natural favorita pelo WhatsApp com entrega rápida!",
+  keywords: [
+    "pizzaria artesanal",
+    "pizza de fermentação natural",
+    "cardápio de pizzas",
+    "Don Luydd",
+  ],
+  alternates: {
+    canonical: "https://donluydd.com.br",
+  },
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
