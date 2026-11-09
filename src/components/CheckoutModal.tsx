@@ -29,6 +29,7 @@ interface CheckoutModalProps {
   cart: CartItem[];
   total: number;
   storeOpen: boolean;
+  storeMessage?: string | null;
   onClose: () => void;
   onOrderSent: () => void;
 }
@@ -48,6 +49,7 @@ export function CheckoutModal({
   cart,
   total,
   storeOpen,
+  storeMessage,
   onClose,
   onOrderSent,
 }: CheckoutModalProps) {
@@ -326,8 +328,8 @@ export function CheckoutModal({
               <div className="rounded-sm border border-red-primary/40 bg-red-primary/10 p-4 text-center">
                 <p className="text-sm font-bold text-red-light">Loja fechada</p>
                 <p className="mt-1 text-xs text-cream-dim">
-                  Você pode montar o pedido, mas o envio pelo WhatsApp só será
-                  processado quando a pizzaria abrir.
+                  {storeMessage ||
+                    "Você pode montar o pedido, mas o envio pelo WhatsApp só será processado quando a pizzaria abrir."}
                 </p>
               </div>
             )}

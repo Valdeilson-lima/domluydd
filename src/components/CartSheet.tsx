@@ -11,7 +11,7 @@ import {
   Wine,
   Sparkles,
 } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Drink } from "@/types";
 import { useEffect, useRef } from "react";
 import { bebidas } from "@/data/drinks";
@@ -21,6 +21,8 @@ interface CartSheetProps {
   cart: CartItem[];
   total: number;
   itemCount: number;
+  storeOpen?: boolean;
+  storeMessage?: string | null;
   onClose: () => void;
   onRemove: (id: number) => void;
   onUpdateQty: (id: number, delta: number) => void;
@@ -33,6 +35,8 @@ export function CartSheet({
   cart,
   total,
   itemCount,
+  storeOpen,
+  storeMessage,
   onClose,
   onRemove,
   onUpdateQty,
@@ -320,13 +324,32 @@ export function CartSheet({
               </div>
             </div>
 
+            {storeOpen === false && (
+              <div className="rounded-sm border border-red-primary/40 bg-red-primary/10 p-2.5 text-center text-xs text-red-200">
+                <span className="font-bold block">Pizzaria Fechada</span>
+                <span className="text-[0.7rem] text-cream-dim">
+                  {storeMessage || "Novos pedidos estão pausados no momento."}
+                </span>
+              </div>
+            )}
+
             <button
               onClick={onCheckout}
               type="button"
-              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-sm bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+              disabled={storeOpen === false}
+              className={cn(
+                "flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-sm px-5 py-4 font-body text-sm font-bold shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200",
+                storeOpen === false
+                  ? "bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-70"
+                  : "bg-linear-to-r from-red-dark via-red-primary to-yellow text-cream hover:brightness-110 active:scale-[0.98]"
+              )}
             >
-              <span>Avançar para Pagamento & Entrega</span>
-              <ArrowRight className="size-4.5" />
+              <span>
+                {storeOpen === false
+                  ? "Loja Fechada no Momento"
+                  : "Avançar para Pagamento & Entrega"}
+              </span>
+              {storeOpen !== false && <ArrowRight className="size-4.5" />}
             </button>
           </div>
         )}

@@ -42,6 +42,8 @@ import {
 } from "@/lib/escpos";
 import { salgadas, doces, EXTRA_INGREDIENTS } from "@/data/pizzas";
 import { showToast } from "@/components/ui/toast-helpers";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
+import type { StoreMode } from "@/types/store";
 
 const STATUS_LABELS: Record<
   OrderStatus,
@@ -105,6 +107,107 @@ export default function AdminPage() {
 
   // Estoque e itens pausados
   const [pausedItems, setPausedItems] = useState<string[]>([]);
+
+  // Controle de coluna ativa no modo Kanban em telas mobile (< 768px)
+  const [mobileKanbanColumn, setMobileKanbanColumn] = useState<
+    "pending" | "preparing" | "delivering"
+  >("pending");
+
+  // Filtros internos do Modal de Estoque
+  const [stockSearchQuery, setStockSearchQuery] = useState("");
+  const [stockCategory, setStockCategory] = useState<
+    "all" | "salgadas" | "doces" | "extras" | "paused"
+  >("all");
+
+  const filteredSalgadas = useMemo(() => {
+    return salgadas.filter((p) => {
+      if (stockCategory === "doces" || stockCategory === "extras") return false;
+      const isPaused = pausedItems.includes(p.name);
+      if (stockCategory === "paused" && !isPaused) return false;
+      if (!stockSearchQuery) return true;
+      const q = stockSearchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+      );
+    });
+  }, [stockCategory, pausedItems, stockSearchQuery]);
+
+  const filteredDoces = useMemo(() => {
+    return doces.filter((p) => {
+      if (stockCategory === "salgadas" || stockCategory === "extras")
+        return false;
+      const isPaused = pausedItems.includes(p.name);
+      if (stockCategory === "paused" && !isPaused) return false;
+      if (!stockSearchQuery) return true;
+      const q = stockSearchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+      );
+    });
+  }, [stockCategory, pausedItems, stockSearchQuery]);
+
+  const filteredExtras = useMemo(() => {
+    return EXTRA_INGREDIENTS.filter((e) => {
+      if (stockCategory === "salgadas" || stockCategory === "doces")
+        return false;
+      const isPaused = pausedItems.includes(e.name);
+      if (stockCategory === "paused" && !isPaused) return false;
+      if (!stockSearchQuery) return true;
+      const q = stockSearchQuery.toLowerCase();
+      return e.name.toLowerCase().includes(q);
+    });
+  }, [stockCategory, pausedItems, stockSearchQuery]);
+
+  // Status de funcionamento da loja (Aberto/Fechado pelo Dono)
+  const storeStatus = useStoreStatus();
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [tempStoreMode, setTempStoreMode] = useState<StoreMode>("auto");
+  const [tempStoreMessage, setTempStoreMessage] = useState("");
+  const [isSavingStore, setIsSavingStore] = useState(false);
+
+  const handleOpenStoreModal = useCallback(() => {
+    setTempStoreMode(storeStatus.mode);
+    setTempStoreMessage(storeStatus.customMessage || "");
+    setStoreModalOpen(true);
+  }, [storeStatus.mode, storeStatus.customMessage]);
+
+  const handleQuickToggleStore = useCallback(async () => {
+    const newMode: StoreMode = storeStatus.isOpen ? "closed" : "open";
+    const ok = await storeStatus.updateStatus(
+      newMode,
+      storeStatus.customMessage
+    );
+    if (ok) {
+      showToast(
+        newMode === "open"
+          ? "🟢 Pizzaria ABERTA para receber pedidos!"
+          : "🔴 Pizzaria FECHADA para novos pedidos."
+      );
+    } else {
+      showToast("Erro ao alterar status da loja.");
+    }
+  }, [storeStatus]);
+
+  const handleSaveStoreStatus = useCallback(async () => {
+    setIsSavingStore(true);
+    const ok = await storeStatus.updateStatus(
+      tempStoreMode,
+      tempStoreMessage.trim() ? tempStoreMessage.trim() : null
+    );
+    setIsSavingStore(false);
+    if (ok) {
+      setStoreModalOpen(false);
+      showToast(
+        tempStoreMode === "open"
+          ? "Pizzaria configurada como ABERTA!"
+          : tempStoreMode === "closed"
+            ? "Pizzaria configurada como FECHADA!"
+            : "Pizzaria em MODO AUTOMÁTICO (Ter-Dom 18h às 22h)!"
+      );
+    } else {
+      showToast("Erro ao atualizar status da pizzaria.");
+    }
+  }, [storeStatus, tempStoreMode, tempStoreMessage]);
 
   // Timer para atualização periódica dos SLAs (a cada 30 segundos)
   const [, setTick] = useState(0);
@@ -772,7 +875,7 @@ export default function AdminPage() {
     return (
       <div
         key={order.id}
-        className={`flex flex-col justify-between rounded-sm border bg-linear-to-b from-[#1d1a1b] to-[#141213] p-4 shadow-xl transition-all ${
+        className={`flex flex-col justify-between rounded-sm border bg-linear-to-b from-[#1d1a1b] to-[#141213] p-3.5 sm:p-4 shadow-xl transition-all ${
           isDelayed
             ? "border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/50"
             : "border-white/10 hover:border-yellow/40"
@@ -781,12 +884,12 @@ export default function AdminPage() {
         <div>
           {/* Card Header & SLA Timer */}
           <div className="flex items-start justify-between gap-2 border-b border-white/8 pb-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <span className="font-mono text-xs font-bold text-yellow">
                   #{order.id.slice(0, 6)}
                 </span>
-                <span className="text-[0.68rem] text-muted flex items-center gap-1">
+                <span className="text-[0.68rem] text-muted flex items-center gap-1 shrink-0">
                   <Clock className="size-3" />
                   {timeFormatted}
                 </span>
@@ -801,11 +904,11 @@ export default function AdminPage() {
                     </span>
                   )}
               </div>
-              <h3 className="font-display text-base font-bold text-cream mt-1">
+              <h3 className="font-display text-base font-bold text-cream mt-1 break-words line-clamp-2">
                 {order.customer_name}
               </h3>
               {order.customer_phone && (
-                <span className="font-mono text-xs text-cream-dim">
+                <span className="font-mono text-xs text-cream-dim block truncate">
                   {order.customer_phone}
                 </span>
               )}
@@ -813,7 +916,7 @@ export default function AdminPage() {
 
             {/* Status Tag */}
             <span
-              className={`inline-flex items-center gap-1 rounded-sm border px-2.5 py-1 font-mono text-[0.62rem] font-bold shrink-0 ${statusCfg.bg} ${statusCfg.text}`}
+              className={`inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-[0.62rem] font-bold shrink-0 ${statusCfg.bg} ${statusCfg.text}`}
             >
               <span>{statusCfg.icon}</span>
               <span className="hidden sm:inline">{statusCfg.label}</span>
@@ -821,7 +924,14 @@ export default function AdminPage() {
           </div>
 
           {/* Delivery or Takeaway */}
-          <div className="mt-2.5 flex items-center gap-1.5 text-xs text-cream-dim">
+          <div
+            className="mt-2.5 flex items-center gap-1.5 text-xs text-cream-dim"
+            title={
+              order.address
+                ? `Endereço: ${order.address}${order.bairro ? ` · ${order.bairro}` : ""}`
+                : undefined
+            }
+          >
             {isDelivery ? (
               <>
                 <Bike className="size-3.5 text-yellow shrink-0" />
@@ -833,7 +943,7 @@ export default function AdminPage() {
             ) : (
               <>
                 <Store className="size-3.5 text-yellow shrink-0" />
-                <span className="text-yellow font-bold">
+                <span className="text-yellow font-bold truncate">
                   Retirada no Balcão da Pizzaria
                 </span>
               </>
@@ -849,11 +959,11 @@ export default function AdminPage() {
                   key={idx}
                   className="rounded-sm border border-white/6 bg-black/40 p-2.5 text-xs"
                 >
-                  <div className="flex justify-between font-bold text-cream">
-                    <span>
+                  <div className="flex justify-between font-bold text-cream gap-2">
+                    <span className="break-words">
                       {it.qty}x {flavors}
                     </span>
-                    <span className="font-mono text-yellow">
+                    <span className="font-mono text-yellow shrink-0">
                       R$ {formatPrice(it.price * it.qty)}
                     </span>
                   </div>
@@ -893,11 +1003,11 @@ export default function AdminPage() {
                   {it.observation && (
                     <div className="mt-2 flex items-start gap-1.5 rounded-sm bg-amber-500/15 border border-amber-500/35 p-1.5 text-[0.7rem] text-amber-200">
                       <MessageSquare className="size-3.5 text-amber-400 shrink-0 mt-0.5" />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <strong className="text-amber-300 uppercase font-black text-[0.62rem] tracking-wide block">
                           Obs do Cliente:
                         </strong>
-                        <span>{it.observation}</span>
+                        <span className="break-words">{it.observation}</span>
                       </div>
                     </div>
                   )}
@@ -910,10 +1020,10 @@ export default function AdminPage() {
         {/* Card Actions Bottom */}
         <div className="mt-4 border-t border-white/8 pt-3 space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">
+            <span className="text-muted truncate mr-2">
               Pgto: <strong>{order.payment_method}</strong>
             </span>
-            <span className="font-display text-base font-bold text-yellow">
+            <span className="font-display text-base font-bold text-yellow shrink-0">
               R$ {formatPrice(order.total)}
             </span>
           </div>
@@ -924,10 +1034,10 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleUpdateStatus(order.id, "preparing")}
-                className="col-span-2 flex items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-red-primary to-yellow py-2.5 text-xs font-bold text-black shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
+                className="col-span-2 flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-red-primary to-yellow py-2.5 px-3 text-xs font-bold text-black shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
               >
                 <Flame className="size-4" />
-                Colocar no Forno (Iniciar)
+                <span>Colocar no Forno (Iniciar)</span>
               </button>
             )}
 
@@ -935,10 +1045,12 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleUpdateStatus(order.id, "delivering")}
-                className="col-span-2 flex items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-blue-600 to-cyan-500 py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
+                className="col-span-2 flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-blue-600 to-cyan-500 py-2.5 px-3 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
               >
                 <Bike className="size-4" />
-                {isDelivery ? "Despachar Entrega" : "Pronto para Retirada"}
+                <span>
+                  {isDelivery ? "Despachar Entrega" : "Pronto para Retirada"}
+                </span>
               </button>
             )}
 
@@ -946,10 +1058,10 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleUpdateStatus(order.id, "completed")}
-                className="col-span-2 flex items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-emerald-600 to-green-500 py-2.5 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
+                className="col-span-2 flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm bg-linear-to-r from-emerald-600 to-green-500 py-2.5 px-3 text-xs font-bold text-white shadow-md hover:brightness-110 active:scale-95 cursor-pointer"
               >
                 <CheckCircle className="size-4" />
-                Concluir Pedido
+                <span>Concluir Pedido</span>
               </button>
             )}
 
@@ -957,20 +1069,23 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => executePrint(order)}
-              className="flex items-center justify-center gap-1.5 rounded-sm border border-white/10 bg-white/4 py-2 text-xs font-bold text-cream-dim hover:text-cream hover:bg-white/10 cursor-pointer"
+              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-sm border border-white/10 bg-white/4 py-2 px-2 text-xs font-bold text-cream-dim hover:text-cream hover:bg-white/10 cursor-pointer"
+              title="Imprimir comanda na Epson TM-T20"
             >
-              <Printer className="size-3.5 text-yellow" />
-              Imprimir TM-T20
+              <Printer className="size-3.5 text-yellow shrink-0" />
+              <span className="truncate">Imprimir</span>
+              <span className="hidden sm:inline"> TM-T20</span>
             </button>
 
             {/* Notificar WhatsApp */}
             <button
               type="button"
               onClick={() => handleNotifyWhatsApp(order)}
-              className="flex items-center justify-center gap-1.5 rounded-sm border border-[#25d366]/30 bg-[#25d366]/10 py-2 text-xs font-bold text-[#25d366] hover:bg-[#25d366]/20 cursor-pointer"
+              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-sm border border-[#25d366]/30 bg-[#25d366]/10 py-2 px-2 text-xs font-bold text-[#25d366] hover:bg-[#25d366]/20 cursor-pointer"
+              title="Enviar mensagem ao cliente no WhatsApp"
             >
-              <MessageCircle className="size-3.5" />
-              WhatsApp
+              <MessageCircle className="size-3.5 shrink-0" />
+              <span className="truncate">WhatsApp</span>
             </button>
 
             {/* Cancelar Pedido (se ainda ativo) */}
@@ -978,7 +1093,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setCancelModalOrder(order)}
-                className="col-span-2 mt-0.5 text-center text-[0.68rem] text-muted hover:text-red-400 transition-colors cursor-pointer"
+                className="col-span-2 mt-0.5 py-1 text-center text-[0.68rem] text-muted hover:text-red-400 transition-colors cursor-pointer"
               >
                 Cancelar este pedido...
               </button>
@@ -990,36 +1105,87 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121011] text-cream pb-16">
+    <div className="min-h-screen bg-[#121011] text-cream pb-20 pb-[max(5rem,env(safe-area-inset-bottom))]">
       {/* Top Bar Principal */}
-      <header className="sticky top-0 z-100 border-b border-yellow/25 bg-[#1a1415]/95 backdrop-blur-md px-3 py-2.5 sm:px-6">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
+      <header className="sticky top-0 z-100 border-b border-yellow/25 bg-[#1a1415]/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:px-6 sm:py-2.5">
+          {/* Lado Esquerdo: Voltar + Título KDS */}
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             <Link
               href="/"
-              className="flex size-9 items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-colors hover:text-yellow hover:border-yellow"
+              className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-colors hover:text-yellow hover:border-yellow"
               title="Voltar ao cardápio"
             >
               <ArrowLeft className="size-4" />
             </Link>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-base sm:text-lg font-bold italic text-cream">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="font-display text-sm sm:text-lg font-bold italic text-cream truncate">
                   Painel KDS & Balcão
                 </h1>
-                <span className="flex items-center gap-1 rounded-sm bg-emerald-500/20 px-2 py-0.5 font-mono text-[0.6rem] font-bold text-emerald-400 border border-emerald-500/30">
+                <span className="flex items-center gap-1 rounded-sm bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[0.55rem] sm:text-[0.6rem] font-bold text-emerald-400 border border-emerald-500/30 shrink-0">
                   <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Ao Vivo
+                  <span className="hidden xs:inline">Ao Vivo</span>
                 </span>
               </div>
-              <span className="hidden sm:inline text-[0.68rem] text-muted">
+              <span className="hidden md:inline text-[0.68rem] text-muted">
                 Don Luydd Pizzaria · Pedidos em tempo real
               </span>
             </div>
           </div>
 
-          {/* Ações Rápidas do Cabeçalho */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Lado Direito no Desktop (>= 640px) */}
+          <div className="hidden sm:flex items-center gap-1.5 lg:gap-2">
+            {/* Status de Abertura da Pizzaria (Aberto/Fechado) */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleOpenStoreModal}
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-sm border text-xs font-bold transition-all cursor-pointer ${
+                  storeStatus.isOpen
+                    ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50"
+                    : "border-red-500/40 bg-red-950/40 text-red-300 hover:bg-red-900/50"
+                }`}
+                title="Clique para gerenciar se a loja está aberta ou fechada e definir avisos"
+              >
+                <span
+                  className={`size-2 rounded-full ${
+                    storeStatus.isOpen
+                      ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"
+                      : "bg-red-400"
+                  }`}
+                />
+                <Store className="size-3.5" />
+                <span className="font-mono">
+                  {storeStatus.isOpen ? "Aberta" : "Fechada"}
+                </span>
+                <span className="text-[0.6rem] font-normal opacity-70 hidden md:inline">
+                  {storeStatus.mode === "auto"
+                    ? "(Auto)"
+                    : storeStatus.mode === "open"
+                      ? "(Manual)"
+                      : "(Pausada)"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleQuickToggleStore}
+                className={`px-2 py-1.5 rounded-sm text-[0.62rem] font-bold uppercase tracking-wider transition-all border cursor-pointer hidden lg:block ${
+                  storeStatus.isOpen
+                    ? "bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30"
+                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30"
+                }`}
+                title={
+                  storeStatus.isOpen
+                    ? "Fechar loja agora (bloqueia novos pedidos)"
+                    : "Abrir loja agora (permite novos pedidos)"
+                }
+              >
+                {storeStatus.isOpen ? "Fechar" : "Abrir"}
+              </button>
+            </div>
+
             {/* Botão Resumo do Forno (Batching) */}
             <button
               type="button"
@@ -1103,21 +1269,237 @@ export default function AdminPage() {
               <RotateCw className="size-4" />
             </button>
           </div>
+
+          {/* Lado Direito no Mobile (< 640px): Status e Recarregar */}
+          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenStoreModal}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-sm border text-[0.68rem] font-bold ${
+                storeStatus.isOpen
+                  ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
+                  : "border-red-500/40 bg-red-950/40 text-red-300"
+              }`}
+            >
+              <span
+                className={`size-2 rounded-full ${
+                  storeStatus.isOpen
+                    ? "bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]"
+                    : "bg-red-400"
+                }`}
+              />
+              <span className="font-mono">
+                {storeStatus.isOpen ? "Aberta" : "Fechada"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={fetchOrders}
+              className="flex size-8 items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted hover:text-cream"
+              title="Atualizar lista"
+            >
+              <RotateCw className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Linha 2 no Mobile: Barra de Ferramentas Deslizável (Touch Scroll) */}
+        <div className="flex sm:hidden items-center gap-1.5 overflow-x-auto px-3 py-1.5 border-t border-white/6 bg-black/40 scrollbar-none overscroll-x-contain">
+          {/* Botão Alternar Aberto/Fechado Rápido */}
+          <button
+            type="button"
+            onClick={handleQuickToggleStore}
+            className={`px-2.5 py-1 rounded-sm text-[0.62rem] font-bold uppercase tracking-wider shrink-0 border ${
+              storeStatus.isOpen
+                ? "bg-red-500/20 text-red-300 border-red-500/40 active:bg-red-500/30"
+                : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 active:bg-emerald-500/30"
+            }`}
+          >
+            {storeStatus.isOpen ? "Fechar Loja" : "Abrir Loja"}
+          </button>
+
+          {/* Resumo Forno */}
+          <button
+            type="button"
+            onClick={() => setSummaryOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-sm border border-yellow/30 bg-yellow/10 text-yellow text-[0.65rem] font-bold shrink-0"
+          >
+            <Flame className="size-3 text-yellow" />
+            <span>Forno</span>
+            <span className="rounded-sm bg-yellow text-black px-1 font-mono text-[0.6rem] font-bold">
+              {ovenSummary.totalPizzas}
+            </span>
+          </button>
+
+          {/* Caixa */}
+          <button
+            type="button"
+            onClick={() => setClosingModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-sm border border-white/10 bg-white/4 text-cream text-[0.65rem] font-bold shrink-0"
+          >
+            <DollarSign className="size-3 text-emerald-400" />
+            <span>Caixa</span>
+          </button>
+
+          {/* Estoque */}
+          <button
+            type="button"
+            onClick={() => setStockModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-sm border border-white/10 bg-white/4 text-cream text-[0.65rem] font-bold shrink-0"
+          >
+            <Ban className="size-3 text-red-400" />
+            <span>Estoque</span>
+            {pausedItems.length > 0 && (
+              <span className="rounded-sm bg-red-500 text-white px-1 text-[0.55rem] font-bold">
+                {pausedItems.length}
+              </span>
+            )}
+          </button>
+
+          {/* Som */}
+          <button
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-sm border text-[0.65rem] font-bold shrink-0 ${
+              soundEnabled
+                ? "border-yellow/40 bg-yellow/15 text-yellow"
+                : "border-white/10 bg-white/4 text-muted"
+            }`}
+          >
+            {soundEnabled ? (
+              <Volume2 className="size-3" />
+            ) : (
+              <VolumeX className="size-3" />
+            )}
+            <span>{soundEnabled ? "Som On" : "Mudo"}</span>
+          </button>
+
+          {/* Tela Cheia */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="flex items-center gap-1 px-2 py-1 rounded-sm border border-white/10 bg-white/4 text-muted text-[0.65rem] font-bold shrink-0"
+          >
+            {isFullscreen ? (
+              <Minimize className="size-3" />
+            ) : (
+              <Maximize className="size-3" />
+            )}
+            <span>{isFullscreen ? "Sair Tela Cheia" : "Tela Cheia"}</span>
+          </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-5">
+        {/* Banner de Controle de Abertura / Fechamento da Pizzaria */}
+        <div
+          className={`mb-4 rounded-sm border p-3 sm:p-4 shadow-xl transition-all ${
+            storeStatus.isOpen
+              ? "border-emerald-500/35 bg-linear-to-r from-emerald-950/30 via-[#181d1a] to-[#121011]"
+              : "border-red-500/40 bg-linear-to-r from-red-950/35 via-[#1d1617] to-[#121011]"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0">
+              <div
+                className={`flex size-10 sm:size-11 items-center justify-center rounded-sm shrink-0 ring-1 ${
+                  storeStatus.isOpen
+                    ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/40"
+                    : "bg-red-500/15 text-red-400 ring-red-500/40"
+                }`}
+              >
+                <Store className="size-5 sm:size-5.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <h2 className="font-display text-sm sm:text-base font-bold text-cream">
+                    Pizzaria{" "}
+                    {storeStatus.isOpen
+                      ? "Aberta para Pedidos"
+                      : "Fechada para Novos Pedidos"}
+                  </h2>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[0.6rem] sm:text-[0.62rem] font-bold border shrink-0 ${
+                      storeStatus.isOpen
+                        ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300"
+                        : "border-red-500/40 bg-red-500/20 text-red-300"
+                    }`}
+                  >
+                    <span
+                      className={`size-1.5 rounded-full ${
+                        storeStatus.isOpen
+                          ? "bg-emerald-400 animate-pulse"
+                          : "bg-red-400"
+                      }`}
+                    />
+                    {storeStatus.mode === "auto"
+                      ? `Automático (${storeStatus.isAutoOpen ? "No Horário" : "Fora do Horário"})`
+                      : storeStatus.mode === "open"
+                        ? "Forçado Aberto"
+                        : "Forçado Fechado"}
+                  </span>
+                </div>
+                <p className="text-[0.7rem] sm:text-[0.72rem] text-muted mt-0.5 break-words">
+                  {storeStatus.customMessage ? (
+                    <span className="text-amber-200">
+                      📢 Aviso aos clientes: &ldquo;{storeStatus.customMessage}
+                      &rdquo;
+                    </span>
+                  ) : storeStatus.isOpen ? (
+                    "Clientes podem fazer pedidos no cardápio online e no WhatsApp."
+                  ) : (
+                    "Novos pedidos pausados no cardápio online."
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0 w-full sm:w-auto pt-1 sm:pt-0 border-t border-white/6 sm:border-t-0">
+              <button
+                type="button"
+                onClick={handleQuickToggleStore}
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-sm text-xs font-bold transition-all shadow-md cursor-pointer ${
+                  storeStatus.isOpen
+                    ? "bg-red-600/30 text-red-200 border border-red-500/50 hover:bg-red-600/45"
+                    : "bg-emerald-600/30 text-emerald-200 border border-emerald-500/50 hover:bg-emerald-600/45"
+                }`}
+              >
+                {storeStatus.isOpen ? (
+                  <>
+                    <Ban className="size-3.5 text-red-400 shrink-0" />
+                    <span>Fechar Loja</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="size-3.5 text-emerald-400 shrink-0" />
+                    <span>Abrir Loja</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenStoreModal}
+                className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-sm border border-white/10 bg-white/5 hover:bg-white/10 text-cream text-xs font-bold transition-all cursor-pointer"
+              >
+                <span>Configurar / Avisos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Barra de Controle de Impressão Epson TM-T20 */}
-        <div className="mb-5 rounded-sm border border-yellow/20 bg-linear-to-r from-[#1f1a1a] via-[#171415] to-[#121011] p-3.5 sm:p-4 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-sm bg-yellow/15 text-yellow ring-1 ring-yellow/30 shrink-0">
-              <Printer className="size-5" />
+        <div className="mb-5 rounded-sm border border-yellow/20 bg-linear-to-r from-[#1f1a1a] via-[#171415] to-[#121011] p-3 sm:p-4 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex size-9 sm:size-10 items-center justify-center rounded-sm bg-yellow/15 text-yellow ring-1 ring-yellow/30 shrink-0">
+              <Printer className="size-4 sm:size-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-cream">
-                  Impressão Automática · Epson TM-T20 (80mm)
+                  Impressão Automática · Epson TM-T20
                 </span>
                 <span
                   className={`inline-block size-2 rounded-sm ${
@@ -1127,7 +1509,7 @@ export default function AdminPage() {
                   }`}
                 />
               </div>
-              <p className="text-[0.7rem] text-muted">
+              <p className="text-[0.65rem] sm:text-[0.7rem] text-muted">
                 {autoPrint
                   ? "Novos pedidos disparam impressão na comanda térmica imediatamente"
                   : "Impressão manual selecionada (clique em Imprimir no pedido)"}
@@ -1135,28 +1517,26 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
             {/* Switch Auto-Print */}
             <button
               type="button"
               onClick={handleToggleAutoPrint}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs font-bold transition-all cursor-pointer ${
                 autoPrint
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                   : "bg-white/5 text-muted border border-white/10"
               }`}
             >
-              <span>
-                {autoPrint ? "Auto-Print Ativo" : "Auto-Print Desligado"}
-              </span>
+              <span>{autoPrint ? "Auto-Print Ativo" : "Auto-Print Off"}</span>
             </button>
 
             {/* Seletor Kiosk vs WebUSB */}
-            <div className="flex items-center gap-1 rounded-sm bg-black/60 p-1 border border-white/8 text-xs">
+            <div className="flex items-center justify-center gap-1 rounded-sm bg-black/60 p-1 border border-white/8 text-xs">
               <button
                 type="button"
                 onClick={() => handleSetPrintMode("browser")}
-                className={`px-2.5 py-1 rounded-sm font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial px-2 py-0.5 rounded-sm font-bold text-center transition-all cursor-pointer ${
                   printMode === "browser"
                     ? "bg-yellow text-black shadow-sm"
                     : "text-muted hover:text-cream"
@@ -1168,7 +1548,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => handleSetPrintMode("webusb")}
-                className={`px-2.5 py-1 rounded-sm font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial px-2 py-0.5 rounded-sm font-bold text-center transition-all cursor-pointer ${
                   printMode === "webusb"
                     ? "bg-yellow text-black shadow-sm"
                     : "text-muted hover:text-cream"
@@ -1183,89 +1563,95 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleConnectUsb}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer"
+                className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-sm border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer"
               >
                 <Usb className="size-3.5" />
-                {usbDeviceName ? `USB Conectada` : "Conectar USB"}
+                <span>{usbDeviceName ? "USB Conectada" : "Conectar USB"}</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={handleTestPrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-white/10 bg-white/4 hover:bg-white/10 text-cream text-xs font-bold transition-all cursor-pointer"
+              className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-sm border border-white/10 bg-white/4 hover:bg-white/10 text-cream text-xs font-bold transition-all cursor-pointer"
             >
               <Printer className="size-3.5 text-yellow" />
-              Teste TM-T20
+              <span>Teste TM-T20</span>
             </button>
           </div>
         </div>
 
         {/* Métricas do Turno */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-3 sm:p-4">
-            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-widest text-muted">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
+          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-2.5 sm:p-4">
+            <span className="font-mono text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest text-muted block truncate">
               Faturamento Hoje
             </span>
             <div className="mt-1 flex items-baseline gap-1">
-              <span className="font-display text-xl sm:text-2xl font-bold text-yellow">
+              <span className="font-display text-lg sm:text-2xl font-bold text-yellow truncate">
                 R$ {formatPrice(metrics.totalSales)}
               </span>
             </div>
-            <span className="text-[0.62rem] text-muted">
+            <span className="text-[0.6rem] sm:text-[0.62rem] text-muted block truncate">
               {metrics.todayCount} pedidos hoje
             </span>
           </div>
 
-          <div className="rounded-sm border border-yellow/30 bg-yellow/10 p-3 sm:p-4">
-            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-widest text-yellow">
+          <div className="rounded-sm border border-yellow/30 bg-yellow/10 p-2.5 sm:p-4">
+            <span className="font-mono text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest text-yellow block truncate">
               Em Produção
             </span>
             <div className="mt-1 flex items-baseline gap-2">
-              <span className="font-display text-xl sm:text-2xl font-bold text-yellow">
+              <span className="font-display text-lg sm:text-2xl font-bold text-yellow">
                 {metrics.activeCount}
               </span>
-              <span className="text-[0.68rem] text-cream">pedidos</span>
+              <span className="text-[0.65rem] sm:text-[0.68rem] text-cream">
+                pedidos
+              </span>
             </div>
-            <span className="text-[0.62rem] text-muted">
+            <span className="text-[0.6rem] sm:text-[0.62rem] text-muted block truncate">
               {ovenSummary.totalPizzas} pizzas no total
             </span>
           </div>
 
-          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-3 sm:p-4">
-            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-widest text-muted">
+          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-2.5 sm:p-4">
+            <span className="font-mono text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest text-muted block truncate">
               Ticket Médio
             </span>
             <div className="mt-1 flex items-baseline gap-1">
-              <span className="font-display text-xl sm:text-2xl font-bold text-cream">
+              <span className="font-display text-lg sm:text-2xl font-bold text-cream truncate">
                 R$ {formatPrice(metrics.averageTicket)}
               </span>
             </div>
-            <span className="text-[0.62rem] text-muted">por pedido hoje</span>
+            <span className="text-[0.6rem] sm:text-[0.62rem] text-muted block truncate">
+              por pedido hoje
+            </span>
           </div>
 
-          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-3 sm:p-4">
-            <span className="font-mono text-[0.62rem] font-bold uppercase tracking-widest text-muted">
+          <div className="rounded-sm border border-white/8 bg-linear-to-b from-[#1c191a] to-[#141213] p-2.5 sm:p-4">
+            <span className="font-mono text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest text-muted block truncate">
               Tempo Médio SLA
             </span>
             <div className="mt-1 flex items-baseline gap-1">
-              <span className="font-display text-xl sm:text-2xl font-bold text-emerald-400">
+              <span className="font-display text-lg sm:text-2xl font-bold text-emerald-400 truncate">
                 25~35 min
               </span>
             </div>
-            <span className="text-[0.62rem] text-muted">meta da cozinha</span>
+            <span className="text-[0.6rem] sm:text-[0.62rem] text-muted block truncate">
+              meta da cozinha
+            </span>
           </div>
         </div>
 
         {/* Barra de Filtros, Visualizações e Busca */}
-        <div className="mb-5 space-y-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-white/8 pb-3">
+        <div className="mb-5 space-y-2.5 sm:space-y-3">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 border-b border-white/8 pb-3">
             {/* Tabs Ativos vs Histórico */}
-            <div className="flex items-center gap-1.5">
+            <div className="grid grid-cols-2 sm:flex items-center gap-1.5 w-full md:w-auto">
               <button
                 type="button"
                 onClick={() => setActiveTab("active")}
-                className={`px-3.5 py-1.5 rounded-sm text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-sm text-xs font-bold text-center transition-all cursor-pointer ${
                   activeTab === "active"
                     ? "bg-yellow text-black shadow-md"
                     : "bg-white/4 text-muted hover:text-cream"
@@ -1276,20 +1662,26 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("completed")}
-                className={`px-3.5 py-1.5 rounded-sm text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-sm text-xs font-bold text-center transition-all cursor-pointer ${
                   activeTab === "completed"
                     ? "bg-yellow text-black shadow-md"
                     : "bg-white/4 text-muted hover:text-cream"
                 }`}
               >
-                Histórico / Concluídos
+                Histórico (
+                {
+                  orders.filter(
+                    (o) => o.status === "completed" || o.status === "cancelled"
+                  ).length
+                }
+                )
               </button>
             </div>
 
             {/* Alternador Kanban vs Grade & Busca */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full md:w-auto">
               {activeTab === "active" && (
-                <div className="flex items-center gap-1 rounded-sm bg-black/60 p-1 border border-white/8">
+                <div className="flex items-center gap-1 rounded-sm bg-black/60 p-1 border border-white/8 shrink-0">
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}
@@ -1319,13 +1711,13 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <div className="relative flex-1 sm:w-60">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted pointer-events-none" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar cliente ou ID..."
+                  placeholder="Buscar cliente, tel ou ID..."
                   className="w-full rounded-sm border border-white/10 bg-black/60 pl-8 pr-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
                 />
               </div>
@@ -1333,8 +1725,8 @@ export default function AdminPage() {
           </div>
 
           {/* Chips de Filtro Rápido */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            <span className="text-[0.68rem] font-bold text-muted uppercase tracking-wider shrink-0 mr-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none overscroll-x-contain">
+            <span className="text-[0.65rem] font-bold text-muted uppercase tracking-wider shrink-0 mr-1">
               Filtrar:
             </span>
             <button
@@ -1406,9 +1798,9 @@ export default function AdminPage() {
             <p className="mt-3 text-xs text-muted">Carregando pedidos...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center rounded-sm border border-white/8 bg-white/2">
+          <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center rounded-sm border border-white/8 bg-white/2 p-4">
             <Receipt className="size-12 text-muted/40 mb-3" />
-            <p className="font-display text-lg font-bold text-cream">
+            <p className="font-display text-base sm:text-lg font-bold text-cream">
               {activeTab === "active"
                 ? "Nenhum pedido em produção com os filtros aplicados"
                 : "Nenhum pedido concluído encontrado"}
@@ -1419,9 +1811,95 @@ export default function AdminPage() {
             </p>
           </div>
         ) : activeTab === "active" && viewMode === "kanban" ? (
-          /* MODO KANBAN EM 3 COLUNAS COM ROLAGEM HORIZONTAL SEGURO */
-          <div className="overflow-x-auto pb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start min-w-[760px] md:min-w-0">
+          /* MODO KANBAN ADAPTATIVO: ABAS NO MOBILE, 3 COLUNAS NO DESKTOP */
+          <div>
+            {/* Seletor de Coluna Kanban para Telas Pequenas (< 768px) */}
+            <div className="grid grid-cols-3 gap-1.5 mb-3 md:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileKanbanColumn("pending")}
+                className={`flex flex-col items-center justify-center p-2 rounded-sm border text-xs font-bold transition-all cursor-pointer ${
+                  mobileKanbanColumn === "pending"
+                    ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
+                    : "border-white/8 bg-black/40 text-muted"
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  <span>🔔</span>
+                  <span>A Fazer</span>
+                </span>
+                <span className="font-mono text-[0.62rem] opacity-90 mt-0.5">
+                  ({kanbanColumns.pending.length})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileKanbanColumn("preparing")}
+                className={`flex flex-col items-center justify-center p-2 rounded-sm border text-xs font-bold transition-all cursor-pointer ${
+                  mobileKanbanColumn === "preparing"
+                    ? "border-red-500/60 bg-red-500/20 text-red-300"
+                    : "border-white/8 bg-black/40 text-muted"
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  <span>🔥</span>
+                  <span>No Forno</span>
+                </span>
+                <span className="font-mono text-[0.62rem] opacity-90 mt-0.5">
+                  ({kanbanColumns.preparing.length})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileKanbanColumn("delivering")}
+                className={`flex flex-col items-center justify-center p-2 rounded-sm border text-xs font-bold transition-all cursor-pointer ${
+                  mobileKanbanColumn === "delivering"
+                    ? "border-blue-500/60 bg-blue-500/20 text-blue-300"
+                    : "border-white/8 bg-black/40 text-muted"
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  <span>🛵</span>
+                  <span>Despacho</span>
+                </span>
+                <span className="font-mono text-[0.62rem] opacity-90 mt-0.5">
+                  ({kanbanColumns.delivering.length})
+                </span>
+              </button>
+            </div>
+
+            {/* Visualização de Coluna Ativa no Mobile */}
+            <div className="space-y-3 md:hidden">
+              {mobileKanbanColumn === "pending" &&
+                (kanbanColumns.pending.length === 0 ? (
+                  <div className="p-8 text-center rounded-sm border border-white/6 bg-black/30 text-xs text-muted">
+                    Nenhum pedido novo pendente.
+                  </div>
+                ) : (
+                  kanbanColumns.pending.map(renderOrderCard)
+                ))}
+              {mobileKanbanColumn === "preparing" &&
+                (kanbanColumns.preparing.length === 0 ? (
+                  <div className="p-8 text-center rounded-sm border border-white/6 bg-black/30 text-xs text-muted">
+                    Nenhum pedido no forno.
+                  </div>
+                ) : (
+                  kanbanColumns.preparing.map(renderOrderCard)
+                ))}
+              {mobileKanbanColumn === "delivering" &&
+                (kanbanColumns.delivering.length === 0 ? (
+                  <div className="p-8 text-center rounded-sm border border-white/6 bg-black/30 text-xs text-muted">
+                    Nenhum pedido despachado.
+                  </div>
+                ) : (
+                  kanbanColumns.delivering.map(renderOrderCard)
+                ))}
+            </div>
+
+            {/* Visualização em 3 Colunas no Desktop / Tablet (>= 768px) */}
+            <div className="hidden md:grid md:grid-cols-3 gap-4 items-start">
               {/* Coluna 1: Novos / Pendentes */}
               <div className="rounded-sm border border-amber-500/20 bg-black/40 p-3">
                 <div className="mb-3 flex items-center justify-between border-b border-amber-500/20 pb-2">
@@ -1505,31 +1983,35 @@ export default function AdminPage() {
 
       {/* MODAL 1: RESUMO DO FORNO (MISE EN PLACE / BATCHING) */}
       {summaryOpen && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] p-6 shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setSummaryOpen(false)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] shadow-2xl overflow-hidden">
+            {/* Header fixo */}
+            <div className="p-4 sm:p-6 border-b border-white/8 relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setSummaryOpen(false)}
+                className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
 
-            <div className="flex items-center gap-2 text-yellow mb-1">
-              <Flame className="size-5" />
-              <span className="font-mono text-xs font-bold uppercase tracking-widest">
-                Fila de Produção Coletiva
-              </span>
+              <div className="flex items-center gap-2 text-yellow mb-1">
+                <Flame className="size-4 sm:size-5" />
+                <span className="font-mono text-[0.65rem] sm:text-xs font-bold uppercase tracking-widest">
+                  Fila de Produção Coletiva
+                </span>
+              </div>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-cream">
+                Resumo do Forno & Mise en Place
+              </h2>
+              <p className="text-[0.7rem] sm:text-xs text-muted mt-0.5">
+                Total acumulado de tudo o que precisa ser aberto, recheado e
+                assado agora.
+              </p>
             </div>
-            <h2 className="font-display text-2xl font-bold text-cream">
-              Resumo do Forno & Mise en Place
-            </h2>
-            <p className="text-xs text-muted mt-0.5">
-              Total acumulado de tudo o que precisa ser aberto, recheado e
-              assado agora.
-            </p>
 
-            <div className="mt-6 space-y-5">
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
               {/* Tamanhos de Pizzas */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">
@@ -1643,11 +2125,12 @@ export default function AdminPage() {
               )}
             </div>
 
-            <div className="mt-6 border-t border-white/8 pt-4 flex justify-end">
+            {/* Rodapé fixo */}
+            <div className="p-3 sm:p-4 border-t border-white/8 flex justify-end shrink-0 bg-black/40">
               <button
                 type="button"
                 onClick={() => setSummaryOpen(false)}
-                className="px-5 py-2 rounded-sm bg-white/10 text-xs font-bold text-cream hover:bg-white/20 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-sm bg-white/10 text-xs font-bold text-cream hover:bg-white/20 cursor-pointer text-center"
               >
                 Fechar Resumo
               </button>
@@ -1658,97 +2141,107 @@ export default function AdminPage() {
 
       {/* MODAL 2: FECHAMENTO DE CAIXA / RELATÓRIO DO TURNO */}
       {closingModalOpen && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-lg rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] p-6 shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setClosingModalOpen(false)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
-
-            <div className="flex items-center gap-2 text-yellow mb-1">
-              <DollarSign className="size-5" />
-              <span className="font-mono text-xs font-bold uppercase tracking-widest">
-                Gestão Financeira
-              </span>
-            </div>
-            <h2 className="font-display text-2xl font-bold text-cream">
-              Fechamento de Caixa / Turno
-            </h2>
-            <p className="text-xs text-muted mt-0.5">
-              Resumo contábil das vendas de hoje para conferência do caixa.
-            </p>
-
-            <div className="mt-5 space-y-4 rounded-sm border border-white/8 bg-black/50 p-4 text-xs">
-              <div className="flex justify-between items-baseline border-b border-white/8 pb-2">
-                <span className="text-muted">Faturamento Bruto:</span>
-                <span className="font-display text-xl font-bold text-yellow">
-                  R$ {formatPrice(metrics.totalSales)}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-muted">Total de Pedidos Concluídos:</span>
-                <span className="font-bold text-cream">
-                  {metrics.todayCount}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-muted">Ticket Médio:</span>
-                <span className="font-bold text-cream">
-                  R$ {formatPrice(metrics.averageTicket)}
-                </span>
-              </div>
-
-              <div className="border-t border-white/6 pt-2">
-                <span className="font-bold text-cream-dim block mb-1.5 uppercase text-[0.65rem] tracking-wider">
-                  Divisão por Forma de Pagamento:
-                </span>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-muted">
-                    <span>PIX ({metrics.paymentBreakdown.pix.count}x):</span>
-                    <span className="font-mono text-cream font-bold">
-                      R$ {formatPrice(metrics.paymentBreakdown.pix.total)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-muted">
-                    <span>
-                      Cartão Débito/Crédito (
-                      {metrics.paymentBreakdown.cartao.count}x):
-                    </span>
-                    <span className="font-mono text-cream font-bold">
-                      R$ {formatPrice(metrics.paymentBreakdown.cartao.total)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-muted">
-                    <span>
-                      Dinheiro em Espécie (
-                      {metrics.paymentBreakdown.dinheiro.count}x):
-                    </span>
-                    <span className="font-mono text-cream font-bold">
-                      R$ {formatPrice(metrics.paymentBreakdown.dinheiro.total)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-white/6 pt-2 flex justify-between text-muted">
-                <span>Taxas de Entrega Arrecadadas:</span>
-                <span className="font-mono text-cream">
-                  R$ {formatPrice(metrics.totalDeliveryFees)} (
-                  {metrics.deliveryCount} entregas)
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] shadow-2xl overflow-hidden">
+            {/* Header fixo */}
+            <div className="p-4 sm:p-6 border-b border-white/8 relative shrink-0">
               <button
                 type="button"
                 onClick={() => setClosingModalOpen(false)}
-                className="px-4 py-2.5 rounded-sm border border-white/10 bg-white/4 text-xs font-bold text-muted hover:text-cream cursor-pointer"
+                className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+
+              <div className="flex items-center gap-2 text-yellow mb-1">
+                <DollarSign className="size-4 sm:size-5 text-emerald-400" />
+                <span className="font-mono text-[0.65rem] sm:text-xs font-bold uppercase tracking-widest text-emerald-400">
+                  Gestão Financeira
+                </span>
+              </div>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-cream">
+                Fechamento de Caixa / Turno
+              </h2>
+              <p className="text-[0.7rem] sm:text-xs text-muted mt-0.5">
+                Resumo contábil das vendas de hoje para conferência do caixa.
+              </p>
+            </div>
+
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="space-y-4 rounded-sm border border-white/8 bg-black/50 p-4 text-xs">
+                <div className="flex justify-between items-baseline border-b border-white/8 pb-2">
+                  <span className="text-muted">Faturamento Bruto:</span>
+                  <span className="font-display text-xl font-bold text-yellow">
+                    R$ {formatPrice(metrics.totalSales)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-muted">
+                    Total de Pedidos Concluídos:
+                  </span>
+                  <span className="font-bold text-cream">
+                    {metrics.todayCount}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-muted">Ticket Médio:</span>
+                  <span className="font-bold text-cream">
+                    R$ {formatPrice(metrics.averageTicket)}
+                  </span>
+                </div>
+
+                <div className="border-t border-white/6 pt-2">
+                  <span className="font-bold text-cream-dim block mb-1.5 uppercase text-[0.65rem] tracking-wider">
+                    Divisão por Forma de Pagamento:
+                  </span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-muted">
+                      <span>PIX ({metrics.paymentBreakdown.pix.count}x):</span>
+                      <span className="font-mono text-cream font-bold">
+                        R$ {formatPrice(metrics.paymentBreakdown.pix.total)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-muted">
+                      <span>
+                        Cartão Débito/Crédito (
+                        {metrics.paymentBreakdown.cartao.count}x):
+                      </span>
+                      <span className="font-mono text-cream font-bold">
+                        R$ {formatPrice(metrics.paymentBreakdown.cartao.total)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-muted">
+                      <span>
+                        Dinheiro em Espécie (
+                        {metrics.paymentBreakdown.dinheiro.count}x):
+                      </span>
+                      <span className="font-mono text-cream font-bold">
+                        R${" "}
+                        {formatPrice(metrics.paymentBreakdown.dinheiro.total)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/6 pt-2 flex justify-between text-muted">
+                  <span>Taxas de Entrega Arrecadadas:</span>
+                  <span className="font-mono text-cream">
+                    R$ {formatPrice(metrics.totalDeliveryFees)} (
+                    {metrics.deliveryCount} entregas)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rodapé fixo */}
+            <div className="p-3 sm:p-4 border-t border-white/8 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0 bg-black/40">
+              <button
+                type="button"
+                onClick={() => setClosingModalOpen(false)}
+                className="px-4 py-2.5 rounded-sm border border-white/10 bg-white/4 text-xs font-bold text-muted hover:text-cream cursor-pointer text-center"
               >
                 Voltar
               </button>
@@ -1756,10 +2249,10 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handlePrintClosingReport}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-linear-to-r from-red-primary to-yellow text-xs font-bold text-black shadow-lg hover:brightness-110 active:scale-95 cursor-pointer"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm bg-linear-to-r from-red-primary to-yellow text-xs font-bold text-black shadow-lg hover:brightness-110 active:scale-95 cursor-pointer text-center"
               >
-                <Printer className="size-4" />
-                Imprimir Relatório Z na Epson
+                <Printer className="size-4 shrink-0" />
+                <span>Imprimir Relatório Z</span>
               </button>
             </div>
           </div>
@@ -1768,142 +2261,251 @@ export default function AdminPage() {
 
       {/* MODAL 3: PAUSAR SABORES & ESTOQUE */}
       {stockModalOpen && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] p-6 shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setStockModalOpen(false)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
-
-            <div className="flex items-center gap-2 text-yellow mb-1">
-              <Ban className="size-5 text-red-400" />
-              <span className="font-mono text-xs font-bold uppercase tracking-widest">
-                Disponibilidade do Cardápio
-              </span>
-            </div>
-            <h2 className="font-display text-2xl font-bold text-cream">
-              Pausar Itens e Ingredientes
-            </h2>
-            <p className="text-xs text-muted mt-0.5">
-              Se algum ingrediente acabou hoje, pause o sabor aqui para que os
-              clientes não consigam pedir no cardápio online.
-            </p>
-
-            <div className="mt-5 space-y-6">
-              {/* Pizzas Salgadas */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2.5">
-                  Pizzas Salgadas (32 sabores)
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {salgadas.map((p) => {
-                    const isPaused = pausedItems.includes(p.name);
-                    return (
-                      <div
-                        key={p.id}
-                        className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
-                          isPaused
-                            ? "border-red-500/40 bg-red-500/10 text-red-300"
-                            : "border-white/6 bg-white/2 text-cream"
-                        }`}
-                      >
-                        <span className="font-medium">{p.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStockItem(p.name)}
-                          className={`px-2.5 py-1 rounded-sm text-[0.65rem] font-bold cursor-pointer transition-all ${
-                            isPaused
-                              ? "bg-red-500 text-white"
-                              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
-                          }`}
-                        >
-                          {isPaused ? "Esgotado (Pausado)" : "🟢 Disponível"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Pizzas Doces */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2.5">
-                  Pizzas Doces (6 sabores)
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {doces.map((p) => {
-                    const isPaused = pausedItems.includes(p.name);
-                    return (
-                      <div
-                        key={p.id}
-                        className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
-                          isPaused
-                            ? "border-red-500/40 bg-red-500/10 text-red-300"
-                            : "border-white/6 bg-white/2 text-cream"
-                        }`}
-                      >
-                        <span className="font-medium">{p.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStockItem(p.name)}
-                          className={`px-2.5 py-1 rounded-sm text-[0.65rem] font-bold cursor-pointer transition-all ${
-                            isPaused
-                              ? "bg-red-500 text-white"
-                              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
-                          }`}
-                        >
-                          {isPaused ? "Esgotado (Pausado)" : "🟢 Disponível"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Ingredientes Extras */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2.5">
-                  Ingredientes Extras
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {EXTRA_INGREDIENTS.map((extra) => {
-                    const isPaused = pausedItems.includes(extra.name);
-                    return (
-                      <div
-                        key={extra.id}
-                        className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
-                          isPaused
-                            ? "border-red-500/40 bg-red-500/10 text-red-300"
-                            : "border-white/6 bg-white/2 text-cream"
-                        }`}
-                      >
-                        <span className="font-medium">{extra.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStockItem(extra.name)}
-                          className={`px-2.5 py-1 rounded-sm text-[0.65rem] font-bold cursor-pointer transition-all ${
-                            isPaused
-                              ? "bg-red-500 text-white"
-                              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
-                          }`}
-                        >
-                          {isPaused ? "Esgotado" : "🟢 Disponível"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 border-t border-white/8 pt-4 flex justify-end">
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="relative w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-sm border border-yellow/30 bg-linear-to-b from-[#1f1b1c] to-[#121011] shadow-2xl overflow-hidden">
+            {/* Header fixo com busca rápida */}
+            <div className="p-4 sm:p-5 border-b border-white/8 relative shrink-0">
               <button
                 type="button"
                 onClick={() => setStockModalOpen(false)}
-                className="px-5 py-2 rounded-sm bg-yellow text-xs font-bold text-black hover:brightness-110 cursor-pointer"
+                className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-sm bg-white/5 text-muted hover:text-cream cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+
+              <div className="flex items-center gap-2 text-yellow mb-1">
+                <Ban className="size-4 sm:size-5 text-red-400" />
+                <span className="font-mono text-[0.65rem] sm:text-xs font-bold uppercase tracking-widest">
+                  Disponibilidade do Cardápio
+                </span>
+              </div>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-cream">
+                Pausar Itens e Ingredientes
+              </h2>
+              <p className="text-[0.7rem] sm:text-xs text-muted mt-0.5">
+                Se algum ingrediente acabou hoje, pause o sabor aqui para que os
+                clientes não consigam pedir no cardápio online.
+              </p>
+
+              {/* Busca de Estoque */}
+              <div className="relative mt-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted pointer-events-none" />
+                <input
+                  type="text"
+                  value={stockSearchQuery}
+                  onChange={(e) => setStockSearchQuery(e.target.value)}
+                  placeholder="Buscar sabor ou ingrediente..."
+                  className="w-full rounded-sm border border-white/10 bg-black/60 pl-8 pr-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
+                />
+              </div>
+
+              {/* Categorias de Estoque */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mt-2.5 text-xs scrollbar-none overscroll-x-contain">
+                <button
+                  type="button"
+                  onClick={() => setStockCategory("all")}
+                  className={`px-2.5 py-1 rounded-sm text-[0.68rem] font-bold shrink-0 transition-all cursor-pointer ${
+                    stockCategory === "all"
+                      ? "bg-yellow text-black"
+                      : "bg-white/4 text-muted hover:text-cream"
+                  }`}
+                >
+                  Todos (
+                  {salgadas.length + doces.length + EXTRA_INGREDIENTS.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockCategory("salgadas")}
+                  className={`px-2.5 py-1 rounded-sm text-[0.68rem] font-bold shrink-0 transition-all cursor-pointer ${
+                    stockCategory === "salgadas"
+                      ? "bg-yellow text-black"
+                      : "bg-white/4 text-muted hover:text-cream"
+                  }`}
+                >
+                  Salgadas ({salgadas.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockCategory("doces")}
+                  className={`px-2.5 py-1 rounded-sm text-[0.68rem] font-bold shrink-0 transition-all cursor-pointer ${
+                    stockCategory === "doces"
+                      ? "bg-yellow text-black"
+                      : "bg-white/4 text-muted hover:text-cream"
+                  }`}
+                >
+                  Doces ({doces.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockCategory("extras")}
+                  className={`px-2.5 py-1 rounded-sm text-[0.68rem] font-bold shrink-0 transition-all cursor-pointer ${
+                    stockCategory === "extras"
+                      ? "bg-yellow text-black"
+                      : "bg-white/4 text-muted hover:text-cream"
+                  }`}
+                >
+                  Extras ({EXTRA_INGREDIENTS.length})
+                </button>
+                {pausedItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStockCategory("paused")}
+                    className={`px-2.5 py-1 rounded-sm text-[0.68rem] font-bold shrink-0 transition-all cursor-pointer ${
+                      stockCategory === "paused"
+                        ? "bg-red-500 text-white"
+                        : "bg-red-500/20 text-red-300 border border-red-500/40"
+                    }`}
+                  >
+                    🔴 Pausados ({pausedItems.length})
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+              {/* Pizzas Salgadas */}
+              {filteredSalgadas.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2">
+                    Pizzas Salgadas ({filteredSalgadas.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {filteredSalgadas.map((p) => {
+                      const isPaused = pausedItems.includes(p.name);
+                      return (
+                        <div
+                          key={p.id}
+                          className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
+                            isPaused
+                              ? "border-red-500/40 bg-red-500/10 text-red-300"
+                              : "border-white/6 bg-white/2 text-cream"
+                          }`}
+                        >
+                          <span className="font-medium truncate mr-2">
+                            {p.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStockItem(p.name)}
+                            className={`px-2.5 py-1.5 rounded-sm text-[0.65rem] font-bold cursor-pointer shrink-0 transition-all ${
+                              isPaused
+                                ? "bg-red-500 text-white"
+                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
+                            }`}
+                          >
+                            {isPaused ? "Esgotado (Pausado)" : "🟢 Disponível"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Pizzas Doces */}
+              {filteredDoces.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2">
+                    Pizzas Doces ({filteredDoces.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {filteredDoces.map((p) => {
+                      const isPaused = pausedItems.includes(p.name);
+                      return (
+                        <div
+                          key={p.id}
+                          className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
+                            isPaused
+                              ? "border-red-500/40 bg-red-500/10 text-red-300"
+                              : "border-white/6 bg-white/2 text-cream"
+                          }`}
+                        >
+                          <span className="font-medium truncate mr-2">
+                            {p.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStockItem(p.name)}
+                            className={`px-2.5 py-1.5 rounded-sm text-[0.65rem] font-bold cursor-pointer shrink-0 transition-all ${
+                              isPaused
+                                ? "bg-red-500 text-white"
+                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
+                            }`}
+                          >
+                            {isPaused ? "Esgotado (Pausado)" : "🟢 Disponível"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Ingredientes Extras */}
+              {filteredExtras.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-yellow mb-2">
+                    Ingredientes Extras ({filteredExtras.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {filteredExtras.map((extra) => {
+                      const isPaused = pausedItems.includes(extra.name);
+                      return (
+                        <div
+                          key={extra.id}
+                          className={`flex items-center justify-between rounded-sm border p-2.5 text-xs transition-all ${
+                            isPaused
+                              ? "border-red-500/40 bg-red-500/10 text-red-300"
+                              : "border-white/6 bg-white/2 text-cream"
+                          }`}
+                        >
+                          <span className="font-medium truncate mr-2">
+                            {extra.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStockItem(extra.name)}
+                            className={`px-2.5 py-1.5 rounded-sm text-[0.65rem] font-bold cursor-pointer shrink-0 transition-all ${
+                              isPaused
+                                ? "bg-red-500 text-white"
+                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
+                            }`}
+                          >
+                            {isPaused ? "Esgotado" : "🟢 Disponível"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Vazio quando filtrado */}
+              {filteredSalgadas.length === 0 &&
+                filteredDoces.length === 0 &&
+                filteredExtras.length === 0 && (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <p>Nenhum sabor ou ingrediente encontrado.</p>
+                    {stockSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setStockSearchQuery("")}
+                        className="mt-2 text-yellow underline cursor-pointer"
+                      >
+                        Limpar busca
+                      </button>
+                    )}
+                  </div>
+                )}
+            </div>
+
+            {/* Rodapé fixo */}
+            <div className="p-3 sm:p-4 border-t border-white/8 flex justify-end shrink-0 bg-black/40">
+              <button
+                type="button"
+                onClick={() => setStockModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-sm bg-yellow text-xs font-bold text-black hover:brightness-110 cursor-pointer text-center"
               >
                 Concluir Ajustes
               </button>
@@ -1914,9 +2516,9 @@ export default function AdminPage() {
 
       {/* MODAL 4: CONFIRMAR CANCELAMENTO */}
       {cancelModalOrder && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-sm rounded-sm border border-red-500/30 bg-[#191516] p-6 shadow-2xl">
-            <h3 className="font-display text-lg font-bold text-cream">
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="relative w-full max-w-sm rounded-sm border border-red-500/30 bg-[#191516] p-5 sm:p-6 shadow-2xl">
+            <h3 className="font-display text-base sm:text-lg font-bold text-cream">
               Cancelar Pedido #{cancelModalOrder.id.slice(0, 6)}?
             </h3>
             <p className="text-xs text-muted mt-1">
@@ -1936,23 +2538,304 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setCancelModalOrder(null);
                   setCancelReason("");
                 }}
-                className="px-3.5 py-2 rounded-sm border border-white/10 text-xs font-bold text-muted hover:text-cream cursor-pointer"
+                className="px-3.5 py-2.5 rounded-sm border border-white/10 text-xs font-bold text-muted hover:text-cream cursor-pointer text-center"
               >
                 Voltar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 rounded-sm bg-red-600 text-xs font-bold text-white hover:bg-red-500 cursor-pointer"
+                className="px-4 py-2.5 rounded-sm bg-red-600 text-xs font-bold text-white hover:bg-red-500 cursor-pointer text-center"
               >
                 Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: CONTROLE DE FUNCIONAMENTO DA PIZZARIA (ABERTO / FECHADO) */}
+      {storeModalOpen && (
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col rounded-sm border border-yellow/30 bg-[#181415] shadow-2xl overflow-hidden">
+            {/* Modal Header fixo */}
+            <div className="flex items-center justify-between border-b border-white/8 p-4 sm:p-5 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 items-center justify-center rounded-sm bg-yellow/15 text-yellow ring-1 ring-yellow/30 shrink-0">
+                  <Store className="size-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base sm:text-lg font-bold text-cream">
+                    Funcionamento da Pizzaria
+                  </h3>
+                  <p className="text-[0.68rem] text-muted">
+                    Defina se a Don Luydd fica aberta ou fechada para os
+                    clientes
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStoreModalOpen(false)}
+                className="flex size-8 items-center justify-center rounded-sm text-muted hover:text-cream hover:bg-white/5 cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+              {/* Status Atual Card */}
+              <div
+                className={`rounded-sm border p-3 flex items-center justify-between text-xs ${
+                  storeStatus.isOpen
+                    ? "border-emerald-500/30 bg-emerald-950/25 text-emerald-300"
+                    : "border-red-500/30 bg-red-950/25 text-red-300"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`size-2.5 rounded-full ${
+                      storeStatus.isOpen
+                        ? "bg-emerald-400 animate-pulse"
+                        : "bg-red-400"
+                    }`}
+                  />
+                  <span className="font-bold">
+                    Status Atual: {storeStatus.isOpen ? "ABERTA" : "FECHADA"}
+                  </span>
+                </div>
+                <span className="text-[0.68rem] opacity-80 font-mono">
+                  {storeStatus.nextLabel}
+                </span>
+              </div>
+
+              {/* Opções de Modo */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-yellow block">
+                  Escolha o Modo de Atendimento:
+                </label>
+
+                {/* 1. Forçar Aberta */}
+                <button
+                  type="button"
+                  onClick={() => setTempStoreMode("open")}
+                  className={`w-full flex items-start gap-3 p-3 rounded-sm border text-left transition-all cursor-pointer ${
+                    tempStoreMode === "open"
+                      ? "border-emerald-500 bg-emerald-950/40 ring-1 ring-emerald-500/50"
+                      : "border-white/8 bg-black/40 hover:border-white/20"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex size-4.5 items-center justify-center rounded-full border shrink-0 ${
+                      tempStoreMode === "open"
+                        ? "border-emerald-400 bg-emerald-500 text-black"
+                        : "border-white/30"
+                    }`}
+                  >
+                    {tempStoreMode === "open" && (
+                      <CheckCircle className="size-3.5" />
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <span className="font-display font-bold text-sm text-emerald-300">
+                        🟢 Forçar Aberta (Abrir Agora)
+                      </span>
+                      <span className="rounded-sm bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 font-mono text-[0.6rem] font-bold">
+                        Aberto Manual
+                      </span>
+                    </div>
+                    <p className="text-[0.7rem] text-cream-dim mt-1">
+                      A pizzaria aceita pedidos imediatamente no cardápio e no
+                      WhatsApp, mesmo antes das 18h ou em dias de folga.
+                    </p>
+                  </div>
+                </button>
+
+                {/* 2. Forçar Fechada */}
+                <button
+                  type="button"
+                  onClick={() => setTempStoreMode("closed")}
+                  className={`w-full flex items-start gap-3 p-3 rounded-sm border text-left transition-all cursor-pointer ${
+                    tempStoreMode === "closed"
+                      ? "border-red-500 bg-red-950/40 ring-1 ring-red-500/50"
+                      : "border-white/8 bg-black/40 hover:border-white/20"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex size-4.5 items-center justify-center rounded-full border shrink-0 ${
+                      tempStoreMode === "closed"
+                        ? "border-red-400 bg-red-500 text-white"
+                        : "border-white/30"
+                    }`}
+                  >
+                    {tempStoreMode === "closed" && <Ban className="size-3.5" />}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <span className="font-display font-bold text-sm text-red-300">
+                        🔴 Forçar Fechada (Fechar Agora)
+                      </span>
+                      <span className="rounded-sm bg-red-500/20 text-red-300 px-1.5 py-0.2 font-mono text-[0.6rem] font-bold">
+                        Fechado Manual
+                      </span>
+                    </div>
+                    <p className="text-[0.7rem] text-cream-dim mt-1">
+                      Pausa o recebimento de pedidos no momento. O cardápio
+                      avisa que a loja está fechada e desativa o envio de novos
+                      pedidos.
+                    </p>
+                  </div>
+                </button>
+
+                {/* 3. Modo Automático */}
+                <button
+                  type="button"
+                  onClick={() => setTempStoreMode("auto")}
+                  className={`w-full flex items-start gap-3 p-3 rounded-sm border text-left transition-all cursor-pointer ${
+                    tempStoreMode === "auto"
+                      ? "border-yellow bg-yellow/10 ring-1 ring-yellow/50"
+                      : "border-white/8 bg-black/40 hover:border-white/20"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex size-4.5 items-center justify-center rounded-full border shrink-0 ${
+                      tempStoreMode === "auto"
+                        ? "border-yellow bg-yellow text-black"
+                        : "border-white/30"
+                    }`}
+                  >
+                    {tempStoreMode === "auto" && <Clock className="size-3.5" />}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                      <span className="font-display font-bold text-sm text-yellow">
+                        ⏰ Modo Automático (Horário Padrão)
+                      </span>
+                      <span className="rounded-sm bg-yellow/20 text-yellow px-1.5 py-0.2 font-mono text-[0.6rem] font-bold">
+                        Programado
+                      </span>
+                    </div>
+                    <p className="text-[0.7rem] text-cream-dim mt-1">
+                      Abre de <strong>terça a domingo das 18h às 22h</strong>.
+                      Fora desses horários e às segundas-feiras, fecha
+                      automaticamente.
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Aviso Personalizado aos Clientes */}
+              <div className="border-t border-white/8 pt-4">
+                <label className="text-xs font-bold uppercase tracking-wider text-yellow block mb-1">
+                  Aviso aos Clientes no Cardápio (Opcional):
+                </label>
+                <p className="text-[0.68rem] text-muted mb-2">
+                  Esta mensagem aparecerá em destaque na página inicial e no
+                  carrinho dos clientes.
+                </p>
+                <input
+                  type="text"
+                  value={tempStoreMessage}
+                  onChange={(e) => setTempStoreMessage(e.target.value)}
+                  maxLength={90}
+                  placeholder="Ex: Voltamos às 19h / Fechado hoje para manutenção / Massas esgotadas"
+                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3 py-2 text-xs text-cream outline-none focus:border-yellow"
+                />
+
+                {/* Sugestões Rápidas de Mensagens */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {[
+                    "Voltamos em 30 minutos!",
+                    "Hoje abriremos às 19h",
+                    "Fechado hoje para manutenção",
+                    "Massas esgotadas por hoje!",
+                    "Aberto para pedidos antecipados!",
+                  ].map((sug) => (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => setTempStoreMessage(sug)}
+                      className="rounded-sm border border-white/10 bg-white/4 px-2 py-1 text-[0.65rem] text-cream-dim hover:text-yellow hover:border-yellow/30 transition-colors cursor-pointer"
+                    >
+                      + {sug}
+                    </button>
+                  ))}
+                  {tempStoreMessage && (
+                    <button
+                      type="button"
+                      onClick={() => setTempStoreMessage("")}
+                      className="rounded-sm border border-red-500/30 bg-red-500/10 px-2 py-1 text-[0.65rem] text-red-300 hover:bg-red-500/20 cursor-pointer"
+                    >
+                      ✕ Limpar mensagem
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Live Preview */}
+              <div className="rounded-sm border border-white/10 bg-black/40 p-3">
+                <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted block mb-1.5">
+                  Prévia de como o cliente verá:
+                </span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span
+                    className={`size-2.5 rounded-full shrink-0 ${
+                      tempStoreMode === "open"
+                        ? "bg-emerald-400"
+                        : tempStoreMode === "closed"
+                          ? "bg-red-400"
+                          : storeStatus.isAutoOpen
+                            ? "bg-emerald-400"
+                            : "bg-red-400"
+                    }`}
+                  />
+                  <span className="font-bold text-cream shrink-0">
+                    {tempStoreMode === "open"
+                      ? "Aberto Agora"
+                      : tempStoreMode === "closed"
+                        ? "Fechado no Momento"
+                        : storeStatus.isAutoOpen
+                          ? "Aberto Agora"
+                          : "Fechado no Momento"}
+                  </span>
+                  <span className="text-muted shrink-0">·</span>
+                  <span className="text-cream-dim truncate text-[0.7rem]">
+                    {tempStoreMessage.trim() ||
+                      (tempStoreMode === "open"
+                        ? "Aberto pelo Don Luydd · Pedidos Liberados!"
+                        : tempStoreMode === "closed"
+                          ? "Fechado no Momento · Novos pedidos pausados"
+                          : storeStatus.nextLabel)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer fixo */}
+            <div className="p-3 sm:p-4 border-t border-white/8 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 shrink-0 bg-black/40">
+              <button
+                type="button"
+                onClick={() => setStoreModalOpen(false)}
+                className="px-4 py-2.5 rounded-sm border border-white/10 text-xs font-bold text-muted hover:text-cream cursor-pointer text-center"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isSavingStore}
+                onClick={handleSaveStoreStatus}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm bg-linear-to-r from-red-primary to-yellow text-xs font-bold text-black shadow-lg hover:brightness-110 active:scale-95 cursor-pointer disabled:opacity-50 text-center"
+              >
+                {isSavingStore ? "Salvando..." : "Salvar Alterações"}
               </button>
             </div>
           </div>

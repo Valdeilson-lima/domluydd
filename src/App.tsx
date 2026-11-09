@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ActiveOrderBanner } from "@/components/ActiveOrderBanner";
 import { Hero, InfoStrip } from "@/components/Hero";
@@ -18,10 +19,10 @@ import { SeoContent } from "@/components/SeoContent";
 import { Toast } from "@/components/ui/toast";
 import { setToastFn } from "@/components/ui/toast-helpers";
 import { useCart } from "@/hooks/useCart";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { salgadas, doces, allPizzas } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
 import { combos } from "@/data/combos";
-import { isStoreOpen } from "@/lib/utils";
 import type { Pizza, Drink, CartItem, Combo, PastOrder } from "@/types";
 
 type TabId = "combos" | "salgadas" | "doces" | "bebidas";
@@ -61,6 +62,10 @@ export default function App() {
   const [lastOrder, setLastOrder] = useState<PastOrder | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [pausedItems, setPausedItems] = useState<string[]>([]);
+
+  // Status de funcionamento gerenciado pelo dono da pizzaria
+  const storeStatus = useStoreStatus();
+  const storeOpen = storeStatus.isOpen;
 
   useEffect(() => {
     fetch("/api/stock")
@@ -157,8 +162,11 @@ export default function App() {
 
   const handleDrinkSelect = useCallback(
     (drink: Drink) => {
-      if (!isStoreOpen()) {
-        setToastMessage("Loja fechada — volte no horário de funcionamento");
+      if (!storeOpen) {
+        setToastMessage(
+          storeStatus.customMessage ||
+            "Loja fechada — volte no horário de funcionamento"
+        );
         setToastOpen(true);
         return;
       }
@@ -171,13 +179,16 @@ export default function App() {
       setToastMessage(`${drink.name} adicionada à sacola`);
       setToastOpen(true);
     },
-    [addItem]
+    [addItem, storeOpen, storeStatus.customMessage]
   );
 
   const handleComboSelect = useCallback(
     (combo: Combo) => {
-      if (!isStoreOpen()) {
-        setToastMessage("Loja fechada — volte no horário de funcionamento");
+      if (!storeOpen) {
+        setToastMessage(
+          storeStatus.customMessage ||
+            "Loja fechada — volte no horário de funcionamento"
+        );
         setToastOpen(true);
         return;
       }
@@ -191,7 +202,7 @@ export default function App() {
       setToastMessage(`${combo.name} adicionado à sacola!`);
       setToastOpen(true);
     },
-    [addItem]
+    [addItem, storeOpen, storeStatus.customMessage]
   );
 
   const handleRepeatLastOrder = useCallback(() => {
@@ -207,8 +218,11 @@ export default function App() {
 
   const handleAddToCart = useCallback(
     (item: Omit<CartItem, "id" | "qty">, qty = 1) => {
-      if (!isStoreOpen()) {
-        setToastMessage("Loja fechada — volte no horário de funcionamento");
+      if (!storeOpen) {
+        setToastMessage(
+          storeStatus.customMessage ||
+            "Loja fechada — volte no horário de funcionamento"
+        );
         setToastOpen(true);
         return;
       }
@@ -226,7 +240,7 @@ export default function App() {
       );
       setToastOpen(true);
     },
-    [addItem]
+    [addItem, storeOpen, storeStatus.customMessage]
   );
 
   const handleOrderSent = useCallback(() => {
@@ -371,11 +385,12 @@ export default function App() {
     );
   }, [search, activeTag]);
 
-  const storeOpen = isStoreOpen();
-
   const handleCheckout = useCallback(() => {
     if (!storeOpen) {
-      setToastMessage("Loja fechada — volte no horário de funcionamento");
+      setToastMessage(
+        storeStatus.customMessage ||
+          "Loja fechada — volte no horário de funcionamento"
+      );
       setToastOpen(true);
       return;
     }
@@ -386,7 +401,7 @@ export default function App() {
     }
     toggleCart(false);
     setCheckoutOpen(true);
-  }, [cart, toggleCart, storeOpen]);
+  }, [cart, toggleCart, storeOpen, storeStatus.customMessage]);
 
   const resultsCount =
     activeTab === "combos"
@@ -417,6 +432,8 @@ export default function App() {
         onRepeatLastOrder={handleRepeatLastOrder}
         hasLastOrder={Boolean(lastOrder)}
         activeOrder={isActiveOrder ? lastOrder : null}
+        storeOpen={storeOpen}
+        storeLabel={storeStatus.customMessage || storeStatus.nextLabel}
       />
 
       {isActiveOrder && !bannerDismissed && lastOrder && (
@@ -427,8 +444,25 @@ export default function App() {
         />
       )}
 
-      <Hero />
+      <Hero storeStatus={storeStatus} />
       <InfoStrip />
+
+      {!storeOpen && (
+        <div className="mx-auto max-w-280 px-3.5 pt-4 sm:px-6">
+          <div className="flex items-center gap-3 rounded-sm border border-red-500/40 bg-red-950/30 p-3.5 text-xs text-red-200 shadow-md">
+            <AlertTriangle className="size-4 text-red-400 shrink-0" />
+            <div className="flex-1">
+              <strong className="text-red-300 font-bold block text-sm">
+                Pizzaria Fechada para Novos Pedidos
+              </strong>
+              <p className="text-red-200/90 mt-0.5">
+                {storeStatus.customMessage ||
+                  `Horário regular: Terça a Domingo, das 18h às 22h (${storeStatus.nextLabel}). Você pode visualizar o cardápio normalmente!`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main
         id="main-content"
@@ -576,6 +610,8 @@ export default function App() {
         cart={cart}
         total={total}
         itemCount={itemCount}
+        storeOpen={storeOpen}
+        storeMessage={storeStatus.customMessage}
         onClose={() => toggleCart(false)}
         onRemove={removeItem}
         onUpdateQty={updateQty}
@@ -588,6 +624,7 @@ export default function App() {
         cart={cart}
         total={total}
         storeOpen={storeOpen}
+        storeMessage={storeStatus.customMessage}
         onClose={() => setCheckoutOpen(false)}
         onOrderSent={handleOrderSent}
       />

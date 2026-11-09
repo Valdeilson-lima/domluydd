@@ -36,6 +36,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Bloqueia pedidos caso o dono tenha fechado a pizzaria manualmente
+    const globalStore = globalThis as unknown as {
+      __donluyddStoreSettings?: {
+        mode: "auto" | "open" | "closed";
+        custom_message: string | null;
+      };
+    };
+    if (globalStore.__donluyddStoreSettings?.mode === "closed") {
+      return NextResponse.json(
+        {
+          error:
+            globalStore.__donluyddStoreSettings.custom_message ||
+            "A Don Luydd Pizzaria está fechada para novos pedidos no momento.",
+        },
+        { status: 403 }
+      );
+    }
+
     if (!isSupabaseConfigured || !supabase) {
       // Retorna sucesso com ID simulado se o Supabase ainda não estiver configurado
       const simulatedId = "local-" + Date.now();

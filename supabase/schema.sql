@@ -43,3 +43,37 @@ create policy "Permitir atualizacao de pedidos"
 
 -- 4. Habilita Realtime para que a cozinha receba pedidos instantaneamente via WebSockets
 alter publication supabase_realtime add table public.orders;
+
+-- 5. Cria a tabela de configurações da loja (aberto/fechado, aviso aos clientes)
+create table if not exists public.store_settings (
+  id text primary key default 'main',
+  is_open boolean not null default false,
+  mode text not null default 'auto', -- 'auto' | 'open' | 'closed'
+  custom_message text,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Habilita Row Level Security (RLS)
+alter table public.store_settings enable row level security;
+
+-- Políticas de acesso para store_settings:
+create policy "Permitir leitura de store_settings"
+  on public.store_settings for select
+  using (true);
+
+create policy "Permitir insercao de store_settings"
+  on public.store_settings for insert
+  with check (true);
+
+create policy "Permitir atualizacao de store_settings"
+  on public.store_settings for update
+  using (true);
+
+-- Insere linha inicial de configuração
+insert into public.store_settings (id, mode, is_open, custom_message)
+values ('main', 'auto', false, null)
+on conflict (id) do nothing;
+
+-- Habilita Realtime para sincronização instantânea do status entre Admin e Clientes
+alter publication supabase_realtime add table public.store_settings;
+

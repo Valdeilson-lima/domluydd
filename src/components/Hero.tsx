@@ -9,8 +9,23 @@ import { PizzaImage } from "./PizzaImage";
 
 const SLIDE_MS = 5000;
 
-export function Hero() {
-  const { open, nextLabel } = getStoreStatus();
+interface HeroProps {
+  storeStatus?: {
+    isOpen: boolean;
+    nextLabel: string;
+    customMessage?: string | null;
+  };
+}
+
+export function Hero({ storeStatus }: HeroProps = {}) {
+  const defaultStatus = getStoreStatus();
+  const open =
+    storeStatus !== undefined ? storeStatus.isOpen : defaultStatus.open;
+  const nextLabel =
+    storeStatus?.customMessage ||
+    (storeStatus !== undefined
+      ? storeStatus.nextLabel
+      : defaultStatus.nextLabel);
   const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
 

@@ -18,6 +18,8 @@ interface HeaderProps {
   onRepeatLastOrder?: () => void;
   hasLastOrder?: boolean;
   activeOrder?: PastOrder | null;
+  storeOpen?: boolean;
+  storeLabel?: string;
 }
 
 const tabs = [
@@ -35,6 +37,8 @@ export function Header({
   onRepeatLastOrder,
   hasLastOrder = false,
   activeOrder,
+  storeOpen,
+  storeLabel,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -50,9 +54,30 @@ export function Header({
             className="h-9 w-9 rounded-full ring-1 ring-yellow/30 sm:h-10 sm:w-10 object-cover"
           />
           <div className="flex flex-col leading-tight">
-            <span className="font-display text-[0.95rem] font-semibold italic leading-none tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36,'SOFT'_30] sm:text-base">
-              Don Luydd
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-display text-[0.95rem] font-semibold italic leading-none tracking-[-0.01em] text-cream [font-variation-settings:'opsz'_36,'SOFT'_30] sm:text-base">
+                Don Luydd
+              </span>
+              {typeof storeOpen === "boolean" && (
+                <span
+                  className={cn(
+                    "flex items-center gap-1 rounded-sm px-1.5 py-0.2 font-mono text-[0.55rem] font-bold border",
+                    storeOpen
+                      ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
+                      : "border-red-500/40 bg-red-950/40 text-red-300"
+                  )}
+                  title={storeLabel || (storeOpen ? "Aberto" : "Fechado")}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      storeOpen ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+                    )}
+                  />
+                  <span>{storeOpen ? "Aberto" : "Fechado"}</span>
+                </span>
+              )}
+            </div>
             <span className="mt-0.5 font-mono text-[0.5rem] font-semibold uppercase tracking-[0.18em] text-yellow/80 sm:text-[0.55rem]">
               Pizzaria
             </span>
@@ -195,8 +220,20 @@ export function Header({
             </a>
           </div>
 
-          <div className="text-[0.68rem] text-muted text-center pt-1 border-t border-white/6">
-            🍕 Don Luydd Pizzaria · Terça a Domingo, 18h às 22h
+          <div className="text-[0.68rem] text-muted text-center pt-1 border-t border-white/6 flex items-center justify-center gap-1.5">
+            <span
+              className={cn(
+                "size-2 rounded-full",
+                storeOpen ? "bg-emerald-400" : "bg-red-400"
+              )}
+            />
+            <span>
+              {typeof storeOpen === "boolean"
+                ? storeOpen
+                  ? "🍕 Aberto agora para pedidos!"
+                  : `🍕 Don Luydd Pizzaria · ${storeLabel || "Fechado no momento"}`
+                : "🍕 Don Luydd Pizzaria · Terça a Domingo, 18h às 22h"}
+            </span>
           </div>
         </div>
       )}

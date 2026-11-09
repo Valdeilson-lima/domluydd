@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { StoreMode } from "@/types/store";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,10 +16,10 @@ export const OPEN_HOUR = 18;
 export const CLOSE_HOUR = 22;
 
 /**
- * A loja abre de terça a domingo, das 18h às 22h.
- * Dica para testes: use `?aberto=1` (força aberto) ou `?aberto=0` (força fechado) na URL.
+ * Verifica se a loja estaria aberta de acordo com o horário comercial padrão
+ * (terça a domingo, das 18h às 22h).
  */
-export function isStoreOpen(date: Date = new Date()) {
+export function isScheduleOpen(date: Date = new Date()) {
   if (typeof window !== "undefined") {
     const param = new URLSearchParams(window.location.search).get("aberto");
     if (param === "1") return true;
@@ -33,31 +34,108 @@ export function isStoreOpen(date: Date = new Date()) {
   );
 }
 
-export interface StoreStatus {
-  open: boolean;
-  nextLabel: string;
-}
-
-/** Status atualizado da loja + rótulo de próximo horário de funcionamento. */
-export function getStoreStatus(date: Date = new Date()): StoreStatus {
-  const open = isStoreOpen(date);
+/** Rótulo textual da próxima abertura ou encerramento no modo automático. */
+export function getScheduleNextLabel(date: Date = new Date()): string {
+  const open = isScheduleOpen(date);
   const day = date.getDay();
   const minutes = date.getHours() * 60 + date.getMinutes();
 
-  let nextLabel: string;
   if (open) {
-    nextLabel = "Pedidos até 22h";
+    return "Pedidos até 22h";
   } else if (day === 1) {
-    nextLabel = "Abrimos terça às 18h";
+    return "Abrimos terça às 18h";
   } else if (minutes < OPEN_HOUR * 60) {
-    nextLabel = "Abrimos hoje às 18h";
+    return "Abrimos hoje às 18h";
   } else if (day === 0) {
-    nextLabel = "Abrimos terça às 18h";
+    return "Abrimos terça às 18h";
   } else if (day === 6) {
-    nextLabel = "Abrimos domingo às 18h";
+    return "Abrimos domingo às 18h";
   } else {
-    nextLabel = "Abrimos amanhã às 18h";
+    return "Abrimos amanhã às 18h";
+  }
+}
+
+export interface StoreStatus {
+  open: boolean;
+  mode?: StoreMode;
+  nextLabel: string;
+  customMessage?: string | null;
+}
+
+/**
+ * Resolve o status final da loja considerando a preferência do dono:
+ * - 'open': Aberta forçada (mesmo fora do horário comercial)
+ * - 'closed': Fechada forçada (mesmo dentro do horário comercial)
+ * - 'auto': Segue o horário automático da semana
+ */
+export function resolveStoreStatus(
+  settings?: {
+    mode?: StoreMode;
+    custom_message?: string | null;
+  } | null,
+  date: Date = new Date()
+): StoreStatus {
+  // Parâmetros de teste na URL têm prioridade em ambiente de desenvolvimento/testes
+  if (typeof window !== "undefined") {
+    const param = new URLSearchParams(window.location.search).get("aberto");
+    if (param === "1") {
+      return {
+        open: true,
+        mode: "open",
+        nextLabel: "Aberto para testes (URL ?aberto=1)",
+        customMessage: settings?.custom_message || null,
+      };
+    }
+    if (param === "0") {
+      return {
+        open: false,
+        mode: "closed",
+        nextLabel: "Fechado para testes (URL ?aberto=0)",
+        customMessage: settings?.custom_message || null,
+      };
+    }
   }
 
-  return { open, nextLabel };
+  const mode = settings?.mode || "auto";
+  const customMessage = settings?.custom_message?.trim() || null;
+
+  if (mode === "open") {
+    return {
+      open: true,
+      mode: "open",
+      nextLabel: customMessage || "Aberto pelo Don Luydd · Pedidos Liberados!",
+      customMessage,
+    };
+  }
+
+  if (mode === "closed") {
+    return {
+      open: false,
+      mode: "closed",
+      nextLabel: customMessage || "Fechado no Momento · Novos pedidos pausados",
+      customMessage,
+    };
+  }
+
+  // Modo Automático (segue a grade horária)
+  const autoOpen = isScheduleOpen(date);
+  return {
+    open: autoOpen,
+    mode: "auto",
+    nextLabel: customMessage || getScheduleNextLabel(date),
+    customMessage,
+  };
+}
+
+/**
+ * A loja abre de terça a domingo, das 18h às 22h (ou via URL ?aberto=1|0).
+ * Mantido para compatibilidade retroativa.
+ */
+export function isStoreOpen(date: Date = new Date()) {
+  return isScheduleOpen(date);
+}
+
+/** Status padrão retrocompatível. */
+export function getStoreStatus(date: Date = new Date()): StoreStatus {
+  return resolveStoreStatus({ mode: "auto" }, date);
 }
