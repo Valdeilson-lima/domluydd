@@ -25,7 +25,7 @@ export function WhatsAppButton({
         href={`https://wa.me/5583993740352?text=${WHATSAPP_MSG}`}
         target="_blank"
         rel="noreferrer"
-        className="flex flex-col items-center gap-0.5 rounded-full bg-linear-to-br from-[#25d366] to-[#128C7E] p-2.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(37,211,102,0.35)] active:scale-95 animate-[float_3s_ease-in-out_infinite] sm:flex-row sm:gap-2 sm:rounded-2xl sm:pl-5 sm:pr-6 sm:py-3.5"
+        className="flex flex-col items-center gap-0.5 rounded-full bg-linear-to-br from-[#25d366] to-[#128C7E] p-2.5 text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_30px_rgba(37,211,102,0.35)] active:scale-95 animate-[float_3s_ease-in-out_infinite] sm:flex-row sm:gap-2 sm:rounded-sm sm:pl-5 sm:pr-6 sm:py-3.5"
         aria-label="Falar no WhatsApp"
       >
         <span className="relative flex shrink-0 items-center justify-center">

@@ -66,15 +66,15 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
       }}
       aria-label={`Adicionar ${drink.name}, R$ ${formatPrice(drink.price)}`}
       style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
-      className={`group relative flex items-center gap-3.5 rounded-2xl border p-3.5 shadow-sm outline-none transition-all duration-300 animate-[fadeUp_0.4s_both] sm:p-4 ${
+      className={`group relative flex items-center gap-3.5 rounded-sm border p-3.5 shadow-sm outline-none transition-all duration-300 animate-[fadeUp_0.4s_both] sm:p-4 ${
         isAvailable
           ? "cursor-pointer border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.4)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99]"
-          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-[30%]"
+          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-30"
       }`}
     >
       {/* Icon badge */}
       <div
-        className={`relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-black/60 ring-2 ${theme.ring} shadow-md`}
+        className={`relative flex size-12 shrink-0 items-center justify-center rounded-sm bg-black/60 ring-2 ${theme.ring} shadow-md`}
       >
         <Wine className="size-5 text-cream-dim transition-transform duration-300 group-hover:scale-110" />
         <span
@@ -90,13 +90,13 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
           </h3>
           {isAvailable ? (
             <span
-              className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider ${theme.chip}`}
+              className={`inline-flex items-center gap-0.5 rounded-sm border px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider ${theme.chip}`}
             >
               <Snowflake className="size-2.5" />
               Gelada
             </span>
           ) : (
-            <span className="inline-flex items-center gap-0.5 rounded-full border border-red-500/30 bg-black/80 px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400">
+            <span className="inline-flex items-center gap-0.5 rounded-sm border border-red-500/30 bg-black/80 px-1.5 py-0.2 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400">
               <Ban className="size-2.5" />
               Esgotado
             </span>
@@ -114,7 +114,7 @@ export function DrinkCard({ drink, index, onSelect }: DrinkCardProps) {
           type="button"
           tabIndex={-1}
           disabled={!isAvailable}
-          className="flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/4 text-cream-dim transition-all duration-200 group-hover:border-yellow group-hover:bg-yellow group-hover:text-black group-hover:shadow-[0_0_12px_rgba(242,183,5,0.4)] active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex size-9 items-center justify-center rounded-sm border border-white/10 bg-white/4 text-cream-dim transition-all duration-200 group-hover:border-yellow group-hover:bg-yellow group-hover:text-black group-hover:shadow-[0_0_12px_rgba(242,183,5,0.4)] active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
           aria-hidden
         >
           <Plus className="size-4.5" />

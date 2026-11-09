@@ -86,7 +86,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           {/* Pizza Image Card */}
-          <div className="relative aspect-4/3 w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-black">
+          <div className="relative aspect-4/3 w-full overflow-hidden rounded-sm border border-white/10 shadow-2xl bg-black">
             <Image
               src={imgSrc}
               alt={pizza.name}
@@ -99,7 +99,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
 
             {/* Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
-              <span className="rounded-full bg-black/80 px-3 py-1 font-mono text-xs font-bold text-yellow border border-yellow/30 backdrop-blur-md">
+              <span className="rounded-sm bg-black/80 px-3 py-1 font-mono text-xs font-bold text-yellow border border-yellow/30 backdrop-blur-md">
                 {pizza.category === "doce"
                   ? "Pizza Doce"
                   : "Pizza Artesanal Salgada"}
@@ -108,7 +108,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
 
             {!isAvailable && (
               <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
-                <span className="rounded-2xl border border-red-500/50 bg-red-950/80 px-6 py-3 font-mono text-sm font-bold uppercase tracking-wider text-red-300 shadow-xl">
+                <span className="rounded-sm border border-red-500/50 bg-red-950/80 px-6 py-3 font-mono text-sm font-bold uppercase tracking-wider text-red-300 shadow-xl">
                   Esgotado Hoje
                 </span>
               </div>
@@ -131,13 +131,13 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
             </div>
 
             {/* Size Options & Prices */}
-            <div className="space-y-3 rounded-2xl border border-white/8 bg-white/2 p-4 sm:p-5">
+            <div className="space-y-3 rounded-sm border border-white/8 bg-white/2 p-4 sm:p-5">
               <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-muted">
                 Tamanhos e Valores
               </h3>
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-white/8 bg-black/40 p-3 text-center">
+                <div className="rounded-sm border border-white/8 bg-black/40 p-3 text-center">
                   <span className="block font-mono text-[0.65rem] text-muted uppercase">
                     P · 4 Fatias
                   </span>
@@ -149,7 +149,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
                   </span>
                 </div>
 
-                <div className="rounded-xl border border-yellow/40 bg-yellow/10 p-3 text-center ring-1 ring-yellow/30">
+                <div className="rounded-sm border border-yellow/40 bg-yellow/10 p-3 text-center ring-1 ring-yellow/30">
                   <span className="block font-mono text-[0.65rem] text-yellow font-bold uppercase">
                     M · 6 Fatias ⭐
                   </span>
@@ -161,7 +161,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
                   </span>
                 </div>
 
-                <div className="rounded-xl border border-white/8 bg-black/40 p-3 text-center">
+                <div className="rounded-sm border border-white/8 bg-black/40 p-3 text-center">
                   <span className="block font-mono text-[0.65rem] text-muted uppercase">
                     G · 8 Fatias
                   </span>
@@ -176,7 +176,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
             </div>
 
             {/* Bordas Recheadas Disponíveis */}
-            <div className="space-y-2 rounded-2xl border border-white/8 bg-white/2 p-4">
+            <div className="space-y-2 rounded-sm border border-white/8 bg-white/2 p-4">
               <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-cream">
                 <Sparkles className="size-3.5 text-yellow" />
                 Opções de Bordas Recheadas
@@ -209,7 +209,7 @@ export default async function PizzaPage({ params }: PizzaPageProps) {
             <div className="pt-2">
               <Link
                 href={`/?pizza=${pizza.slug}`}
-                className={`flex w-full items-center justify-center gap-2.5 rounded-2xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-6 py-4 font-body text-base font-bold text-cream shadow-xl transition-all duration-200 hover:brightness-110 active:scale-98 ${
+                className={`flex w-full items-center justify-center gap-2.5 rounded-sm bg-linear-to-r from-red-dark via-red-primary to-yellow px-6 py-4 font-body text-base font-bold text-cream shadow-xl transition-all duration-200 hover:brightness-110 active:scale-98 ${
                   !isAvailable ? "pointer-events-none opacity-40" : ""
                 }`}
               >

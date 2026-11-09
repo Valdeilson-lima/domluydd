@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   X,
   MapPin,
@@ -42,13 +43,6 @@ const PAYMENTS = [
   { id: "Débito", label: "Débito", icon: Landmark },
 ] as const;
 
-const PAYMENT_LABELS: Record<string, string> = {
-  Dinheiro: "Dinheiro (pagamento na entrega/retirada)",
-  PIX: "PIX (transferência instantânea)",
-  Crédito: "Cartão de Crédito (levar maquininha)",
-  Débito: "Cartão de Débito (levar maquininha)",
-};
-
 export function CheckoutModal({
   open,
   cart,
@@ -57,6 +51,7 @@ export function CheckoutModal({
   onClose,
   onOrderSent,
 }: CheckoutModalProps) {
+  const router = useRouter();
   const [deliveryType, setDeliveryType] = useState<"delivery" | "takeaway">(
     "delivery"
   );
@@ -72,9 +67,30 @@ export function CheckoutModal({
   const [bairroSearch, setBairroSearch] = useState("");
   const [bairroOpen, setBairroOpen] = useState(false);
   const [pixCopied, setPixCopied] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const bairroRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const resetForm = () => {
+    setName("");
+    setPhone("");
+    setCep("");
+    setAddress("");
+    setComplement("");
+    setBairro("");
+    setPayment("PIX");
+    setChangeAmount("");
+    setBairroSearch("");
+    setBairroOpen(false);
+    setPixCopied(false);
+    setDeliveryType("delivery");
+    try {
+      localStorage.removeItem("donluydd.customer.v1");
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Carrega dados salvos do cliente no primeiro acesso
   useEffect(() => {
@@ -175,112 +191,8 @@ export function CheckoutModal({
     name.trim() && (deliveryType === "takeaway" || (bairro && address.trim()))
   );
 
-  const buildWhatsAppMessage = () => {
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}`;
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const line = "━━━━━━━━━━━━━━━━━━";
-    const lineThin = "─────────────────";
-
-    const itemsList = cart
-      .map((item, i) => {
-        const isHalf =
-          item.flavors.length > 1 &&
-          item.flavors[0].name !== item.flavors[1].name;
-        const nameStr = isHalf
-          ? `${item.flavors[0].name} + ${item.flavors[1].name}`
-          : item.flavors[0].name;
-        const qtyStr = item.qty > 1 ? `${item.qty}x ` : "";
-        const lineTotal = item.price * item.qty;
-
-        let details = `*${i + 1}.* ${qtyStr}${nameStr} _(${item.size})_\n     R$ ${formatPrice(lineTotal)}`;
-        if (item.crust) {
-          details += `\n     🧀 *Borda:* ${item.crust.name}`;
-        }
-        if (item.extras && item.extras.length > 0) {
-          details += `\n     🥓 *Extras:* ${item.extras.map((e) => e.name).join(", ")}`;
-        }
-        if (item.removals && item.removals.length > 0) {
-          details += `\n     ❌ *Sem:* ${item.removals.join(", ")}`;
-        }
-        if (item.observation) {
-          details += `\n     📝 _Obs: ${item.observation}_`;
-        }
-        return details;
-      })
-      .join("\n\n");
-
-    const paymentLabel = PAYMENT_LABELS[payment] ?? payment;
-    const itemCount = cart.reduce((s, i) => s + i.qty, 0);
-
-    let msg = "";
-    msg += `🍕 *DON LUYDD PIZZARIA* 🍕`;
-    msg += `\n${line}`;
-    msg += `\n📄 *NOVO PEDIDO DIGITAL*`;
-    msg += `\n📅 ${dateStr} às ${timeStr}`;
-    msg += `\n🛒 ${itemCount} ${itemCount === 1 ? "item" : "itens"}`;
-    msg += `\n${line}`;
-
-    msg += `\n\n👤 *DADOS DO CLIENTE*`;
-    msg += `\nNome: *${name.trim()}*`;
-    if (phone.trim()) msg += `\nTelefone: ${phone.trim()}`;
-    msg += `\nTipo: *${deliveryType === "delivery" ? "🛵 Entrega a Domicílio" : "🏬 Retirada no Balcão"}*`;
-
-    if (deliveryType === "delivery") {
-      const fullAddress = complement.trim()
-        ? `${address.trim()} (Comp: ${complement.trim()})`
-        : address.trim();
-      msg += `\n\n📍 *ENDEREÇO DE ENTREGA*`;
-      msg += `\n🏠 ${fullAddress}`;
-      msg += `\n🗺️ Bairro: ${bairro}`;
-      if (cep.trim()) msg += `\n📮 CEP: ${cep.trim()}`;
-    } else {
-      msg += `\n\n🏬 *RETIRADA NO BALCÃO*`;
-      msg += `\nCliente irá retirar na pizzaria (Sem taxa de entrega).`;
-    }
-
-    msg += `\n\n${line}`;
-    msg += `\n🍕 *ITENS DO PEDIDO*`;
-    msg += `\n\n${itemsList}`;
-    msg += `\n\n${line}`;
-
-    msg += `\n💰 *RESUMO FINANCEIRO*`;
-    msg += `\nSubtotal:     R$ ${formatPrice(total)}`;
-    if (deliveryType === "delivery") {
-      msg += `\nTaxa Entrega: R$ ${formatPrice(frete)} (${bairro})`;
-    } else {
-      msg += `\nTaxa Entrega: R$ 0,00 (Retirada no Balcão)`;
-    }
-    msg += `\n${lineThin}`;
-    msg += `\n*TOTAL GERAL: R$ ${formatPrice(totalComFrete)}*`;
-    msg += `\n${line}`;
-
-    msg += `\n\n💳 *FORMA DE PAGAMENTO*`;
-    msg += `\n${paymentLabel}`;
-
-    if (payment === "PIX") {
-      msg += `\n🔑 Chave Pix: ${PIX_KEY_FORMATTED}`;
-      msg += `\n(Favor enviar o comprovante após a transferência)`;
-    } else if (
-      payment === "Dinheiro" &&
-      changeValue &&
-      changeValue.num > totalComFrete
-    ) {
-      msg += `\n💵 Troco para: R$ ${formatPrice(changeValue.num)}`;
-      msg += `\n🪙 Valor do troco: R$ ${formatPrice(changeValue.change)}`;
-    } else if (payment === "Dinheiro" && changeAmount === "0") {
-      msg += `\n💵 Não precisa de troco (valor exato)`;
-    }
-
-    msg += `\n${line}`;
-    msg += `\n✨ _Pedido gerado pelo Cardápio Don Luydd_`;
-
-    return msg;
-  };
-
-  const handleSend = () => {
-    if (!storeOpen) return;
+  const handleSend = async () => {
+    if (!storeOpen || isSubmitting) return;
     if (!name.trim()) {
       showToast("Informe seu nome para o pedido");
       return;
@@ -296,48 +208,21 @@ export function CheckoutModal({
       }
     }
 
-    // Salva dados no localStorage para próximas compras
-    try {
-      localStorage.setItem(
-        "donluydd.customer.v1",
-        JSON.stringify({
-          name,
-          phone,
-          deliveryType,
-          cep,
-          address,
-          complement,
-          bairro,
-          payment,
-        })
-      );
-      localStorage.setItem(
-        "donluydd.last_order.v1",
-        JSON.stringify({
-          id: String(Date.now()),
-          date: new Date().toISOString(),
-          items: cart,
-          total: totalComFrete,
-          deliveryType,
-        })
-      );
-    } catch {
-      /* ignore */
-    }
+    setIsSubmitting(true);
 
-    // Salva no Supabase via API Route
     try {
-      fetch("/api/orders", {
+      // 1. Envia o pedido para a API (Supabase / KDS Cozinha / Impressão Automática)
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer_name: name,
-          customer_phone: phone,
+          customer_name: name.trim(),
+          customer_phone: phone.trim() || null,
           delivery_type: deliveryType,
-          cep,
-          address,
-          complement,
-          bairro,
+          cep: cep.trim() || null,
+          address: address.trim() || null,
+          complement: complement.trim() || null,
+          bairro: bairro || null,
           items: cart,
           subtotal: total,
           delivery_fee: frete,
@@ -345,19 +230,52 @@ export function CheckoutModal({
           payment_method: payment,
           change_for: changeValue?.num || null,
         }),
-      }).catch(() => {});
-    } catch {
-      /* ignore */
-    }
+      });
 
-    const msg = buildWhatsAppMessage();
-    window.open(
-      `https://wa.me/5583993740352?text=${encodeURIComponent(msg)}`,
-      "_blank"
-    );
-    setChangeAmount("");
-    onOrderSent();
-    showToast("Pedido enviado com sucesso para o WhatsApp!");
+      const data = await res.json();
+      const orderId =
+        data.orderId || data.order?.id || `donluydd-${Date.now().toString(36)}`;
+
+      // 2. Salva no localStorage para persistência e fallback offline
+      try {
+        localStorage.removeItem("donluydd.customer.v1");
+        localStorage.setItem(
+          "donluydd.last_order.v1",
+          JSON.stringify({
+            id: orderId,
+            date: new Date().toISOString(),
+            customer_name: name.trim(),
+            customer_phone: phone.trim(),
+            delivery_type: deliveryType,
+            address: address.trim(),
+            bairro,
+            complement: complement.trim(),
+            cep: cep.trim(),
+            items: cart,
+            subtotal: total,
+            delivery_fee: frete,
+            total: totalComFrete,
+            payment_method: payment,
+            change_for: changeValue?.num || null,
+            status: "pending",
+          })
+        );
+      } catch {
+        /* ignore */
+      }
+
+      resetForm();
+      onOrderSent();
+      showToast("Pedido confirmado! Acompanhe seu pedido ao vivo...");
+
+      // 3. Redireciona diretamente para a página de acompanhamento do pedido
+      router.push(`/pedido/${orderId}`);
+    } catch (err) {
+      console.error("Erro ao enviar pedido:", err);
+      showToast("Erro ao processar pedido. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -373,11 +291,11 @@ export function CheckoutModal({
         aria-labelledby="checkout-title"
         className="fixed inset-0 z-451 flex items-center justify-center p-3 sm:p-5"
       >
-        <div className="w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)] animate-[modalIn_0.3s_ease]">
+        <div className="w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)] animate-[modalIn_0.3s_ease]">
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 py-4 sm:px-6">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-yellow/15 text-yellow">
+              <div className="flex size-9 items-center justify-center rounded-sm bg-yellow/15 text-yellow">
                 <Receipt className="size-5" />
               </div>
               <div>
@@ -395,7 +313,7 @@ export function CheckoutModal({
 
             <button
               onClick={onClose}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/4 text-muted transition-all duration-200 hover:border-yellow/50 hover:bg-yellow/15 hover:text-yellow active:scale-90"
+              className="flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-all duration-200 hover:border-yellow/50 hover:bg-yellow/15 hover:text-yellow active:scale-90"
               aria-label="Fechar"
             >
               <X className="size-4" />
@@ -405,7 +323,7 @@ export function CheckoutModal({
           {/* Scrollable Body */}
           <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6 space-y-5">
             {!storeOpen && (
-              <div className="rounded-xl border border-red-primary/40 bg-red-primary/10 p-4 text-center">
+              <div className="rounded-sm border border-red-primary/40 bg-red-primary/10 p-4 text-center">
                 <p className="text-sm font-bold text-red-light">Loja fechada</p>
                 <p className="mt-1 text-xs text-cream-dim">
                   Você pode montar o pedido, mas o envio pelo WhatsApp só será
@@ -415,11 +333,11 @@ export function CheckoutModal({
             )}
 
             {/* 1. Toggle: Entrega vs Retirada no Balcão */}
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/60 border border-white/8">
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-sm bg-black/60 border border-white/8">
               <button
                 type="button"
                 onClick={() => setDeliveryType("delivery")}
-                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-2 py-2 rounded-sm text-xs font-bold transition-all cursor-pointer ${
                   deliveryType === "delivery"
                     ? "bg-yellow text-black shadow-md"
                     : "text-muted hover:text-cream"
@@ -431,7 +349,7 @@ export function CheckoutModal({
               <button
                 type="button"
                 onClick={() => setDeliveryType("takeaway")}
-                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-2 py-2 rounded-sm text-xs font-bold transition-all cursor-pointer ${
                   deliveryType === "takeaway"
                     ? "bg-yellow text-black shadow-md"
                     : "text-muted hover:text-cream"
@@ -456,7 +374,7 @@ export function CheckoutModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo *"
-                    className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                   />
                 </div>
                 <div>
@@ -465,7 +383,7 @@ export function CheckoutModal({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="WhatsApp / Telefone"
-                    className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                   />
                 </div>
               </div>
@@ -487,13 +405,13 @@ export function CheckoutModal({
                     maxLength={9}
                     onChange={(e) => setCep(e.target.value)}
                     placeholder="CEP (ex: 58000-000)"
-                    className="w-36 rounded-xl border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    className="w-36 rounded-sm border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                   />
                   <button
                     type="button"
                     onClick={handleLookupCep}
                     disabled={cepLoading}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-sm border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                   >
                     {cepLoading ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -509,7 +427,7 @@ export function CheckoutModal({
                   <button
                     type="button"
                     onClick={() => setBairroOpen((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream outline-none focus:border-yellow cursor-pointer"
+                    className="flex w-full items-center justify-between rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream outline-none focus:border-yellow cursor-pointer"
                   >
                     <span className={bairro ? "text-cream" : "text-muted"}>
                       {bairro
@@ -520,14 +438,14 @@ export function CheckoutModal({
                   </button>
 
                   {bairroOpen && (
-                    <div className="absolute top-full left-0 z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-yellow/20 bg-[#1c191a] p-2 shadow-2xl">
+                    <div className="absolute top-full left-0 z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-sm border border-yellow/20 bg-[#1c191a] p-2 shadow-2xl">
                       <input
                         ref={searchRef}
                         type="text"
                         value={bairroSearch}
                         onChange={(e) => setBairroSearch(e.target.value)}
                         placeholder="Buscar bairro..."
-                        className="mb-2 w-full rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
+                        className="mb-2 w-full rounded-sm border border-white/10 bg-black/60 px-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
                       />
                       <ul className="space-y-1">
                         {bairrosFiltrados.map((b) => (
@@ -537,7 +455,7 @@ export function CheckoutModal({
                               setBairro(b.nome);
                               setBairroOpen(false);
                             }}
-                            className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-2 text-xs text-cream-dim transition-colors hover:bg-yellow/15 hover:text-cream"
+                            className="flex cursor-pointer items-center justify-between rounded-sm px-2.5 py-2 text-xs text-cream-dim transition-colors hover:bg-yellow/15 hover:text-cream"
                           >
                             <span>{b.nome}</span>
                             <span className="font-mono text-yellow">
@@ -556,7 +474,7 @@ export function CheckoutModal({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Rua / Avenida e Número *"
-                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
 
                 {/* Complemento */}
@@ -565,11 +483,11 @@ export function CheckoutModal({
                   value={complement}
                   onChange={(e) => setComplement(e.target.value)}
                   placeholder="Complemento / Ponto de referência (Apto, Bloco, etc.)"
-                  className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
               </div>
             ) : (
-              <div className="rounded-xl border border-yellow/30 bg-yellow/10 p-3.5 space-y-1.5">
+              <div className="rounded-sm border border-yellow/30 bg-yellow/10 p-3.5 space-y-1.5">
                 <div className="flex items-center gap-2 text-yellow font-bold text-xs">
                   <Store className="size-4" />
                   Retirada no Balcão (Frete Grátis)
@@ -601,7 +519,7 @@ export function CheckoutModal({
                       key={p.id}
                       type="button"
                       onClick={() => setPayment(p.id)}
-                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`flex items-center gap-2.5 p-3 rounded-sm border text-left transition-all cursor-pointer ${
                         isSelected
                           ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
                           : "border-white/8 bg-white/2 text-cream hover:border-white/20"
@@ -616,7 +534,7 @@ export function CheckoutModal({
 
               {/* Box especial do PIX com chave Copia e Cola */}
               {payment === "PIX" && (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-2">
+                <div className="rounded-sm border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                       <Zap className="size-3.5" />
@@ -625,7 +543,7 @@ export function CheckoutModal({
                     <button
                       type="button"
                       onClick={copyPixKey}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[0.68rem] font-bold transition-all cursor-pointer"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[0.68rem] font-bold transition-all cursor-pointer"
                     >
                       {pixCopied ? (
                         <>
@@ -640,7 +558,7 @@ export function CheckoutModal({
                       )}
                     </button>
                   </div>
-                  <div className="font-mono text-sm font-bold text-cream tracking-wider bg-black/50 p-2 rounded-lg border border-white/5">
+                  <div className="font-mono text-sm font-bold text-cream tracking-wider bg-black/50 p-2 rounded-sm border border-white/5">
                     {PIX_KEY_FORMATTED}
                   </div>
                   <p className="text-[0.65rem] text-muted leading-tight">
@@ -653,7 +571,7 @@ export function CheckoutModal({
 
               {/* Campo de Troco para Dinheiro */}
               {payment === "Dinheiro" && (
-                <div className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-1.5">
+                <div className="rounded-sm border border-white/10 bg-black/40 p-3 space-y-1.5">
                   <label className="block text-[0.68rem] font-medium text-cream-dim">
                     Precisa de troco para quanto?
                   </label>
@@ -662,7 +580,7 @@ export function CheckoutModal({
                     value={changeAmount}
                     onChange={(e) => setChangeAmount(e.target.value)}
                     placeholder="Ex: 50 ou 100 (ou digite 0 para não precisa)"
-                    className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs text-cream outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3 py-2 text-xs text-cream outline-none focus:border-yellow"
                   />
                   {changeValue && changeValue.change > 0 && (
                     <p className="text-[0.68rem] text-yellow font-mono">
@@ -674,7 +592,7 @@ export function CheckoutModal({
             </div>
 
             {/* Resumo Financeiro */}
-            <div className="rounded-xl border border-white/8 bg-white/2 p-3.5 space-y-2">
+            <div className="rounded-sm border border-white/8 bg-white/2 p-3.5 space-y-2">
               <div className="flex justify-between text-xs text-muted">
                 <span>Subtotal dos itens ({cart.length})</span>
                 <span className="font-mono text-cream">
@@ -704,13 +622,22 @@ export function CheckoutModal({
           <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5">
             <button
               onClick={handleSend}
-              disabled={!canSend || !storeOpen}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-[#25d366] to-[#128c7e] px-5 py-4 font-body text-sm font-bold text-white shadow-[0_8px_24px_rgba(37,211,102,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={!canSend || !storeOpen || isSubmitting}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm bg-linear-to-r from-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-black shadow-[0_8px_24px_rgba(232,37,42,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <span>Enviar Pedido pelo WhatsApp</span>
-              <span className="font-mono font-bold">
-                · R$ {formatPrice(totalComFrete)}
-              </span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin text-black" />
+                  <span>Enviando Pedido...</span>
+                </>
+              ) : (
+                <>
+                  <span>Confirmar e Acompanhar Pedido</span>
+                  <span className="font-mono font-bold">
+                    · R$ {formatPrice(totalComFrete)}
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -35,13 +35,13 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-300 grid gap-4 border border-white/10 bg-black-light p-6 shadow-lg duration-200 left-4 right-4 w-auto top-[50%] -translate-y-1/2 sm:left-[50%] sm:right-auto sm:w-full sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-lg",
+        "fixed z-300 grid gap-4 border border-white/10 bg-black-light p-6 shadow-lg duration-200 left-4 right-4 w-auto top-[50%] -translate-y-1/2 sm:left-[50%] sm:right-auto sm:w-full sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-sm",
         className
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2 text-white hover:bg-red-primary transition-all duration-200 focus:outline-none disabled:pointer-events-none">
+      <DialogPrimitive.Close className="absolute right-3 top-3 z-10 rounded-sm bg-black/60 p-2 text-white hover:bg-red-primary transition-all duration-200 focus:outline-none disabled:pointer-events-none">
         <X className="h-4 w-4" />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

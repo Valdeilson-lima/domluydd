@@ -75,7 +75,19 @@ export interface CustomerData {
 export interface PastOrder {
   id: string;
   date: string;
+  customer_name?: string;
+  customer_phone?: string | null;
+  deliveryType?: "delivery" | "takeaway";
+  delivery_type?: "delivery" | "takeaway";
+  address?: string | null;
+  bairro?: string | null;
+  complement?: string | null;
+  cep?: string | null;
   items: CartItem[];
+  subtotal?: number;
+  delivery_fee?: number;
   total: number;
-  deliveryType: "delivery" | "takeaway";
+  payment_method?: string;
+  change_for?: number | null;
+  status?: "pending" | "preparing" | "delivering" | "completed" | "cancelled";
 }

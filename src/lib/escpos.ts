@@ -446,3 +446,234 @@ export function printOrderViaBrowser(order: DbOrder): void {
     }, 1500);
   }, 350);
 }
+
+export interface ClosingReportData {
+  generatedAt: string;
+  dateStr: string;
+  totalSales: number;
+  orderCount: number;
+  averageTicket: number;
+  paymentBreakdown: {
+    pix: { count: number; total: number };
+    cartao: { count: number; total: number };
+    dinheiro: { count: number; total: number };
+    outro: { count: number; total: number };
+  };
+  deliveryCount: number;
+  takeawayCount: number;
+  totalDeliveryFees: number;
+  cancelledCount: number;
+}
+
+// Monta buffer ESC/POS para fechamento de caixa do turno na Epson TM-T20
+export function buildEpsonClosingReportEscPos(
+  data: ClosingReportData
+): Uint8Array {
+  const bytes: number[] = [];
+
+  const addBytes = (...arr: number[]) => {
+    bytes.push(...arr);
+  };
+
+  const addString = (str: string) => {
+    const cleaned = cleanText(str);
+    for (let i = 0; i < cleaned.length; i++) {
+      bytes.push(cleaned.charCodeAt(i));
+    }
+  };
+
+  const addLine = (str = "") => {
+    addString(str);
+    bytes.push(0x0a);
+  };
+
+  addBytes(...CMD.INIT);
+  addBytes(...CMD.BEEP);
+
+  addBytes(...CMD.ALIGN_CENTER);
+  addBytes(...CMD.DOUBLE_ON);
+  addLine("DON LUYDD PIZZARIA");
+  addBytes(...CMD.NORMAL_TEXT);
+  addLine("FECHAMENTO DE CAIXA / TURNO");
+  addLine(`Data: ${data.dateStr}`);
+  addLine(`Gerado em: ${data.generatedAt}`);
+  addLine("=".repeat(48));
+
+  addBytes(...CMD.ALIGN_LEFT);
+  addBytes(...CMD.BOLD_ON);
+  addLine(justifyLine("TOTAL PEDIDOS FINALIZADOS:", String(data.orderCount)));
+  addLine(
+    justifyLine("FATURAMENTO BRUTO:", `R$ ${formatPrice(data.totalSales)}`)
+  );
+  addLine(
+    justifyLine("TICKET MEDIO:", `R$ ${formatPrice(data.averageTicket)}`)
+  );
+  addBytes(...CMD.BOLD_OFF);
+  addLine("-".repeat(48));
+
+  addLine("FORMAS DE PAGAMENTO:");
+  if (data.paymentBreakdown.pix.count > 0) {
+    addLine(
+      justifyLine(
+        `  PIX (${data.paymentBreakdown.pix.count}x)`,
+        `R$ ${formatPrice(data.paymentBreakdown.pix.total)}`
+      )
+    );
+  }
+  if (data.paymentBreakdown.cartao.count > 0) {
+    addLine(
+      justifyLine(
+        `  Cartao (${data.paymentBreakdown.cartao.count}x)`,
+        `R$ ${formatPrice(data.paymentBreakdown.cartao.total)}`
+      )
+    );
+  }
+  if (data.paymentBreakdown.dinheiro.count > 0) {
+    addLine(
+      justifyLine(
+        `  Dinheiro (${data.paymentBreakdown.dinheiro.count}x)`,
+        `R$ ${formatPrice(data.paymentBreakdown.dinheiro.total)}`
+      )
+    );
+  }
+  if (data.paymentBreakdown.outro.count > 0) {
+    addLine(
+      justifyLine(
+        `  Outros (${data.paymentBreakdown.outro.count}x)`,
+        `R$ ${formatPrice(data.paymentBreakdown.outro.total)}`
+      )
+    );
+  }
+
+  addLine("-".repeat(48));
+  addLine("LOGISTICA:");
+  addLine(
+    justifyLine("  Entregas a Domicilio:", `${data.deliveryCount} pedidos`)
+  );
+  addLine(
+    justifyLine("  Retiradas no Balcao:", `${data.takeawayCount} pedidos`)
+  );
+  addLine(
+    justifyLine(
+      "  Total em Taxas de Entrega:",
+      `R$ ${formatPrice(data.totalDeliveryFees)}`
+    )
+  );
+
+  if (data.cancelledCount > 0) {
+    addLine("-".repeat(48));
+    addLine(justifyLine("  Pedidos Cancelados:", String(data.cancelledCount)));
+  }
+
+  addLine("=".repeat(48));
+  addBytes(...CMD.ALIGN_CENTER);
+  addLine("Assinatura do Responsavel:");
+  addLine("\n\n____________________________________");
+  addLine("Conferido e Arquivado");
+  addBytes(...CMD.FEED_5);
+  addBytes(...CMD.PARTIAL_CUT);
+
+  return new Uint8Array(bytes);
+}
+
+// Imprime fechamento de caixa via WebUSB
+export async function printClosingReportViaWebUsb(
+  device: USBDevice,
+  data: ClosingReportData
+): Promise<void> {
+  const bytes = buildEpsonClosingReportEscPos(data);
+  let endpointOut = 1;
+  const iface = device.configuration?.interfaces?.[0];
+  if (iface) {
+    const ep = iface.alternate?.endpoints?.find((e) => e.direction === "out");
+    if (ep) endpointOut = ep.endpointNumber;
+  }
+  await device.transferOut(endpointOut, bytes);
+}
+
+// Imprime fechamento de caixa via Navegador (Kiosk)
+export function printClosingReportViaBrowser(data: ClosingReportData): void {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.top = "-9999px";
+  iframe.style.left = "-9999px";
+  iframe.style.width = "80mm";
+  iframe.style.height = "auto";
+  iframe.style.border = "none";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) return;
+
+  doc.open();
+  doc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Fechamento de Caixa - Don Luydd</title>
+        <style>
+          @page { size: 80mm auto; margin: 0; }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: #000;
+            width: 76mm;
+            margin: 0 auto;
+            padding: 8px 4px;
+            line-height: 1.35;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .divider { border-bottom: 1px dashed #000; margin: 6px 0; }
+          .double-divider { border-bottom: 2px solid #000; margin: 6px 0; }
+          .row { display: flex; justify-content: space-between; }
+        </style>
+      </head>
+      <body>
+        <div class="center bold" style="font-size: 16px;">🍕 DON LUYDD PIZZARIA</div>
+        <div class="center bold">FECHAMENTO DE CAIXA / TURNO</div>
+        <div class="center" style="font-size: 11px;">Data: ${data.dateStr} · Gerado: ${data.generatedAt}</div>
+        <div class="double-divider"></div>
+        <div class="row bold">
+          <span>TOTAL FINALIZADOS:</span>
+          <span>${data.orderCount}</span>
+        </div>
+        <div class="row bold" style="font-size: 15px;">
+          <span>FATURAMENTO BRUTO:</span>
+          <span>R$ ${formatPrice(data.totalSales)}</span>
+        </div>
+        <div class="row">
+          <span>TICKET MÉDIO:</span>
+          <span>R$ ${formatPrice(data.averageTicket)}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="bold">FORMAS DE PAGAMENTO:</div>
+        <div class="row"><span>PIX (${data.paymentBreakdown.pix.count}x):</span><span>R$ ${formatPrice(data.paymentBreakdown.pix.total)}</span></div>
+        <div class="row"><span>Cartão (${data.paymentBreakdown.cartao.count}x):</span><span>R$ ${formatPrice(data.paymentBreakdown.cartao.total)}</span></div>
+        <div class="row"><span>Dinheiro (${data.paymentBreakdown.dinheiro.count}x):</span><span>R$ ${formatPrice(data.paymentBreakdown.dinheiro.total)}</span></div>
+        ${data.paymentBreakdown.outro.count > 0 ? `<div class="row"><span>Outros (${data.paymentBreakdown.outro.count}x):</span><span>R$ ${formatPrice(data.paymentBreakdown.outro.total)}</span></div>` : ""}
+        <div class="divider"></div>
+        <div class="bold">LOGÍSTICA:</div>
+        <div class="row"><span>Delivery:</span><span>${data.deliveryCount} pedidos</span></div>
+        <div class="row"><span>Balcão:</span><span>${data.takeawayCount} pedidos</span></div>
+        <div class="row"><span>Taxas de Entrega:</span><span>R$ ${formatPrice(data.totalDeliveryFees)}</span></div>
+        ${data.cancelledCount > 0 ? `<div class="row"><span>Cancelados:</span><span>${data.cancelledCount}</span></div>` : ""}
+        <div class="double-divider"></div>
+        <div class="center" style="margin-top: 25px;">
+          ____________________________________<br/>
+          <span style="font-size: 11px;">Assinatura do Responsável</span>
+        </div>
+      </body>
+    </html>
+  `);
+  doc.close();
+
+  iframe.contentWindow?.focus();
+  setTimeout(() => {
+    iframe.contentWindow?.print();
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1500);
+  }, 350);
+}

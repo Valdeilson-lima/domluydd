@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Select,
@@ -92,6 +92,26 @@ export function DetailModal({
 
   const flavor2Ref = useRef<HTMLDivElement>(null);
 
+  const resetForm = useCallback(() => {
+    setSize("M");
+    setHalfHalf(false);
+    setSelectedCrust(CRUST_OPTIONS[0]);
+    setSelectedExtras([]);
+    setSelectedRemovals([]);
+    setObservation("");
+    setQty(1);
+    if (pizza) {
+      setFlavor1(pizza.name);
+      setFlavor2(pizza.name);
+    }
+  }, [pizza]);
+
+  useEffect(() => {
+    if (open && pizza) {
+      resetForm();
+    }
+  }, [open, pizza, resetForm]);
+
   useEffect(() => {
     if (halfHalf && flavor2Ref.current) {
       const t = setTimeout(() => {
@@ -180,12 +200,13 @@ export function DetailModal({
       },
       qty
     );
+    resetForm();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-2xl border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+      <DialogContent className="max-w-lg max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
         {/* Scrollable Body */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
           {/* Header Title Bar */}
@@ -194,7 +215,7 @@ export function DetailModal({
               type="button"
               onClick={handleShare}
               title="Compartilhar sabor"
-              className="absolute left-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/4 text-muted transition-colors hover:border-yellow hover:text-yellow"
+              className="absolute left-4 top-4 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-colors hover:border-yellow hover:text-yellow"
             >
               <Share2 className="size-4" />
             </button>
@@ -249,21 +270,21 @@ export function DetailModal({
                       key={s}
                       onClick={() => setSize(s)}
                       type="button"
-                      className={`relative flex flex-col items-center justify-between rounded-xl border p-2.5 text-center transition-all duration-200 cursor-pointer ${
+                      className={`relative flex flex-col items-center justify-between rounded-sm border p-2.5 text-center transition-all duration-200 cursor-pointer ${
                         active
                           ? "border-yellow bg-yellow/12 shadow-[0_0_16px_rgba(242,183,5,0.2),inset_0_0_0_1px_rgba(242,183,5,0.5)] scale-[1.02]"
                           : "border-white/10 bg-white/2 hover:border-white/20 hover:bg-white/4"
                       }`}
                     >
                       {s === "M" && (
-                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-yellow px-1.5 py-0.2 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-black">
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-sm bg-yellow px-1.5 py-0.2 font-mono text-[0.5rem] font-bold uppercase tracking-wider text-black">
                           Popular
                         </span>
                       )}
 
                       <div className="flex items-center gap-1.5">
                         <span
-                          className="size-2 rounded-full"
+                          className="size-2 rounded-sm"
                           style={{ background: meta.cor }}
                         />
                         <span
@@ -294,7 +315,7 @@ export function DetailModal({
             </div>
 
             {/* 2. Meio a Meio Toggle */}
-            <div className="rounded-xl border border-white/8 bg-white/2 p-3.5 transition-all duration-200 hover:border-white/15">
+            <div className="rounded-sm border border-white/8 bg-white/2 p-3.5 transition-all duration-200 hover:border-white/15">
               <button
                 type="button"
                 onClick={handleToggleHalf}
@@ -302,7 +323,7 @@ export function DetailModal({
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-sm border transition-colors ${
                       halfHalf
                         ? "border-yellow/50 bg-yellow/15 text-yellow"
                         : "border-white/10 bg-white/5 text-muted"
@@ -323,13 +344,15 @@ export function DetailModal({
                 </div>
 
                 <div
-                  className={`relative h-6 w-11 rounded-full transition-colors duration-200 shrink-0 ${
-                    halfHalf ? "bg-yellow" : "bg-white/15"
+                  className={`relative h-6 w-11 rounded-sm border border-white/20 transition-colors duration-200 shrink-0 ${
+                    halfHalf ? "bg-yellow" : "bg-black/60"
                   }`}
                 >
                   <div
-                    className={`absolute top-0.5 size-5 rounded-full bg-black shadow-md transition-transform duration-200 ${
-                      halfHalf ? "translate-x-5.5" : "translate-x-0.5"
+                    className={`absolute top-0.5 size-4.5 rounded-sm bg-black shadow-md transition-transform duration-200 ${
+                      halfHalf
+                        ? "translate-x-5.5 bg-black"
+                        : "translate-x-0.5 bg-white/60"
                     }`}
                   />
                 </div>
@@ -348,10 +371,10 @@ export function DetailModal({
                   </span>
                 </label>
                 <Select value={flavor1} onValueChange={handleFlavor1Change}>
-                  <SelectTrigger className="h-12 rounded-xl border-white/10 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
+                  <SelectTrigger className="h-12 rounded-sm border-white/10 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 border-yellow/20 bg-[#1c191a] text-cream">
+                  <SelectContent className="max-h-64 rounded-sm border-yellow/20 bg-[#1c191a] text-cream">
                     {catPizzas.map((p) => (
                       <SelectItem
                         key={p.id}
@@ -388,10 +411,10 @@ export function DetailModal({
                     </span>
                   </label>
                   <Select value={flavor2} onValueChange={setFlavor2}>
-                    <SelectTrigger className="h-12 rounded-xl border-yellow/40 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
+                    <SelectTrigger className="h-12 rounded-sm border-yellow/40 bg-black/60 text-sm font-medium text-cream focus:border-yellow">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="max-h-64 border-yellow/20 bg-[#1c191a] text-cream">
+                    <SelectContent className="max-h-64 rounded-sm border-yellow/20 bg-[#1c191a] text-cream">
                       {catPizzas.map((p) => (
                         <SelectItem
                           key={p.id}
@@ -438,7 +461,7 @@ export function DetailModal({
                       key={crust.id}
                       type="button"
                       onClick={() => setSelectedCrust(crust)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer ${
                         isSelected
                           ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
                           : "border-white/8 bg-white/2 text-cream hover:border-white/20"
@@ -446,7 +469,7 @@ export function DetailModal({
                     >
                       <div className="flex items-center gap-2">
                         <div
-                          className={`size-4 rounded-full border flex items-center justify-center ${
+                          className={`size-4 rounded-sm border flex items-center justify-center ${
                             isSelected
                               ? "border-yellow bg-yellow text-black"
                               : "border-white/20"
@@ -490,7 +513,7 @@ export function DetailModal({
                       key={extra.id}
                       type="button"
                       onClick={() => toggleExtra(extra)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer ${
                         isSelected
                           ? "border-yellow bg-yellow/15 text-yellow shadow-sm"
                           : "border-white/8 bg-white/2 text-cream hover:border-white/20"
@@ -498,7 +521,7 @@ export function DetailModal({
                     >
                       <div className="flex items-center gap-2">
                         <div
-                          className={`size-4 rounded-md border flex items-center justify-center ${
+                          className={`size-4 rounded-sm border flex items-center justify-center ${
                             isSelected
                               ? "border-yellow bg-yellow text-black"
                               : "border-white/20"
@@ -537,7 +560,7 @@ export function DetailModal({
                       key={rem}
                       type="button"
                       onClick={() => toggleRemoval(rem)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-sm border text-xs font-medium transition-all cursor-pointer ${
                         isRemoved
                           ? "border-red-primary bg-red-primary/20 text-red-light line-through"
                           : "border-white/10 bg-white/3 text-muted hover:text-cream hover:border-white/20"
@@ -562,7 +585,7 @@ export function DetailModal({
                 placeholder="Ex: massa bem passada, cortar em aperitivo, caprichar no orégano..."
                 rows={2}
                 maxLength={140}
-                className="w-full resize-none rounded-xl border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"
+                className="w-full resize-none rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"
               />
             </div>
           </div>
@@ -586,12 +609,12 @@ export function DetailModal({
             </div>
 
             {/* Quantity Stepper */}
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/60 p-1">
+            <div className="flex items-center gap-2 rounded-sm border border-white/10 bg-black/60 p-1">
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 disabled={qty <= 1}
-                className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-sm text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-label="Diminuir quantidade"
               >
                 <Minus className="size-4" />
@@ -602,7 +625,7 @@ export function DetailModal({
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(20, q + 1))}
-                className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-sm text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
                 aria-label="Aumentar quantidade"
               >
                 <Plus className="size-4" />
@@ -613,7 +636,7 @@ export function DetailModal({
           <button
             onClick={handleAdd}
             type="button"
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-3.5 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-3.5 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
           >
             <Plus className="size-5" />
             Adicionar {qty > 1 ? `${qty} pizzas` : "ao pedido"} · R${" "}

@@ -55,7 +55,7 @@ export function Hero() {
 
       {/* Conteúdo centralizado */}
       <div className="relative mx-auto flex w-full max-w-280 flex-1 flex-col items-center justify-center gap-6 px-5 py-16 text-center sm:px-7">
-        <span className="inline-flex items-center gap-2 rounded-full border border-yellow/30 bg-black/40 px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-yellow/90 backdrop-blur-sm">
+        <span className="inline-flex items-center gap-2 rounded-sm border border-yellow/30 bg-black/40 px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-yellow/90 backdrop-blur-sm">
           <Flame className="size-3" />
           Pizzaria Artesanal
         </span>
@@ -71,7 +71,7 @@ export function Hero() {
 
         {/* Status — the thesis */}
         <div
-          className={`mt-1 flex items-center gap-3.5 rounded-2xl border px-5 py-3 backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02] ${
+          className={`mt-1 flex items-center gap-3.5 rounded-sm border px-5 py-3 backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02] ${
             open
               ? "border-emerald-500/40 bg-emerald-950/25 text-emerald-400"
               : "border-red-primary/40 bg-red-primary/12 text-red-light"

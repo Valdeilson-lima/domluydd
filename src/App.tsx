@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
+import { ActiveOrderBanner } from "@/components/ActiveOrderBanner";
 import { Hero, InfoStrip } from "@/components/Hero";
 import { SearchBar } from "@/components/SearchBar";
 import { PizzaGrid } from "@/components/PizzaGrid";
@@ -57,6 +58,19 @@ export default function App() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [lastOrder, setLastOrder] = useState<PastOrder | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [pausedItems, setPausedItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/stock")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.pausedItems)) {
+          setPausedItems(data.pausedItems);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const {
     cart,
@@ -120,13 +134,25 @@ export default function App() {
     setActiveTag("Todas");
   }, []);
 
-  const handlePizzaSelect = useCallback((id: string) => {
-    const pizza = allPizzas.find((p) => p.id === id);
-    if (pizza) {
-      setSelectedPizza(pizza);
-      setDetailOpen(true);
-    }
-  }, []);
+  const handlePizzaSelect = useCallback(
+    (id: string) => {
+      const pizza = allPizzas.find((p) => p.id === id);
+      if (pizza) {
+        const isPaused =
+          pausedItems.includes(pizza.name) ||
+          pausedItems.includes(pizza.id) ||
+          pausedItems.includes(pizza.slug);
+        if (isPaused) {
+          setToastMessage("Este sabor está temporariamente esgotado hoje.");
+          setToastOpen(true);
+          return;
+        }
+        setSelectedPizza(pizza);
+        setDetailOpen(true);
+      }
+    },
+    [pausedItems]
+  );
 
   const handleDrinkSelect = useCallback(
     (drink: Drink) => {
@@ -206,6 +232,7 @@ export default function App() {
     clearCart();
     toggleCart(false);
     setCheckoutOpen(false);
+    setBannerDismissed(false);
 
     try {
       const raw = localStorage.getItem("donluydd.last_order.v1");
@@ -217,7 +244,42 @@ export default function App() {
     }
   }, [clearCart, toggleCart]);
 
-  const pizzaData = activeTab === "salgadas" ? salgadas : doces;
+  const isActiveOrder = useMemo(() => {
+    if (!lastOrder || !lastOrder.date) return false;
+    const diffHours =
+      (Date.now() - new Date(lastOrder.date).getTime()) / (1000 * 60 * 60);
+    return diffHours < 12 && lastOrder.status !== "cancelled";
+  }, [lastOrder]);
+
+  const handleOrderStatusUpdate = useCallback(
+    (newStatus: PastOrder["status"]) => {
+      setLastOrder((prev) => {
+        if (!prev) return null;
+        const updated = { ...prev, status: newStatus };
+        try {
+          localStorage.setItem(
+            "donluydd.last_order.v1",
+            JSON.stringify(updated)
+          );
+        } catch {
+          /* ignore */
+        }
+        return updated;
+      });
+    },
+    []
+  );
+
+  const rawPizzaData = activeTab === "salgadas" ? salgadas : doces;
+  const pizzaData = useMemo(() => {
+    return rawPizzaData.map((p) => {
+      const isPaused =
+        pausedItems.includes(p.name) ||
+        pausedItems.includes(p.id) ||
+        pausedItems.includes(p.slug);
+      return isPaused ? { ...p, available: false } : p;
+    });
+  }, [rawPizzaData, pausedItems]);
   const totalForTab =
     activeTab === "combos"
       ? combos.length
@@ -341,7 +403,7 @@ export default function App() {
     <>
       <a
         href="#main-content"
-        className="absolute -top-25 left-4 z-1000 rounded-lg bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4 shadow-lg ring-2 ring-yellow"
+        className="absolute -top-25 left-4 z-1000 rounded-sm bg-red-primary px-6 py-3 font-bold text-white no-underline transition-[top] duration-200 focus:top-4 shadow-lg ring-2 ring-yellow"
       >
         Pular para o cardápio
       </a>
@@ -353,7 +415,16 @@ export default function App() {
         onCartOpen={() => toggleCart(true)}
         onRepeatLastOrder={handleRepeatLastOrder}
         hasLastOrder={Boolean(lastOrder)}
+        activeOrder={isActiveOrder ? lastOrder : null}
       />
+
+      {isActiveOrder && !bannerDismissed && lastOrder && (
+        <ActiveOrderBanner
+          order={lastOrder}
+          onDismiss={() => setBannerDismissed(true)}
+          onStatusUpdate={handleOrderStatusUpdate}
+        />
+      )}
 
       <Hero />
       <InfoStrip />

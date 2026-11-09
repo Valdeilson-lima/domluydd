@@ -15,7 +15,7 @@ export function PizzaGrid({
 }: PizzaGridProps) {
   if (pizzas.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/12 bg-white/2 px-6 py-14 text-center">
+      <div className="flex flex-col items-center justify-center rounded-sm border border-dashed border-white/12 bg-white/2 px-6 py-14 text-center">
         <div className="relative mb-4 flex size-14 items-center justify-center rounded-full bg-yellow/10 ring-1 ring-yellow/30">
           <SearchX className="size-6 text-yellow" />
         </div>
@@ -30,7 +30,7 @@ export function PizzaGrid({
           <button
             type="button"
             onClick={onClearFilters}
-            className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-yellow/15 px-4 py-2 font-mono text-xs font-bold text-yellow transition-all duration-200 hover:bg-yellow/25 active:scale-95"
+            className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-sm bg-yellow/15 px-4 py-2 font-mono text-xs font-bold text-yellow transition-all duration-200 hover:bg-yellow/25 active:scale-95"
           >
             <PizzaIcon className="size-3.5" />
             Ver todas as pizzas

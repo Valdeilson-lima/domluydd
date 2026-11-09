@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Menu, X, ShoppingBag, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { salgadas, doces } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
 import { combos } from "@/data/combos";
+import type { PastOrder } from "@/types";
 
 interface HeaderProps {
   activeTab: string;
@@ -15,6 +17,7 @@ interface HeaderProps {
   onCartOpen?: () => void;
   onRepeatLastOrder?: () => void;
   hasLastOrder?: boolean;
+  activeOrder?: PastOrder | null;
 }
 
 const tabs = [
@@ -31,6 +34,7 @@ export function Header({
   onCartOpen,
   onRepeatLastOrder,
   hasLastOrder = false,
+  activeOrder,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -81,7 +85,7 @@ export function Header({
                 <span className="flex items-center gap-1.5">
                   {tab.label}
                   {tab.isPromo && (
-                    <span className="rounded-full bg-red-primary px-1.5 py-0.2 font-mono text-[0.5rem] font-bold text-white uppercase tracking-normal">
+                    <span className="rounded-sm bg-red-primary px-1.5 py-0.2 font-mono text-[0.5rem] font-bold text-white uppercase tracking-normal">
                       Promo
                     </span>
                   )}
@@ -103,12 +107,23 @@ export function Header({
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {activeOrder && (
+            <Link
+              href={`/pedido/${activeOrder.id}`}
+              title={`Acompanhar Pedido #${activeOrder.id.slice(0, 8)}`}
+              className="flex items-center gap-1.5 rounded-sm border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1.5 text-xs font-bold text-emerald-300 transition-all hover:bg-emerald-900/60 active:scale-95 cursor-pointer"
+            >
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="hidden sm:inline">Meu Pedido</span>
+            </Link>
+          )}
+
           {hasLastOrder && onRepeatLastOrder && (
             <button
               onClick={onRepeatLastOrder}
               type="button"
               title="Repetir último pedido"
-              className="flex items-center gap-1.5 rounded-lg border border-yellow/30 bg-yellow/10 px-2.5 py-1.5 text-xs font-bold text-yellow transition-all hover:bg-yellow/20 active:scale-95 cursor-pointer max-sm:hidden"
+              className="flex items-center gap-1.5 rounded-sm border border-yellow/30 bg-yellow/10 px-2.5 py-1.5 text-xs font-bold text-yellow transition-all hover:bg-yellow/20 active:scale-95 cursor-pointer max-sm:hidden"
             >
               <RotateCcw className="size-3.5" />
               <span>Repetir Pedido</span>
@@ -118,7 +133,7 @@ export function Header({
           {onCartOpen && (
             <button
               onClick={onCartOpen}
-              className="relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-white/10 bg-white/5 text-cream transition-colors duration-200 hover:bg-white/10 hover:text-yellow active:scale-90"
+              className="relative flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/5 text-cream transition-colors duration-200 hover:bg-white/10 hover:text-yellow active:scale-90"
               aria-label={`Abrir carrinho${itemCount > 0 ? `, ${itemCount} itens` : ""}`}
             >
               <ShoppingBag className="size-4.5" />
@@ -132,7 +147,7 @@ export function Header({
 
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex size-auto shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"
+            className="flex size-auto shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-white/10 bg-white/5 px-2.5 py-2 text-cream transition-colors duration-200 hover:bg-white/10 active:scale-90 sm:hidden"
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
           >

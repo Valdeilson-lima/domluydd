@@ -53,10 +53,10 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
       }}
       aria-label={`${pizza.name}, a partir de R$ ${formatPrice(pizza.p)}.${!isAvailable ? " Esgotado hoje." : " Toque para personalizar."}`}
       style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
-      className={`group relative flex overflow-hidden rounded-2xl border transition-all duration-300 outline-none animate-[fadeUp_0.4s_both] ${
+      className={`group relative flex overflow-hidden rounded-sm border transition-all duration-300 outline-none animate-[fadeUp_0.4s_both] ${
         isAvailable
           ? "cursor-pointer border-white/8 bg-linear-to-b from-[#1f1c1d] to-[#161415] shadow-sm hover:border-yellow/50 hover:bg-[#252122] hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] focus-visible:border-yellow focus-visible:ring-2 focus-visible:ring-yellow/40 active:scale-[0.99]"
-          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-[35%]"
+          : "cursor-not-allowed border-white/4 bg-white/2 opacity-60 grayscale-35"
       }`}
     >
       {/* Thumbnail area with photo & overlays */}
@@ -70,20 +70,20 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
         <div className="absolute inset-0 bg-linear-to-r from-transparent via-black/20 to-[#1f1c1d]/90 sm:to-[#1f1c1d]/80" />
 
         {/* Number Badge */}
-        <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-black/75 px-2 py-0.5 font-mono text-[0.58rem] font-bold tracking-wider text-yellow shadow-md backdrop-blur-md">
+        <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-sm bg-black/85 px-2 py-0.5 font-mono text-[0.58rem] font-bold tracking-wider text-yellow shadow-md border border-white/10">
           #{menuNumber(pizza)}
         </span>
 
         {/* Highlight Tag or Sold Out */}
         {isAvailable ? (
           isHighlight && (
-            <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-red-primary/90 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-cream shadow-md backdrop-blur-sm">
+            <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-sm bg-red-primary/95 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-cream shadow-md">
               <Flame className="size-2.5 text-yellow" />
               Favorita
             </span>
           )
         ) : (
-          <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-black/85 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400 shadow-md border border-red-500/30">
+          <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-sm bg-black/90 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-red-400 shadow-md border border-red-500/40">
             <Ban className="size-2.5" />
             Esgotado
           </span>
@@ -99,7 +99,7 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
             </h3>
 
             {pizza.category === "doce" && (
-              <span className="shrink-0 rounded-full border border-yellow/30 bg-yellow/15 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-yellow">
+              <span className="shrink-0 rounded-sm border border-yellow/30 bg-yellow/15 px-2 py-0.5 font-mono text-[0.52rem] font-bold uppercase tracking-wider text-yellow">
                 Doce
               </span>
             )}
@@ -117,7 +117,7 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
             {(["P", "M", "G"] as const).map((sz) => (
               <span
                 key={sz}
-                className="inline-flex items-baseline gap-1 rounded-lg border border-white/8 bg-white/3 px-1.5 py-0.5 font-mono text-[0.62rem] font-medium text-cream-dim sm:px-2 sm:text-[0.68rem]"
+                className="inline-flex items-baseline gap-1 rounded-sm border border-white/8 bg-white/3 px-1.5 py-0.5 font-mono text-[0.62rem] font-medium text-cream-dim sm:px-2 sm:text-[0.68rem]"
               >
                 <span className="font-bold text-muted text-[0.55rem] sm:text-[0.6rem]">
                   {sz}

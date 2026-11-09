@@ -79,7 +79,7 @@ export function CartSheet({
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-yellow/15 text-yellow">
+            <div className="flex size-9 items-center justify-center rounded-sm bg-yellow/15 text-yellow">
               <ShoppingBag className="size-5" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export function CartSheet({
 
           <button
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/4 text-muted transition-all duration-200 hover:border-yellow/50 hover:bg-yellow/15 hover:text-yellow active:scale-90"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-white/4 text-muted transition-all duration-200 hover:border-yellow/50 hover:bg-yellow/15 hover:text-yellow active:scale-90"
             aria-label="Fechar carrinho"
           >
             <X className="size-4" />
@@ -106,7 +106,7 @@ export function CartSheet({
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-              <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white/4 ring-1 ring-white/10">
+              <div className="mb-4 flex size-16 items-center justify-center rounded-sm bg-white/4 ring-1 ring-white/10">
                 <Pizza className="size-8 text-muted/50" />
               </div>
               <p className="font-display text-lg font-bold text-cream">
@@ -118,7 +118,7 @@ export function CartSheet({
               </span>
               <button
                 onClick={onClose}
-                className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-yellow/15 px-5 py-2.5 font-mono text-xs font-bold text-yellow transition-all duration-200 hover:bg-yellow/25 active:scale-95"
+                className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-sm bg-yellow/15 px-5 py-2.5 font-mono text-xs font-bold text-yellow transition-all duration-200 hover:bg-yellow/25 active:scale-95"
               >
                 Ver cardápio
               </button>
@@ -134,7 +134,7 @@ export function CartSheet({
                 return (
                   <li
                     key={item.id}
-                    className="flex flex-col gap-2.5 rounded-2xl border border-white/8 bg-white/2 p-3.5 shadow-sm transition-all duration-200 hover:border-white/15"
+                    className="flex flex-col gap-2.5 rounded-sm border border-white/8 bg-white/2 p-3.5 shadow-sm transition-all duration-200 hover:border-white/15"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -149,12 +149,12 @@ export function CartSheet({
 
                         {/* Badges */}
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-cream-dim">
+                          <span className="rounded-sm border border-white/10 bg-white/4 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-cream-dim">
                             {isDrink ? "Bebida" : `Tamanho ${item.size}`}
                           </span>
 
                           {isHalf && (
-                            <span className="rounded-md border border-yellow/30 bg-yellow/10 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-yellow">
+                            <span className="rounded-sm border border-yellow/30 bg-yellow/10 px-1.5 py-0.2 font-mono text-[0.62rem] font-bold text-yellow">
                               Meio a Meio
                             </span>
                           )}
@@ -195,7 +195,7 @@ export function CartSheet({
 
                         {/* Observation */}
                         {item.observation && (
-                          <p className="mt-1.5 text-[0.68rem] italic text-muted/80 bg-black/30 rounded-md px-2 py-1 border border-white/5">
+                          <p className="mt-1.5 text-[0.68rem] italic text-muted/80 bg-black/30 rounded-sm px-2 py-1 border border-white/5">
                             Obs: &ldquo;{item.observation}&rdquo;
                           </p>
                         )}
@@ -213,7 +213,7 @@ export function CartSheet({
                         R$ {formatPrice(item.price)} un.
                       </span>
 
-                      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/60 p-1">
+                      <div className="flex items-center gap-2 rounded-sm border border-white/10 bg-black/60 p-1">
                         <button
                           type="button"
                           onClick={() => {
@@ -223,7 +223,7 @@ export function CartSheet({
                               onUpdateQty(item.id, -1);
                             }
                           }}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-red-light"
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-sm text-cream-dim transition-colors hover:bg-white/10 hover:text-red-light"
                           aria-label={
                             item.qty === 1 ? "Remover item" : "Diminuir"
                           }
@@ -242,7 +242,7 @@ export function CartSheet({
                         <button
                           type="button"
                           onClick={() => onUpdateQty(item.id, 1)}
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
+                          className="flex size-7 cursor-pointer items-center justify-center rounded-sm text-cream-dim transition-colors hover:bg-white/10 hover:text-yellow"
                           aria-label="Aumentar"
                         >
                           <Plus className="size-3.5" />
@@ -257,7 +257,7 @@ export function CartSheet({
 
           {/* Cross-selling: Quick Drink up-sell tip if no drinks added */}
           {cart.length > 0 && !hasDrink && onAddDrink && (
-            <div className="rounded-2xl border border-yellow/20 bg-linear-to-r from-yellow/10 via-yellow/5 to-transparent p-3.5">
+            <div className="rounded-sm border border-yellow/20 bg-linear-to-r from-yellow/10 via-yellow/5 to-transparent p-3.5">
               <div className="flex items-center gap-2.5 mb-2.5">
                 <Wine className="size-5 text-yellow shrink-0" />
                 <div className="min-w-0 flex-1">
@@ -276,7 +276,7 @@ export function CartSheet({
                     key={d.name}
                     type="button"
                     onClick={() => onAddDrink(d)}
-                    className="flex items-center justify-between p-2 rounded-xl border border-yellow/30 bg-black/40 hover:bg-yellow/15 text-left transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-sm border border-yellow/30 bg-black/40 hover:bg-yellow/15 text-left transition-colors cursor-pointer"
                   >
                     <div className="min-w-0 flex-1 pr-1">
                       <span className="block text-xs font-bold text-cream truncate">
@@ -323,7 +323,7 @@ export function CartSheet({
             <button
               onClick={onCheckout}
               type="button"
-              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
+              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-sm bg-linear-to-r from-red-dark via-red-primary to-yellow px-5 py-4 font-body text-sm font-bold text-cream shadow-[0_8px_24px_rgba(217,4,22,0.35)] transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
             >
               <span>Avançar para Pagamento & Entrega</span>
               <ArrowRight className="size-4.5" />

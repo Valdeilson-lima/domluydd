@@ -15,16 +15,16 @@ export function ComboCard({ combo, onSelect }: ComboCardProps) {
   );
 
   return (
-    <li className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-yellow/30 bg-linear-to-b from-[#25201a] via-[#1c191a] to-[#141213] p-5 shadow-lg transition-all duration-300 hover:border-yellow hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(242,183,5,0.15)] animate-[fadeUp_0.4s_both]">
+    <li className="group relative flex flex-col justify-between overflow-hidden rounded-sm border border-yellow/30 bg-linear-to-b from-[#25201a] via-[#1c191a] to-[#141213] p-5 shadow-lg transition-all duration-300 hover:border-yellow hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(242,183,5,0.15)] animate-[fadeUp_0.4s_both]">
       {/* Discount badge */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-red-primary px-2.5 py-1 font-mono text-[0.65rem] font-bold text-white shadow-md">
+      <div className="absolute top-3 right-3 flex items-center gap-1 rounded-sm bg-red-primary px-2.5 py-1 font-mono text-[0.65rem] font-bold text-white shadow-md">
         <Flame className="size-3 text-yellow fill-yellow" />
         Economize {discount}%
       </div>
 
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-yellow/20 text-yellow">
+          <span className="flex size-7 items-center justify-center rounded-sm bg-yellow/20 text-yellow">
             <Sparkles className="size-4" />
           </span>
           <span className="font-mono text-[0.65rem] font-bold uppercase tracking-widest text-yellow">
@@ -47,7 +47,7 @@ export function ComboCard({ combo, onSelect }: ComboCardProps) {
               key={idx}
               className="flex items-center gap-2 text-xs text-muted"
             >
-              <div className="size-4 rounded-full bg-yellow/15 text-yellow flex items-center justify-center shrink-0">
+              <div className="size-4 rounded-sm bg-yellow/15 text-yellow flex items-center justify-center shrink-0">
                 <Check className="size-2.5 stroke-3" />
               </div>
               <span className="text-cream-dim">{it}</span>
@@ -73,7 +73,7 @@ export function ComboCard({ combo, onSelect }: ComboCardProps) {
         <button
           type="button"
           onClick={() => onSelect(combo)}
-          className="flex items-center gap-1.5 rounded-xl bg-linear-to-r from-red-primary to-yellow px-4 py-2.5 text-xs font-bold text-black shadow-md transition-all duration-200 hover:brightness-110 active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 rounded-sm bg-linear-to-r from-red-primary to-yellow px-4 py-2.5 text-xs font-bold text-black shadow-md transition-all duration-200 hover:brightness-110 active:scale-95 cursor-pointer"
         >
           <Plus className="size-4" />
           Pedir Combo
