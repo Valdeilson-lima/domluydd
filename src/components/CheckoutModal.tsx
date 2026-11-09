@@ -289,11 +289,11 @@ export function CheckoutModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="checkout-title"
-        className="fixed inset-0 z-451 flex items-center justify-center p-3 sm:p-5"
+        className="fixed inset-0 z-451 flex items-center justify-center p-2 sm:p-5"
       >
-        <div className="w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)] animate-[modalIn_0.3s_ease]">
+        <div className="w-full max-w-lg max-h-[94dvh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)] animate-[modalIn_0.3s_ease]">
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-5 py-4 sm:px-6">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-3.5 sm:px-6 sm:py-4">
             <div className="flex items-center gap-2.5">
               <div className="flex size-9 items-center justify-center rounded-sm bg-yellow/15 text-yellow">
                 <Receipt className="size-5" />
@@ -321,7 +321,7 @@ export function CheckoutModal({
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6 space-y-5">
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-4 sm:space-y-5 overscroll-contain">
             {!storeOpen && (
               <div className="rounded-sm border border-red-primary/40 bg-red-primary/10 p-4 text-center">
                 <p className="text-sm font-bold text-red-light">Loja fechada</p>
@@ -374,7 +374,7 @@ export function CheckoutModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo *"
-                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-base sm:text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                   />
                 </div>
                 <div>
@@ -383,7 +383,7 @@ export function CheckoutModal({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="WhatsApp / Telefone"
-                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-base sm:text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                   />
                 </div>
               </div>
@@ -404,14 +404,14 @@ export function CheckoutModal({
                     value={cep}
                     maxLength={9}
                     onChange={(e) => setCep(e.target.value)}
-                    placeholder="CEP (ex: 58000-000)"
-                    className="w-36 rounded-sm border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                    placeholder="CEP (58000-000)"
+                    className="w-32 sm:w-36 rounded-sm border border-white/10 bg-black/60 px-3 py-2 text-base sm:text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow shrink-0"
                   />
                   <button
                     type="button"
                     onClick={handleLookupCep}
                     disabled={cepLoading}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-sm border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm border border-yellow/40 bg-yellow/15 hover:bg-yellow/25 text-yellow text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                   >
                     {cepLoading ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -445,7 +445,7 @@ export function CheckoutModal({
                         value={bairroSearch}
                         onChange={(e) => setBairroSearch(e.target.value)}
                         placeholder="Buscar bairro..."
-                        className="mb-2 w-full rounded-sm border border-white/10 bg-black/60 px-3 py-1.5 text-xs text-cream outline-none focus:border-yellow"
+                        className="mb-2 w-full rounded-sm border border-white/10 bg-black/60 px-3 py-1.5 text-base sm:text-xs text-cream outline-none focus:border-yellow"
                       />
                       <ul className="space-y-1">
                         {bairrosFiltrados.map((b) => (
@@ -474,7 +474,7 @@ export function CheckoutModal({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Rua / Avenida e Número *"
-                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-base sm:text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
 
                 {/* Complemento */}
@@ -482,8 +482,8 @@ export function CheckoutModal({
                   type="text"
                   value={complement}
                   onChange={(e) => setComplement(e.target.value)}
-                  placeholder="Complemento / Ponto de referência (Apto, Bloco, etc.)"
-                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
+                  placeholder="Complemento (Apto, Bloco, etc.)"
+                  className="w-full rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 text-base sm:text-xs text-cream placeholder:text-muted/60 outline-none focus:border-yellow"
                 />
               </div>
             ) : (
@@ -580,7 +580,7 @@ export function CheckoutModal({
                     value={changeAmount}
                     onChange={(e) => setChangeAmount(e.target.value)}
                     placeholder="Ex: 50 ou 100 (ou digite 0 para não precisa)"
-                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3 py-2 text-xs text-cream outline-none focus:border-yellow"
+                    className="w-full rounded-sm border border-white/10 bg-black/60 px-3 py-2 text-base sm:text-xs text-cream outline-none focus:border-yellow"
                   />
                   {changeValue && changeValue.change > 0 && (
                     <p className="text-[0.68rem] text-yellow font-mono">
@@ -619,7 +619,7 @@ export function CheckoutModal({
           </div>
 
           {/* Action Footer */}
-          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5">
+          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-3.5 sm:p-5 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
             <button
               onClick={handleSend}
               disabled={!canSend || !storeOpen || isSubmitting}

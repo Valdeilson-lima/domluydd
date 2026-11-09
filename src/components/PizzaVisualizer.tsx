@@ -53,17 +53,17 @@ export function PizzaVisualizer({
   const sizeInfo = SIZE_DETAILS[size];
 
   return (
-    <div className="relative flex flex-col items-center justify-center py-4 px-2 select-none overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center py-2 sm:py-4 px-2 select-none overflow-hidden">
       {/* Ambient heat aura */}
       <div
         className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-40 blur-2xl"
         aria-hidden
       >
-        <div className="size-48 rounded-full bg-linear-to-tr from-red-primary/50 via-yellow/40 to-yellow-light/30 animate-pulse" />
+        <div className="size-36 sm:size-48 rounded-full bg-linear-to-tr from-red-primary/50 via-yellow/40 to-yellow-light/30 animate-pulse" />
       </div>
 
       {/* Top badges */}
-      <div className="relative z-10 mb-3 flex flex-wrap items-center justify-center gap-2">
+      <div className="relative z-10 mb-2 sm:mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
         <span className="inline-flex items-center gap-1 rounded-full border border-yellow/30 bg-black/60 px-2.5 py-0.5 font-mono text-[0.62rem] font-semibold uppercase tracking-wider text-yellow backdrop-blur-md">
           <Flame className="size-3 text-yellow" />
           {sizeInfo.diameter} · {sizeInfo.slices} fatias
@@ -78,7 +78,7 @@ export function PizzaVisualizer({
       {/* Pizza Plate container */}
       <div
         className={cn(
-          "relative my-2 size-48 sm:size-56 transition-transform duration-500 ease-out",
+          "relative my-1 sm:my-2 size-36 sm:size-52 transition-transform duration-500 ease-out",
           sizeInfo.scale
         )}
       >

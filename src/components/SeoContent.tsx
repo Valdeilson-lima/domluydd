@@ -1,6 +1,6 @@
 import { allPizzas } from "@/data/pizzas";
 
-const siteUrl = "https://donluydd.com.br";
+const siteUrl = "https://pizzariadonluydd.valdeilsonlima.com.br";
 
 const faq = [
   {

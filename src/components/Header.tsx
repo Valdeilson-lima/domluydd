@@ -59,26 +59,20 @@ export function Header({
           </div>
         </div>
 
+        {/* Desktop Category Navigation */}
         <nav
-          className={cn(
-            "flex gap-1 overflow-x-auto flex-nowrap scrollbar-none max-sm:absolute max-sm:top-full max-sm:left-0 max-sm:right-0 max-sm:flex-col max-sm:gap-0 max-sm:bg-linear-to-b max-sm:from-[#2a1010] max-sm:to-[#1f1c1d] max-sm:px-2.5 max-sm:pb-4 max-sm:pt-2 max-sm:shadow-lg max-sm:border-b max-sm:border-yellow/20 max-sm:z-199 max-sm:transition-all max-sm:duration-250",
-            menuOpen
-              ? "max-sm:flex max-sm:opacity-100 max-sm:translate-y-0 max-sm:pointer-events-auto"
-              : "max-sm:hidden max-sm:opacity-0 max-sm:-translate-y-2 max-sm:pointer-events-none"
-          )}
+          aria-label="Categorias desktop"
+          className="hidden sm:flex gap-1 overflow-x-auto flex-nowrap scrollbar-none"
         >
           {tabs.map((tab) => {
             const active = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => {
-                  onTabChange(tab.id);
-                  setMenuOpen(false);
-                }}
+                onClick={() => onTabChange(tab.id)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-2 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none sm:px-3 sm:py-2 sm:text-[0.72rem] max-sm:w-full max-sm:py-3 max-sm:text-sm max-sm:tracking-widest flex items-center justify-between",
+                  "group relative shrink-0 cursor-pointer whitespace-nowrap px-3 py-2 font-mono text-[0.72rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 select-none flex items-center justify-between",
                   active ? "text-yellow" : "text-muted hover:text-cream-dim"
                 )}
               >
@@ -89,13 +83,13 @@ export function Header({
                       Promo
                     </span>
                   )}
-                  <span className="hidden text-[0.6rem] font-normal tracking-normal text-muted/60 sm:inline">
+                  <span className="text-[0.6rem] font-normal tracking-normal text-muted/60">
                     {tab.count}
                   </span>
                 </span>
                 <span
                   className={cn(
-                    "absolute -bottom-px left-0 h-0.5 bg-yellow transition-all duration-300 max-sm:bottom-1.5 max-sm:left-2.5 max-sm:right-2.5",
+                    "absolute -bottom-px left-0 h-0.5 bg-yellow transition-all duration-300",
                     active
                       ? "w-full opacity-100"
                       : "w-0 opacity-0 group-hover:w-full group-hover:opacity-50"
@@ -158,6 +152,90 @@ export function Header({
           </button>
         </div>
       </div>
+
+      {/* Mobile Drawer when Menu button is clicked */}
+      {menuOpen && (
+        <div className="border-t border-yellow/20 bg-linear-to-b from-[#2a1010] to-[#1a1213] px-4 py-3 sm:hidden animate-[fadeUp_0.2s_ease] space-y-2.5">
+          {hasLastOrder && onRepeatLastOrder && (
+            <button
+              onClick={() => {
+                onRepeatLastOrder();
+                setMenuOpen(false);
+              }}
+              type="button"
+              className="flex w-full items-center justify-between rounded-sm border border-yellow/30 bg-yellow/10 px-3.5 py-2.5 text-xs font-bold text-yellow"
+            >
+              <div className="flex items-center gap-2">
+                <RotateCcw className="size-4" />
+                <span>Repetir Último Pedido</span>
+              </div>
+              <span className="font-mono text-[0.65rem] opacity-75">
+                Recarregar
+              </span>
+            </button>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link
+              href="/admin"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 rounded-sm border border-white/10 bg-white/4 px-3 py-2.5 text-cream-dim hover:text-cream hover:bg-white/10"
+            >
+              <span>👨‍🍳 Área do Forno</span>
+            </Link>
+
+            <a
+              href="https://wa.me/5583993740352"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 rounded-sm border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2.5 text-[#25d366]"
+            >
+              <span>💬 Falar no WhatsApp</span>
+            </a>
+          </div>
+
+          <div className="text-[0.68rem] text-muted text-center pt-1 border-t border-white/6">
+            🍕 Don Luydd Pizzaria · Terça a Domingo, 18h às 22h
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Horizontal Category Strip (Sticky & Swipeable) */}
+      <nav
+        aria-label="Categorias do cardápio"
+        className="flex sm:hidden overflow-x-auto scrollbar-none border-t border-white/8 bg-black/50 px-2.5 py-1.5 gap-1.5 overscroll-x-contain"
+      >
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-sm font-mono text-[0.72rem] font-semibold uppercase tracking-wider transition-all cursor-pointer select-none",
+                active
+                  ? "bg-yellow text-black font-bold shadow-md"
+                  : "bg-white/5 text-muted hover:text-cream border border-white/6"
+              )}
+            >
+              <span>{tab.label}</span>
+              {tab.isPromo && (
+                <span
+                  className={cn(
+                    "px-1 py-0.2 rounded-sm text-[0.52rem] font-bold tracking-normal",
+                    active
+                      ? "bg-red-primary text-white"
+                      : "bg-red-primary/30 text-red-light"
+                  )}
+                >
+                  Promo
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </header>
   );
 }

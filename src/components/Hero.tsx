@@ -54,24 +54,24 @@ export function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,rgba(242,135,5,0.16),transparent_60%)]" />
 
       {/* Conteúdo centralizado */}
-      <div className="relative mx-auto flex w-full max-w-280 flex-1 flex-col items-center justify-center gap-6 px-5 py-16 text-center sm:px-7">
+      <div className="relative mx-auto flex w-full max-w-280 flex-1 flex-col items-center justify-center gap-4 sm:gap-6 px-4 py-8 sm:py-16 text-center sm:px-7">
         <span className="inline-flex items-center gap-2 rounded-sm border border-yellow/30 bg-black/40 px-3 py-1 font-mono text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-yellow/90 backdrop-blur-sm">
           <Flame className="size-3" />
           Pizzaria Artesanal
         </span>
 
         <div>
-          <h1 className="font-display text-[clamp(2.6rem,11vw,5.5rem)] font-semibold italic leading-[0.9] tracking-[-0.03em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] [text-shadow:0_4px_30px_rgba(0,0,0,0.5)]">
+          <h1 className="font-display text-[clamp(2.2rem,8vw,5.5rem)] font-semibold italic leading-[0.92] tracking-[-0.03em] text-cream [font-variation-settings:'opsz'_144,'SOFT'_50] [text-shadow:0_4px_30px_rgba(0,0,0,0.5)]">
             Don Luydd
           </h1>
-          <p className="mx-auto mt-3 max-w-md font-display text-base font-normal italic leading-snug text-cream-dim [font-variation-settings:'opsz'_72] sm:text-lg">
+          <p className="mx-auto mt-2 max-w-md font-display text-sm font-normal italic leading-snug text-cream-dim [font-variation-settings:'opsz'_72] sm:mt-3 sm:text-lg">
             Massa de fermentação natural, forno elétrico, ingredientes na hora.
           </p>
         </div>
 
         {/* Status — the thesis */}
         <div
-          className={`mt-1 flex items-center gap-3.5 rounded-sm border px-5 py-3 backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02] ${
+          className={`mt-0.5 flex items-center gap-3.5 rounded-sm border px-4 py-2.5 sm:px-5 sm:py-3 backdrop-blur-md shadow-lg transition-transform hover:scale-[1.02] ${
             open
               ? "border-emerald-500/40 bg-emerald-950/25 text-emerald-400"
               : "border-red-primary/40 bg-red-primary/12 text-red-light"

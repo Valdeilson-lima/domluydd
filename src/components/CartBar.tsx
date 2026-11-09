@@ -13,7 +13,7 @@ export function CartBar({ itemCount, total, onOpen, hidden }: CartBarProps) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-250 animate-[slideUp_0.35s_cubic-bezier(0.16,1,0.3,1)] pointer-events-none">
-      <div className="mx-auto max-w-280 px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-auto">
+      <div className="mx-auto max-w-280 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6 pointer-events-auto">
         <button
           onClick={onOpen}
           type="button"

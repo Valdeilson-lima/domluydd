@@ -217,9 +217,9 @@ export default function OrderTrackingPage({
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-3xl px-3 py-5 sm:px-6 sm:py-8">
         {/* Status Card */}
-        <div className="rounded-sm border border-yellow/25 bg-linear-to-b from-[#1c191a] to-[#141213] p-6 sm:p-8 shadow-2xl">
+        <div className="rounded-sm border border-yellow/25 bg-linear-to-b from-[#1c191a] to-[#141213] p-4 sm:p-8 shadow-2xl">
           <div className="text-center">
             <span className="font-mono text-xs font-bold uppercase tracking-widest text-yellow">
               Acompanhamento ao Vivo
@@ -328,7 +328,7 @@ export default function OrderTrackingPage({
         </div>
 
         {/* Order Details Accordion / Summary */}
-        <div className="mt-6 rounded-sm border border-white/10 bg-[#161415] p-6 shadow-xl space-y-4">
+        <div className="mt-4 sm:mt-6 rounded-sm border border-white/10 bg-[#161415] p-4 sm:p-6 shadow-xl space-y-4">
           <h2 className="font-display text-lg font-bold italic text-cream">
             Resumo do Pedido
           </h2>

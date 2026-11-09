@@ -140,7 +140,7 @@ export function ActiveOrderBanner({
   return (
     <aside
       aria-label="Aviso de pedido em andamento"
-      className="relative z-60 border-b border-yellow/30 bg-linear-to-r from-[#211718] via-[#1a1213] to-[#151011] px-4 py-3 sm:px-6 shadow-xl"
+      className="relative z-60 border-b border-yellow/30 bg-linear-to-r from-[#211718] via-[#1a1213] to-[#151011] px-3 py-2.5 sm:px-6 sm:py-3 shadow-xl"
     >
       <div className="mx-auto flex max-w-280 flex-col md:flex-row items-start md:items-center justify-between gap-3">
         {/* Lado Esquerdo: Identificação e Resumo */}

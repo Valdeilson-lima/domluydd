@@ -206,7 +206,7 @@ export function DetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+      <DialogContent className="max-w-lg w-full max-h-[94dvh] sm:max-h-[88vh] p-0 gap-0 flex flex-col overflow-hidden rounded-sm border border-yellow/20 bg-linear-to-b from-[#1c191a] to-[#121011] shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
         {/* Scrollable Body */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
           {/* Header Title Bar */}
@@ -585,14 +585,14 @@ export function DetailModal({
                 placeholder="Ex: massa bem passada, cortar em aperitivo, caprichar no orégano..."
                 rows={2}
                 maxLength={140}
-                className="w-full resize-none rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"
+                className="w-full resize-none rounded-sm border border-white/10 bg-black/60 px-3.5 py-2.5 font-body text-base sm:text-xs text-cream outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-yellow/60 leading-relaxed"
               />
             </div>
           </div>
         </div>
 
         {/* Sticky Action Footer */}
-        <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5">
+        <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-3.5 sm:p-5 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <span className="font-mono text-[0.6rem] uppercase tracking-wider text-muted">

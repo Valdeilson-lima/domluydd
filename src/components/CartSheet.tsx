@@ -296,7 +296,7 @@ export function CartSheet({
 
         {/* Sticky Footer */}
         {cart.length > 0 && (
-          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-5 space-y-3">
+          <div className="shrink-0 border-t border-yellow/20 bg-linear-to-b from-[#1a1718] to-[#121011] p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>Subtotal dos itens</span>

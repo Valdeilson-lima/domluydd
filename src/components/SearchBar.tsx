@@ -56,9 +56,9 @@ export function SearchBar({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Buscar pizza pelo sabor, queijo ou ingrediente favorito..."
+          placeholder="Buscar sabor ou ingrediente favorito..."
           aria-label="Buscar no cardápio"
-          className="w-full rounded-sm border border-white/10 bg-linear-to-b from-[#1c191a] to-[#141213] pl-11 pr-11 py-3.5 font-body text-sm text-cream outline-none transition-all duration-200 placeholder:text-muted/60 focus:border-yellow/70 focus:bg-[#201d1e] focus:ring-1 focus:ring-yellow/30 shadow-inner sm:py-4 sm:text-base"
+          className="w-full rounded-sm border border-white/10 bg-linear-to-b from-[#1c191a] to-[#141213] pl-10 pr-10 py-3 font-body text-base text-cream outline-none transition-all duration-200 placeholder:text-muted/60 focus:border-yellow/70 focus:bg-[#201d1e] focus:ring-1 focus:ring-yellow/30 shadow-inner sm:pl-11 sm:pr-11 sm:py-3.5 sm:text-base"
         />
 
         {hasValue ? (
@@ -78,7 +78,7 @@ export function SearchBar({
 
       {/* Quick Filter Pills */}
       {tags.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
           {tags.map((tag) => {
             const isSelected = activeTag === tag;
             return (

@@ -432,7 +432,7 @@ export default function App() {
 
       <main
         id="main-content"
-        className="mx-auto max-w-280 px-4 py-8 pb-28 sm:px-6 sm:py-10 sm:pb-32"
+        className="mx-auto max-w-280 px-3.5 py-6 pb-28 sm:px-6 sm:py-10 sm:pb-32"
       >
         {/* Search & Filter Bar */}
         <SearchBar
@@ -446,7 +446,7 @@ export default function App() {
         />
 
         {/* Catalog Section */}
-        <div className="mt-7 sm:mt-9">
+        <div className="mt-5 sm:mt-9">
           {activeTab === "combos" ? (
             <section aria-label="Combos promocionais">
               <div className="mb-6 flex flex-col gap-2 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5">

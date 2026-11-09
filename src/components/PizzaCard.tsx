@@ -60,7 +60,7 @@ export function PizzaCard({ pizza, index, onSelect }: PizzaCardProps) {
       }`}
     >
       {/* Thumbnail area with photo & overlays */}
-      <div className="relative w-28 shrink-0 overflow-hidden sm:w-36">
+      <div className="relative w-24 shrink-0 overflow-hidden sm:w-36">
         <PizzaImage
           src={PIZZA_IMAGES[pizza.imgIdx]}
           alt={pizza.name}

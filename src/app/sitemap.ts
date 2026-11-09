@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { allPizzas } from "@/data/pizzas";
 
-const siteUrl = "https://donluydd.com.br";
+const siteUrl = "https://pizzariadonluydd.valdeilsonlima.com.br";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

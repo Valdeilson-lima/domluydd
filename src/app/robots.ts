@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const siteUrl = "https://donluydd.com.br";
+const siteUrl = "https://pizzariadonluydd.valdeilsonlima.com.br";
 
 export default function robots(): MetadataRoute.Robots {
   return {
