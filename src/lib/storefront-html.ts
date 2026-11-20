@@ -25,8 +25,43 @@ body {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
+.nav {
+  background: #e2e2e2;
+  color: #7d0c14;
+  border-bottom: 1px solid rgba(125, 12, 20, 0.22);
+}
+.nav__logo,
+.nav__link,
+.nav__actions .nav__link,
+.nav__toggle {
+  color: #7d0c14;
+}
 .nav__logo .mark {
   box-shadow: 0 0 0 3px var(--p-bg), 0 0 0 4px currentColor;
+}
+.ground-brand,
+.ground-brand :is(h1, h2, h3, p, address, dt, dd, span, .section-head, .footer__address) {
+  color: #e2e2e2;
+}
+.ground-brand a {
+  color: #f2ecea;
+}
+.ground-brand a:hover,
+.ground-brand a:focus-visible {
+  color: #ffffff;
+  text-decoration-thickness: 2px;
+}
+.ground-brand .btn--primary {
+  background: #e2e2e2;
+  color: #7d0c14;
+  border-color: #e2e2e2;
+}
+.ground-brand .footer__legal,
+.ground-brand .closing__links h3,
+.ground-brand .closing__links p,
+.ground-brand .closing__links dd {
+  color: #f2ecea;
+  opacity: 1;
 }
 .hero__text h1 {
   max-width: 11ch;
