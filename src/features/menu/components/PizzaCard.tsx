@@ -69,14 +69,14 @@ export function PizzaCard({ pizza, paused, onSelect }: PizzaCardProps) {
             type="button"
             disabled={paused}
             onClick={() => onSelect(pizza)}
-            className="h-10 flex-1 bg-primary px-3 text-xs font-semibold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+            className="h-11 flex-1 bg-primary px-3 text-xs font-semibold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
             style={{ borderRadius: "2px" }}
           >
             {paused ? "Indisponível" : "Montar pizza"}
           </button>
           <Link
             href={`/pizza/${pizza.slug}`}
-            className="inline-flex h-10 items-center justify-center border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+            className="inline-flex h-11 items-center justify-center border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
             style={{ borderRadius: "2px" }}
             aria-label={`Ver página da pizza ${pizza.name}`}
           >

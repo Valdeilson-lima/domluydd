@@ -33,7 +33,7 @@ export function DrinkCard({ drink, paused, onAdd }: DrinkCardProps) {
         type="button"
         disabled={paused}
         onClick={() => onAdd(drink)}
-        className="h-10 shrink-0 bg-primary px-4 text-xs font-semibold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+        className="h-11 shrink-0 bg-primary px-4 text-xs font-semibold uppercase tracking-wider text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
         style={{ borderRadius: "2px" }}
       >
         {paused ? "Indisponível" : "Adicionar"}

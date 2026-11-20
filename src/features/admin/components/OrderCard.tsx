@@ -176,7 +176,7 @@ export function OrderCard({
           <button
             type="button"
             onClick={() => onUpdateStatus(order.id, nextStep.next)}
-            className="h-9 flex-1 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            className="h-11 flex-1 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             style={{ borderRadius: "2px" }}
           >
             {nextStep.label}
@@ -186,7 +186,7 @@ export function OrderCard({
         <button
           type="button"
           onClick={() => onPrint(order)}
-          className="inline-flex h-9 items-center gap-1 border border-border bg-background px-2.5 text-xs font-semibold text-foreground hover:bg-secondary"
+          className="inline-flex h-11 items-center gap-1 border border-border bg-background px-2.5 text-xs font-semibold text-foreground hover:bg-secondary"
           style={{ borderRadius: "2px" }}
           aria-label={`Imprimir pedido ${order.id.slice(0, 8)}`}
         >
@@ -198,7 +198,7 @@ export function OrderCard({
           <button
             type="button"
             onClick={() => onRequestCancel(order)}
-            className="inline-flex h-9 items-center gap-1 border border-border bg-background px-2.5 text-xs font-semibold text-muted-foreground hover:border-foreground hover:text-foreground"
+            className="inline-flex h-11 items-center gap-1 border border-border bg-background px-2.5 text-xs font-semibold text-muted-foreground hover:border-foreground hover:text-foreground"
             style={{ borderRadius: "2px" }}
             aria-label={`Cancelar pedido ${order.id.slice(0, 8)}`}
           >

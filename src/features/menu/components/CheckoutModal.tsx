@@ -265,7 +265,7 @@ export function CheckoutModal({
                 value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
                 placeholder="Ex.: Ana Lima…"
-                className="h-10 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                 style={{ borderRadius: "2px" }}
               />
             </div>
@@ -287,7 +287,7 @@ export function CheckoutModal({
                 value={form.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
                 placeholder="Ex.: (83) 99999-9999…"
-                className="h-10 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                 style={{ borderRadius: "2px" }}
               />
             </div>
@@ -324,7 +324,7 @@ export function CheckoutModal({
               <button
                 type="button"
                 onClick={() => updateField("deliveryType", "delivery")}
-                className={`h-10 border text-xs font-semibold ${
+                className={`h-11 border text-xs font-semibold ${
                   form.deliveryType === "delivery"
                     ? "border-foreground bg-primary text-primary-foreground"
                     : "border-border bg-card text-foreground"
@@ -336,7 +336,7 @@ export function CheckoutModal({
               <button
                 type="button"
                 onClick={() => updateField("deliveryType", "takeaway")}
-                className={`h-10 border text-xs font-semibold ${
+                className={`h-11 border text-xs font-semibold ${
                   form.deliveryType === "takeaway"
                     ? "border-foreground bg-primary text-primary-foreground"
                     : "border-border bg-card text-foreground"
@@ -370,7 +370,7 @@ export function CheckoutModal({
                   id="checkout-bairro"
                   value={form.bairro}
                   onChange={(e) => updateField("bairro", e.target.value)}
-                  className="h-10 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                  className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                   style={{ borderRadius: "2px" }}
                 >
                   {bairros.map((b) => (
@@ -398,7 +398,7 @@ export function CheckoutModal({
                     value={form.rua}
                     onChange={(e) => updateField("rua", e.target.value)}
                     placeholder="Ex.: Rua das Flores…"
-                    className="h-10 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                    className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                     style={{ borderRadius: "2px" }}
                   />
                 </div>
@@ -417,7 +417,7 @@ export function CheckoutModal({
                     value={form.numero}
                     onChange={(e) => updateField("numero", e.target.value)}
                     placeholder="Ex.: 123…"
-                    className="h-10 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                    className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                     style={{ borderRadius: "2px" }}
                   />
                 </div>
@@ -441,7 +441,7 @@ export function CheckoutModal({
                     value={form.cep}
                     onChange={(e) => updateField("cep", e.target.value)}
                     placeholder="Ex.: 58000-000…"
-                    className="h-10 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                    className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                     style={{ borderRadius: "2px" }}
                   />
                 </div>
@@ -460,7 +460,7 @@ export function CheckoutModal({
                     value={form.complemento}
                     onChange={(e) => updateField("complemento", e.target.value)}
                     placeholder="Ex.: Apto 12, bloco B…"
-                    className="h-10 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                    className="h-11 w-full border border-input bg-background px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                     style={{ borderRadius: "2px" }}
                   />
                 </div>
@@ -480,7 +480,7 @@ export function CheckoutModal({
                     key={method}
                     type="button"
                     onClick={() => updateField("paymentMethod", method)}
-                    className={`h-10 border px-2 text-xs font-semibold ${
+                    className={`h-11 border px-2 text-xs font-semibold ${
                       active
                         ? "border-foreground bg-secondary text-foreground"
                         : "border-border bg-card text-muted-foreground"
@@ -506,7 +506,7 @@ export function CheckoutModal({
                 <button
                   type="button"
                   onClick={handleCopyPix}
-                  className="inline-flex h-8 items-center gap-1.5 border border-border bg-background px-3 font-semibold text-foreground hover:bg-secondary"
+                  className="inline-flex h-11 items-center gap-1.5 border border-border bg-background px-3 font-semibold text-foreground hover:bg-secondary"
                   style={{ borderRadius: "2px" }}
                 >
                   {copiedPix ? (
@@ -538,7 +538,7 @@ export function CheckoutModal({
                   value={form.trocoPara}
                   onChange={(e) => updateField("trocoPara", e.target.value)}
                   placeholder={`Ex.: ${Math.ceil(totals.total / 10) * 10}…`}
-                  className="h-10 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+                  className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
                   style={{ borderRadius: "2px" }}
                 />
               </div>

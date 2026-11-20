@@ -67,7 +67,7 @@ export function AdminHeader({
           <div className="flex items-center gap-3">
             <Link
               href="/cardapio"
-              className="flex items-center gap-2 font-serif text-xl text-foreground"
+              className="flex h-11 items-center gap-2 font-serif text-xl text-foreground"
             >
               <span
                 className="inline-block h-4 w-4 rounded-full border-[3px] border-foreground shadow-[0_0_0_2px_var(--background)]"
@@ -84,7 +84,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={onOpenStoreStatus}
-              className={`inline-flex h-9 items-center gap-1.5 border px-3 text-xs font-semibold ${
+              className={`inline-flex h-11 items-center gap-1.5 border px-3 text-xs font-semibold ${
                 isStoreOpen
                   ? "border-foreground bg-secondary text-foreground"
                   : "border-foreground bg-primary text-primary-foreground"
@@ -98,7 +98,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={onOpenSummary}
-              className="inline-flex h-9 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
+              className="inline-flex h-11 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
               style={{ borderRadius: "2px" }}
             >
               <Flame className="h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={onOpenStock}
-              className="inline-flex h-9 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
+              className="inline-flex h-11 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
               style={{ borderRadius: "2px" }}
             >
               <PackageCheck className="h-3.5 w-3.5" />
@@ -118,7 +118,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={onOpenClosing}
-              className="inline-flex h-9 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
+              className="inline-flex h-11 items-center gap-1.5 border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-secondary"
               style={{ borderRadius: "2px" }}
             >
               <DollarSign className="h-3.5 w-3.5" />
@@ -128,7 +128,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={onConnectUsb}
-              className={`inline-flex h-9 items-center gap-1.5 border px-3 text-xs font-semibold ${
+              className={`inline-flex h-11 items-center gap-1.5 border px-3 text-xs font-semibold ${
                 usbDevice
                   ? "border-foreground bg-secondary text-foreground"
                   : "border-border bg-card text-foreground hover:bg-secondary"
@@ -143,7 +143,7 @@ export function AdminHeader({
               type="button"
               onClick={onToggleAutoPrint}
               aria-pressed={autoPrint}
-              className={`inline-flex h-9 items-center border px-2.5 text-xs font-semibold ${
+              className={`inline-flex h-11 items-center border px-2.5 text-xs font-semibold ${
                 autoPrint
                   ? "border-foreground bg-secondary text-foreground"
                   : "border-border bg-card text-muted-foreground"
@@ -158,7 +158,7 @@ export function AdminHeader({
               type="button"
               onClick={onToggleSound}
               aria-label={soundEnabled ? "Silenciar alertas" : "Ativar alertas"}
-              className="inline-flex h-9 w-9 items-center justify-center border border-border bg-card text-foreground hover:bg-secondary"
+              className="inline-flex h-11 w-11 items-center justify-center border border-border bg-card text-foreground hover:bg-secondary"
               style={{ borderRadius: "2px" }}
             >
               {soundEnabled ? (
@@ -172,7 +172,7 @@ export function AdminHeader({
               type="button"
               onClick={onRefresh}
               aria-label="Atualizar pedidos"
-              className="inline-flex h-9 w-9 items-center justify-center border border-border bg-card text-foreground hover:bg-secondary"
+              className="inline-flex h-11 w-11 items-center justify-center border border-border bg-card text-foreground hover:bg-secondary"
               style={{ borderRadius: "2px" }}
             >
               <RefreshCw className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function AdminHeader({
               type="button"
               onClick={onLogout}
               aria-label="Sair do painel"
-              className="inline-flex h-9 items-center gap-1 border border-border bg-card px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className="inline-flex h-11 items-center gap-1 border border-border bg-card px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
               style={{ borderRadius: "2px" }}
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -192,7 +192,7 @@ export function AdminHeader({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[220px] max-w-sm">
+          <div className="relative flex-1 min-w-55 max-w-sm">
             <label htmlFor="admin-order-search" className="sr-only">
               Buscar pedido por nome, ID ou sabor
             </label>
@@ -206,7 +206,7 @@ export function AdminHeader({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Ex.: Maria, #1234 ou marguerita…"
-              className="h-9 w-full border border-input bg-card pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+              className="h-11 w-full border border-input bg-card pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
               style={{ borderRadius: "2px" }}
             />
           </div>
@@ -215,7 +215,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={() => onViewModeChange("kanban")}
-              className={`inline-flex h-8 items-center gap-1.5 px-3 text-xs font-semibold ${
+              className={`inline-flex h-11 items-center gap-1.5 px-3 text-xs font-semibold ${
                 viewMode === "kanban"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -228,7 +228,7 @@ export function AdminHeader({
             <button
               type="button"
               onClick={() => onViewModeChange("grid")}
-              className={`inline-flex h-8 items-center gap-1.5 px-3 text-xs font-semibold ${
+              className={`inline-flex h-11 items-center gap-1.5 px-3 text-xs font-semibold ${
                 viewMode === "grid"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"

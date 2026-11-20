@@ -106,7 +106,7 @@ export function CartSheet({
                     <button
                       type="button"
                       onClick={() => onUpdateQty(idx, -1)}
-                      className="h-8 w-8 text-sm font-bold hover:bg-secondary"
+                      className="h-11 w-11 text-sm font-bold hover:bg-secondary"
                       aria-label="Diminuir item"
                     >
                       −
@@ -117,7 +117,7 @@ export function CartSheet({
                     <button
                       type="button"
                       onClick={() => onUpdateQty(idx, 1)}
-                      className="h-8 w-8 text-sm font-bold hover:bg-secondary"
+                      className="h-11 w-11 text-sm font-bold hover:bg-secondary"
                       aria-label="Aumentar item"
                     >
                       +

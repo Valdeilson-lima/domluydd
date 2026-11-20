@@ -32,7 +32,7 @@ export default function AppGroupLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         <a
           href="#conteudo-principal"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[999] focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-999 focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-primary-foreground"
         >
           Ir para o conteúdo principal
         </a>

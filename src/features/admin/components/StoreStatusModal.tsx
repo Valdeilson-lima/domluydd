@@ -123,7 +123,7 @@ export function StoreStatusModal({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ex.: Voltamos amanhã às 18h…"
-              className="h-10 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+              className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
               style={{ borderRadius: "2px" }}
             />
           </div>

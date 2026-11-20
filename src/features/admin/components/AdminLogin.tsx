@@ -52,7 +52,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
       <div className="grid w-full overflow-hidden border border-border bg-card sm:grid-cols-[0.72fr_1.28fr]">
         <aside className="hidden flex-col justify-between bg-primary p-8 text-primary-foreground sm:flex">
           <div
-            className="h-12 w-12 rounded-full border-[4px] border-current"
+            className="h-12 w-12 rounded-full border-4 border-current"
             aria-hidden="true"
           />
           <div className="space-y-2">

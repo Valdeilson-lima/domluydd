@@ -225,7 +225,7 @@ export function PizzaConfigurator({
           <button
             type="button"
             onClick={() => handleToggleHalf(false)}
-            className={`h-10 border text-xs font-semibold transition-colors ${
+            className={`h-11 border text-xs font-semibold transition-colors ${
               !isHalf
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"
@@ -237,7 +237,7 @@ export function PizzaConfigurator({
           <button
             type="button"
             onClick={() => handleToggleHalf(true)}
-            className={`h-10 border text-xs font-semibold transition-colors ${
+            className={`h-11 border text-xs font-semibold transition-colors ${
               isHalf
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"
@@ -416,7 +416,7 @@ export function PizzaConfigurator({
                   type="button"
                   onClick={() => toggleRemoval(rem)}
                   aria-pressed={active}
-                  className={`h-8 border px-3 text-xs font-medium transition-colors ${
+                  className={`h-11 border px-3 text-xs font-medium transition-colors ${
                     active
                       ? "border-foreground bg-secondary font-semibold text-foreground"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -464,7 +464,7 @@ export function PizzaConfigurator({
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="h-10 w-10 text-base font-bold text-foreground hover:bg-secondary"
+            className="h-11 w-11 text-base font-bold text-foreground hover:bg-secondary"
             aria-label="Diminuir quantidade"
           >
             −
@@ -475,7 +475,7 @@ export function PizzaConfigurator({
           <button
             type="button"
             onClick={() => setQty((q) => Math.min(20, q + 1))}
-            className="h-10 w-10 text-base font-bold text-foreground hover:bg-secondary"
+            className="h-11 w-11 text-base font-bold text-foreground hover:bg-secondary"
             aria-label="Aumentar quantidade"
           >
             +
@@ -485,7 +485,7 @@ export function PizzaConfigurator({
         <button
           type="submit"
           disabled={primaryPaused}
-          className="h-11 flex-1 min-w-[200px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+          className="h-11 flex-1 min-w-50 bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
           style={{ borderRadius: "2px" }}
         >
           Adicionar à sacola · R$ {formatPrice(unitPrice * qty)}

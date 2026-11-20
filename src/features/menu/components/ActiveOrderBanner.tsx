@@ -84,7 +84,7 @@ export function ActiveOrderBanner() {
 
         <Link
           href={`/pedido/${activeOrder.id}`}
-          className="inline-flex h-9 items-center gap-1.5 border border-foreground bg-background px-3.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+          className="inline-flex h-11 items-center gap-1.5 border border-foreground bg-background px-3.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
           style={{ borderRadius: "2px" }}
         >
           Acompanhar

@@ -85,7 +85,7 @@ export function StockModal({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ex.: Marguerita, combo ou bebida…"
-            className="h-10 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+            className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
             style={{ borderRadius: "2px" }}
           />
           {error && (
@@ -116,7 +116,7 @@ export function StockModal({
                   type="button"
                   disabled={busy}
                   onClick={() => handleToggle(item.name, paused)}
-                  className={`h-8 border px-3 text-xs font-semibold ${
+                  className={`h-11 border px-3 text-xs font-semibold ${
                     paused
                       ? "border-foreground bg-primary text-primary-foreground"
                       : "border-border bg-background text-foreground hover:bg-secondary"

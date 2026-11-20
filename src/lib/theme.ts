@@ -10,7 +10,7 @@ export const THEME_PALETTE = {
   bg: "#e2e2e2",
   surface: "#d6d6d6",
   ink: "#7d0c14",
-  muted: "#7a4a4e",
+  muted: "#62383b",
   accent: "#7d0c14",
   accentInk: "#e2e2e2",
   action: "#7d0c14",
@@ -29,7 +29,7 @@ export const THEME_FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Lora:wght@400..600&family=Nunito+Sans:wght@400..600&display=swap";
 
 export const THEME_ROOT_CSS = `:root {
-  --p-bg: #e2e2e2; --p-surface: #d6d6d6; --p-ink: #7d0c14; --p-muted: #7a4a4e;
+  --p-bg: #e2e2e2; --p-surface: #d6d6d6; --p-ink: #7d0c14;   --p-muted: #62383b;
   --p-accent: #7d0c14; --p-accent-ink: #e2e2e2; --p-action: #7d0c14; --p-action-ink: #e2e2e2;
   --p-inv-bg: #7d0c14; --p-inv-surface: #862323; --p-inv-ink: #e2e2e2; --p-inv-muted: #d0b3af;
   --p-inv-accent: #e2e2e2; --p-inv-accent-ink: #7d0c14; --p-inv-action: #e2e2e2; --p-inv-action-ink: #7d0c14;

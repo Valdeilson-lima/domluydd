@@ -43,7 +43,7 @@ const DialogContent = forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
-        className="absolute right-3.5 top-3.5 z-50 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-black/70 text-muted transition-[color,background-color,border-color,transform] hover:border-red-primary hover:bg-red-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow active:scale-95 disabled:pointer-events-none"
+        className="absolute right-3.5 top-3.5 z-50 flex size-11 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-black/70 text-muted transition-[color,background-color,border-color,transform] hover:border-red-primary hover:bg-red-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow active:scale-95 disabled:pointer-events-none"
       >
         <X className="size-4" />
         <span className="sr-only">Fechar</span>

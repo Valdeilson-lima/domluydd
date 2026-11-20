@@ -102,7 +102,7 @@ export function CancelOrderModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-10 flex-1 border border-border bg-card text-xs font-semibold text-foreground hover:bg-secondary"
+                  className="h-11 flex-1 border border-border bg-card text-xs font-semibold text-foreground hover:bg-secondary"
                   style={{ borderRadius: "2px" }}
                 >
                   Voltar
@@ -110,7 +110,7 @@ export function CancelOrderModal({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-10 flex-1 bg-primary text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="h-11 flex-1 bg-primary text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                   style={{ borderRadius: "2px" }}
                 >
                   {submitting ? "Cancelando…" : "Confirmar cancelamento"}

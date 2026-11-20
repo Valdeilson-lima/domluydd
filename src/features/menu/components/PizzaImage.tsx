@@ -9,7 +9,7 @@ interface PizzaImageProps {
 export function PizzaImage({
   imgIdx,
   name,
-  className = "aspect-[4/3] w-full object-cover",
+  className = "aspect-4/3 w-full object-cover",
 }: PizzaImageProps) {
   const src = PIZZA_IMAGES[imgIdx % PIZZA_IMAGES.length] || PIZZA_IMAGES[1];
 

@@ -39,7 +39,7 @@ export function OrderBoard({
           return (
             <section
               key={col.status}
-              className="min-h-[220px] space-y-3 border border-border bg-secondary/40 p-4"
+              className="min-h-55 space-y-3 border border-border bg-secondary/40 p-4"
             >
               <div className="flex items-center justify-between border-b border-border pb-2">
                 <h2 className="font-serif text-xl font-normal text-foreground">
@@ -103,7 +103,7 @@ export function OrderBoard({
             key={tab.id}
             type="button"
             onClick={() => onFilterChange(tab.id)}
-            className={`h-9 border px-3 text-xs font-semibold ${
+            className={`h-11 border px-3 text-xs font-semibold ${
               filter === tab.id
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"

@@ -61,7 +61,7 @@ export function SearchBar({
               <button
                 type="button"
                 onClick={() => onSearchChange("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                className="absolute right-1 top-1/2 h-11 w-11 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label="Limpar busca"
               >
                 <X className="h-4 w-4" />
@@ -89,7 +89,7 @@ export function SearchBar({
                 role="tab"
                 aria-selected={selected}
                 onClick={() => onTabChange(tab.id)}
-                className={`h-9 px-4 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                className={`h-11 px-4 text-xs font-semibold uppercase tracking-wider transition-colors ${
                   selected
                     ? "bg-primary text-primary-foreground"
                     : "border border-border bg-card text-foreground hover:bg-secondary"
@@ -111,7 +111,7 @@ export function SearchBar({
                   key={tag}
                   type="button"
                   onClick={() => onTagChange(tag)}
-                  className={`h-8 px-3 text-xs font-medium transition-colors ${
+                  className={`h-11 px-3 text-xs font-medium transition-colors ${
                     selected
                       ? "border border-foreground bg-secondary font-semibold text-foreground"
                       : "border border-border bg-transparent text-muted-foreground hover:text-foreground"

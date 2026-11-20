@@ -72,7 +72,7 @@ export function CashClosingModal({
             <button
               type="button"
               onClick={() => setScope("today")}
-              className={`h-9 border px-4 text-xs font-semibold ${
+              className={`h-11 border px-4 text-xs font-semibold ${
                 scope === "today"
                   ? "border-foreground bg-primary text-primary-foreground"
                   : "border-border bg-card text-foreground"
@@ -84,7 +84,7 @@ export function CashClosingModal({
             <button
               type="button"
               onClick={() => setScope("all")}
-              className={`h-9 border px-4 text-xs font-semibold ${
+              className={`h-11 border px-4 text-xs font-semibold ${
                 scope === "all"
                   ? "border-foreground bg-primary text-primary-foreground"
                   : "border-border bg-card text-foreground"

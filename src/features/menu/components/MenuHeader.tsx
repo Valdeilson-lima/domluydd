@@ -25,7 +25,7 @@ export function MenuHeader({
         <div className="flex items-center gap-4 min-w-0">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex h-11 min-w-11 items-center justify-center gap-2 px-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Voltar para a página inicial"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
@@ -34,7 +34,7 @@ export function MenuHeader({
           <span className="h-4 w-px bg-border" aria-hidden="true" />
           <Link
             href="/cardapio"
-            className="flex items-center gap-2.5 font-serif text-xl tracking-tight text-foreground truncate"
+            className="flex h-11 items-center gap-2.5 font-serif text-xl tracking-tight text-foreground truncate"
           >
             <span
               className="inline-block h-4 w-4 shrink-0 rounded-full border-[3px] border-foreground shadow-[0_0_0_2px_var(--background)]"
@@ -56,7 +56,7 @@ export function MenuHeader({
           <button
             type="button"
             onClick={onOpenCart}
-            className="inline-flex h-10 items-center gap-2.5 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            className="inline-flex h-11 items-center gap-2.5 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             style={{ borderRadius: "2px" }}
             aria-label={`Abrir sacola com ${totalQty} itens`}
           >
