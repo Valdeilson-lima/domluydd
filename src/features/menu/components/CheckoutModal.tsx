@@ -13,6 +13,7 @@ import {
 import { bairros } from "@/data/bairros";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import {
+  clearCustomerDraft,
   loadCustomerDraft,
   saveCustomerDraft,
   saveLastOrder,
@@ -212,6 +213,9 @@ export function CheckoutModal({
         status: data.status || "pending",
       });
 
+      clearCustomerDraft();
+      setForm(DEFAULT_DRAFT);
+      setError(null);
       onOrderSuccess();
       onOpenChange(false);
       router.push(`/pedido/${data.id}`);
