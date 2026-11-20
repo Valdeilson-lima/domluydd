@@ -1,43 +1,43 @@
-import { NextResponse } from "next/server";
-
-// Cache em memória compartilhado durante a execução do processo Node.js
-let pausedItemsCache: string[] = [];
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequestAuthorized } from "@/lib/admin-auth";
+import { getPausedItems, setItemAvailability } from "@/lib/server-store";
 
 export async function GET() {
-  return NextResponse.json({
-    pausedItems: pausedItemsCache,
-  });
+  try {
+    const paused = await getPausedItems();
+    return NextResponse.json({ paused });
+  } catch {
+    return NextResponse.json({ paused: [] });
+  }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!isAdminRequestAuthorized(request)) {
+    return NextResponse.json(
+      { error: "Autenticação administrativa necessária." },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
-    if (Array.isArray(body.pausedItems)) {
-      pausedItemsCache = body.pausedItems.filter(
-        (i: unknown) => typeof i === "string"
+    const itemName =
+      typeof body?.item_name === "string" ? body.item_name.trim() : "";
+    const available = Boolean(body?.available);
+
+    if (!itemName) {
+      return NextResponse.json(
+        { error: "Nome do item é obrigatório." },
+        { status: 400 }
       );
-      return NextResponse.json({
-        success: true,
-        pausedItems: pausedItemsCache,
-      });
     }
 
-    if (body.toggleItem && typeof body.toggleItem === "string") {
-      const item = body.toggleItem;
-      if (pausedItemsCache.includes(item)) {
-        pausedItemsCache = pausedItemsCache.filter((i) => i !== item);
-      } else {
-        pausedItemsCache.push(item);
-      }
-      return NextResponse.json({
-        success: true,
-        pausedItems: pausedItemsCache,
-      });
-    }
-
-    return NextResponse.json({ error: "Formato inválido" }, { status: 400 });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Erro interno";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const paused = await setItemAvailability(itemName, available);
+    return NextResponse.json({ paused });
+  } catch {
+    return NextResponse.json(
+      { error: "Erro ao atualizar disponibilidade." },
+      { status: 500 }
+    );
   }
 }

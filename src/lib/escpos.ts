@@ -1,4 +1,9 @@
 import type { DbOrder } from "@/types/supabase";
+import {
+  SITE_URL,
+  STORE_OVEN_LABEL,
+  STORE_WHATSAPP_DISPLAY,
+} from "@/lib/store-config";
 import { formatPrice } from "@/lib/utils";
 
 // Tipagem WebUSB para navegadores baseados em Chromium
@@ -109,8 +114,8 @@ export function buildEpsonEscPos(order: DbOrder): Uint8Array {
   addBytes(...CMD.DOUBLE_ON);
   addLine("DON LUYDD PIZZARIA");
   addBytes(...CMD.NORMAL_TEXT);
-  addLine("Pizzas Artesanais - Forno a Lenha");
-  addLine("WhatsApp: (83) 99374-0352");
+  addLine(`Pizzas Artesanais - ${STORE_OVEN_LABEL}`);
+  addLine(`WhatsApp: ${STORE_WHATSAPP_DISPLAY}`);
   addLine("=".repeat(48));
 
   // Dados do Pedido
@@ -216,7 +221,7 @@ export function buildEpsonEscPos(order: DbOrder): Uint8Array {
   // Rodapé e corte
   addBytes(...CMD.ALIGN_CENTER);
   addLine("=".repeat(48));
-  addLine("Acompanhe: donluydd.com.br");
+  addLine(`Acompanhe: ${SITE_URL.replace(/^https?:\/\//, "")}`);
   addLine("Obrigado pela preferencia!");
   addBytes(...CMD.FEED_5);
   addBytes(...CMD.PARTIAL_CUT);
@@ -378,8 +383,8 @@ export function printOrderViaBrowser(order: DbOrder): void {
       </head>
       <body>
         <div class="center title">🍕 DON LUYDD PIZZARIA</div>
-        <div class="center" style="font-size: 11px;">Pizzas Artesanais · Forno a Lenha</div>
-        <div class="center" style="font-size: 11px;">WhatsApp: (83) 99374-0352</div>
+        <div class="center" style="font-size: 11px;">${STORE_OVEN_LABEL}</div>
+        <div class="center" style="font-size: 11px;">WhatsApp: ${STORE_WHATSAPP_DISPLAY}</div>
         <div class="double-divider"></div>
 
         <div class="row bold">
@@ -430,7 +435,7 @@ export function printOrderViaBrowser(order: DbOrder): void {
 
         <div class="double-divider"></div>
         <div class="center" style="font-size: 10px; margin-top: 6px;">
-          donluydd.com.br<br/>
+          ${SITE_URL.replace(/^https?:\/\//, "")}<br/>
           Obrigado pela preferência!
         </div>
       </body>

@@ -19,8 +19,11 @@ create table if not exists public.orders (
   payment_method text not null,
   change_for numeric(10,2),
   status text not null default 'pending',
-  notes text
+  notes text,
+  whatsapp_notifications boolean not null default false
 );
+alter table public.orders
+  add column if not exists whatsapp_notifications boolean not null default false;
 
 -- 2. Habilita Row Level Security (RLS)
 alter table public.orders enable row level security;

@@ -1,28 +1,15 @@
 import type { MetadataRoute } from "next";
-
-const siteUrl = "https://pizzariadonluydd.valdeilsonlima.com.br";
+import { SITE_URL } from "@/lib/store-config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/admin", "/api/"],
-      },
-      {
-        userAgent: [
-          "GPTBot",
-          "OAI-SearchBot",
-          "PerplexityBot",
-          "ClaudeBot",
-          "Claude-SearchBot",
-        ],
-        allow: "/",
-        disallow: ["/admin", "/api/"],
+        allow: ["/", "/cardapio", "/pizza/"],
+        disallow: ["/admin", "/pedido/", "/api/"],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteUrl,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

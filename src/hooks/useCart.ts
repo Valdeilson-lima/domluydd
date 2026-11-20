@@ -1,160 +1,155 @@
-import { useState, useCallback, useSyncExternalStore } from "react";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { roundCurrency } from "@/lib/utils";
 import type { CartItem } from "@/types";
 
-const STORAGE_KEY = "donluydd.cart.v1";
+const CART_STORAGE_KEY = "donluydd_cart";
 
-let cartState: CartItem[] = [];
-let initialized = false;
-const listeners = new Set<() => void>();
+function buildCartItemSignature(item: Omit<CartItem, "id" | "qty">): string {
+  const flavorsKey = [...item.flavors]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((f) => f.name)
+    .join("+");
+  const extrasKey = [...(item.extras ?? [])]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((e) => e.name)
+    .join(",");
+  const removalsKey = [...(item.removals ?? [])].sort().join(",");
+  return [
+    item.category,
+    item.size,
+    flavorsKey,
+    item.crust?.name ?? "",
+    extrasKey,
+    removalsKey,
+    (item.observation ?? "").trim(),
+  ].join("|");
+}
 
-function loadFromStorage(): CartItem[] {
+function readCartFromStorage(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (i) =>
-        i &&
-        typeof i.id === "number" &&
-        Array.isArray(i.flavors) &&
-        typeof i.qty === "number"
-    );
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function getCartSnapshot(): CartItem[] {
-  if (!initialized && typeof window !== "undefined") {
-    initialized = true;
-    cartState = loadFromStorage();
-  }
-  return cartState;
-}
-
-const SERVER_SNAPSHOT: CartItem[] = [];
-function getServerSnapshot(): CartItem[] {
-  return SERVER_SNAPSHOT;
-}
-
-function subscribe(callback: () => void) {
-  listeners.add(callback);
-  return () => {
-    listeners.delete(callback);
-  };
-}
-
-function updateCart(updater: (prev: CartItem[]) => CartItem[]) {
-  cartState = updater(getCartSnapshot());
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cartState));
-    } catch {
-      /* armazenamento indisponível — segue apenas em memória */
-    }
-  }
-  listeners.forEach((l) => l());
-}
-
-function itemsMatch(a: Omit<CartItem, "id" | "qty">, b: CartItem): boolean {
-  if (a.size !== b.size || a.category !== b.category) return false;
-  if ((a.observation || "") !== (b.observation || "")) return false;
-  if ((a.crust?.name || "") !== (b.crust?.name || "")) return false;
-  const aExtras = (a.extras || [])
-    .map((e) => e.name)
-    .sort()
-    .join("|");
-  const bExtras = (b.extras || [])
-    .map((e) => e.name)
-    .sort()
-    .join("|");
-  if (aExtras !== bExtras) return false;
-  const aRemovals = (a.removals || []).sort().join("|");
-  const bRemovals = (b.removals || []).sort().join("|");
-  if (aRemovals !== bRemovals) return false;
-  if (a.flavors.length !== b.flavors.length) return false;
-  const aNames = a.flavors
-    .map((f) => f.name)
-    .sort()
-    .join("|");
-  const bNames = b.flavors
-    .map((f) => f.name)
-    .sort()
-    .join("|");
-  return aNames === bNames;
-}
-
 export function useCart() {
-  const cart = useSyncExternalStore(
-    subscribe,
-    getCartSnapshot,
-    getServerSnapshot
-  );
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [mounted, setMounted] = useState(false);
 
-  const addItem = useCallback((item: Omit<CartItem, "id" | "qty">, qty = 1) => {
-    if (qty <= 0) return;
-    updateCart((prev) => {
-      const existing = prev.find((p) => itemsMatch(item, p));
-      if (existing) {
-        return prev.map((p) =>
-          p.id === existing.id ? { ...p, qty: p.qty + qty } : p
-        );
+  useEffect(() => {
+    setCart(readCartFromStorage());
+    setMounted(true);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === CART_STORAGE_KEY) {
+        setCart(readCartFromStorage());
       }
-      const nextId = prev.reduce((max, p) => Math.max(max, p.id), 0) + 1;
-      return [...prev, { ...item, id: nextId, qty }];
-    });
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const removeItem = useCallback((id: number) => {
-    updateCart((prev) => prev.filter((p) => p.id !== id));
+  const persistCart = useCallback((next: CartItem[]) => {
+    setCart(next);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore quota errors cleanly
+      }
+    }
   }, []);
 
-  const updateQty = useCallback((id: number, delta: number) => {
-    updateCart((prev) =>
-      prev
-        .map((p) =>
-          p.id === id ? { ...p, qty: Math.max(0, p.qty + delta) } : p
+  const addToCart = useCallback(
+    (item: Omit<CartItem, "id" | "qty"> & { qty?: number }) => {
+      const targetSig = buildCartItemSignature(item);
+      const quantityToAdd = Math.max(1, item.qty ?? 1);
+      setCart((prev) => {
+        const existingIndex = prev.findIndex(
+          (entry) => buildCartItemSignature(entry) === targetSig
+        );
+        let next: CartItem[];
+        if (existingIndex >= 0) {
+          next = prev.map((entry, idx) =>
+            idx === existingIndex
+              ? { ...entry, qty: entry.qty + quantityToAdd }
+              : entry
+          );
+        } else {
+          next = [
+            ...prev,
+            {
+              ...item,
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              qty: quantityToAdd,
+              price: roundCurrency(item.price),
+            },
+          ];
+        }
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  const updateQty = useCallback(
+    (index: number, delta: number) => {
+      const next = cart
+        .map((item, idx) =>
+          idx === index ? { ...item, qty: item.qty + delta } : item
         )
-        .filter((p) => p.qty > 0)
-    );
-  }, []);
+        .filter((item) => item.qty > 0);
+      persistCart(next);
+    },
+    [cart, persistCart]
+  );
+
+  const removeFromCart = useCallback(
+    (index: number) => {
+      persistCart(cart.filter((_, idx) => idx !== index));
+    },
+    [cart, persistCart]
+  );
 
   const clearCart = useCallback(() => {
-    updateCart(() => []);
-  }, []);
+    persistCart([]);
+  }, [persistCart]);
 
-  const repeatOrder = useCallback((items: CartItem[]) => {
-    updateCart(() =>
-      items.map((item, idx) => ({
-        ...item,
-        id: idx + 1,
-      }))
-    );
-    setCartOpen(true);
-  }, []);
+  const setCartItems = useCallback(
+    (items: CartItem[]) => {
+      persistCart(items);
+    },
+    [persistCart]
+  );
 
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const itemCount = cart.reduce((s, i) => s + i.qty, 0);
-
-  const toggleCart = useCallback((open?: boolean) => {
-    setCartOpen((prev) => open ?? !prev);
-  }, []);
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+  const subtotal = roundCurrency(
+    cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+  );
 
   return {
     cart,
-    addItem,
-    removeItem,
+    mounted,
+    addToCart,
     updateQty,
+    removeFromCart,
     clearCart,
-    repeatOrder,
-    total,
-    itemCount,
-    cartOpen,
-    toggleCart,
+    setCartItems,
+    totalQty,
+    subtotal,
   };
 }
-
-export type CartContextType = ReturnType<typeof useCart>;

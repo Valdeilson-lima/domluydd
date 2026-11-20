@@ -21,4 +21,5 @@ export interface DbOrder {
   change_for: number | null;
   status: OrderStatus;
   notes?: string | null;
+  whatsapp_notifications?: boolean;
 }

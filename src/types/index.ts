@@ -1,3 +1,5 @@
+export type PizzaCategory = "salgada" | "doce";
+
 export interface Pizza {
   id: string;
   slug: string;
@@ -6,16 +8,20 @@ export interface Pizza {
   p: number;
   m: number;
   g: number;
-  category: "salgada" | "doce";
+  category: PizzaCategory;
   imgIdx: number;
+  tags: string[];
+  highlight?: boolean;
   available?: boolean;
 }
 
 export interface Drink {
+  id: string;
   name: string;
   icon: string;
   price: number;
   desc: string;
+  tags: string[];
   available?: boolean;
 }
 
@@ -38,12 +44,14 @@ export interface CrustOption {
   id: string;
   name: string;
   price: number;
+  compatibleWith: PizzaCategory[];
 }
 
 export interface ExtraIngredient {
   id: string;
   name: string;
   price: number;
+  compatibleWith: PizzaCategory[];
 }
 
 export interface CartItem {
@@ -70,6 +78,7 @@ export interface CustomerData {
   complemento: string;
   paymentMethod: string;
   trocoPara: string;
+  whatsappNotifications: boolean;
 }
 
 export interface PastOrder {

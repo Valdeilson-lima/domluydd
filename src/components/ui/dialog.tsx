@@ -35,13 +35,16 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-300 grid w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-white/10 bg-black-light p-6 shadow-2xl duration-200 rounded-sm sm:w-full data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "fixed left-1/2 top-1/2 z-300 grid max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain border border-white/10 bg-black-light p-6 shadow-2xl duration-200 rounded-sm sm:w-full data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-3.5 top-3.5 z-50 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-black/70 text-muted transition-all hover:border-red-primary hover:bg-red-primary hover:text-white focus:outline-none focus:ring-1 focus:ring-yellow active:scale-95 disabled:pointer-events-none">
+      <DialogPrimitive.Close
+        aria-label="Fechar"
+        className="absolute right-3.5 top-3.5 z-50 flex size-8 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-black/70 text-muted transition-[color,background-color,border-color,transform] hover:border-red-primary hover:bg-red-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow active:scale-95 disabled:pointer-events-none"
+      >
         <X className="size-4" />
         <span className="sr-only">Fechar</span>
       </DialogPrimitive.Close>

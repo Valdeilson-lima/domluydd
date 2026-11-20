@@ -2,13 +2,15 @@ import type { Pizza, CrustOption, ExtraIngredient } from "@/types";
 
 export const PIZZA_IMAGES = [
   "/Pizza 2 Queijos.png",
-  "https://cdn.pixabay.com/photo/2020/06/08/16/49/pizza-5275191_960_720.jpg",
-  "https://cdn.pixabay.com/photo/2016/04/21/22/50/pizza-1344720_960_720.jpg",
-  "https://cdn.pixabay.com/photo/2014/04/22/02/56/pizza-329523_960_720.jpg",
-  "https://cdn.pixabay.com/photo/2014/07/08/12/34/pizza-386717_960_720.jpg",
-  "https://img.freepik.com/free-photo/pizza-pizza-filled-with-tomatoes-salami-olives_140725-1200.jpg",
-  "https://img.freepik.com/free-photo/delicious-pizza-with-vegetables_144627-22184.jpg",
-  "https://img.freepik.com/free-photo/top-view-pepperoni-pizza-with-mushrooms-sliced_141793-2144.jpg",
+  "/assets/img/photo-f159446387-960.jpg",
+  "/assets/img/photo-f192755848-960.jpg",
+  "/assets/img/photo-f29093071-960.jpg",
+  "/assets/img/photo-f41882039-960.jpg",
+  "/assets/img/photo-f100303227-960.jpg",
+  "/assets/img/photo-f154799608-960.jpg",
+  "/assets/img/photo-f106092414-960.jpg",
+  "/assets/img/photo-f87508732-500.jpg",
+  "/assets/img/photo-f79703781-500.jpg",
 ];
 
 interface RawPizza {
@@ -17,6 +19,8 @@ interface RawPizza {
   p: number;
   m: number;
   g: number;
+  tags: string[];
+  highlight?: boolean;
   available?: boolean;
 }
 
@@ -27,6 +31,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Queijos", "Tradicionais"],
   },
   {
     name: "3 Queijos",
@@ -34,6 +39,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Queijos", "Tradicionais"],
   },
   {
     name: "4 Queijos",
@@ -41,6 +47,8 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Queijos", "Especiais"],
+    highlight: true,
   },
   {
     name: "5 Queijos",
@@ -48,6 +56,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Queijos", "Especiais"],
   },
   {
     name: "Calabresa",
@@ -55,6 +64,8 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais", "Mais Pedidas"],
+    highlight: true,
   },
   {
     name: "Calabresa II",
@@ -62,6 +73,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais"],
   },
   {
     name: "Catupiry",
@@ -69,6 +81,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Queijos", "Tradicionais"],
   },
   {
     name: "Crocante",
@@ -76,6 +89,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais"],
   },
   {
     name: "Frango",
@@ -83,6 +97,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Frango", "Tradicionais"],
   },
   {
     name: "Frango Catupiry",
@@ -90,6 +105,8 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Frango", "Mais Pedidas"],
+    highlight: true,
   },
   {
     name: "Frango II",
@@ -97,6 +114,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Frango", "Especiais"],
   },
   {
     name: "Moda da Casa",
@@ -104,6 +122,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais", "Mais Pedidas"],
   },
   {
     name: "Marguerita",
@@ -111,6 +130,8 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais", "Queijos"],
+    highlight: true,
   },
   {
     name: "Mista",
@@ -118,6 +139,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais"],
   },
   {
     name: "Mussarela",
@@ -125,6 +147,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Queijos", "Tradicionais"],
   },
   {
     name: "Portuguesa",
@@ -132,6 +155,8 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais", "Mais Pedidas"],
+    highlight: true,
   },
   {
     name: "Toscana",
@@ -139,6 +164,7 @@ const rawSalgadas: RawPizza[] = [
     p: 30,
     m: 35,
     g: 40,
+    tags: ["Tradicionais"],
   },
   {
     name: "Paulista",
@@ -146,6 +172,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Frango", "Especiais"],
   },
   {
     name: "Bacon",
@@ -153,6 +180,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Bacon II",
@@ -160,6 +188,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Carne de Sol",
@@ -167,6 +196,8 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais", "Regionais", "Mais Pedidas"],
+    highlight: true,
   },
   {
     name: "Carne de Sol II",
@@ -174,6 +205,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais", "Regionais"],
   },
   {
     name: "Deliciosa",
@@ -181,6 +213,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Frango", "Especiais"],
   },
   {
     name: "Napolitana",
@@ -188,6 +221,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Jardineira",
@@ -195,6 +229,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Frango", "Especiais"],
   },
   {
     name: "Palmito",
@@ -202,6 +237,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Palmito II",
@@ -209,6 +245,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Siciliana",
@@ -216,6 +253,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
   {
     name: "Atum",
@@ -223,6 +261,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais", "Atum"],
   },
   {
     name: "Atum II",
@@ -230,6 +269,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais", "Atum"],
   },
   {
     name: "Atum III",
@@ -237,6 +277,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais", "Atum"],
   },
   {
     name: "Baianinha",
@@ -244,6 +285,7 @@ const rawSalgadas: RawPizza[] = [
     p: 35,
     m: 40,
     g: 45,
+    tags: ["Especiais"],
   },
 ];
 
@@ -254,6 +296,7 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces"],
   },
   {
     name: "Chocolate",
@@ -261,6 +304,8 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces", "Mais Pedidas"],
+    highlight: true,
   },
   {
     name: "Bananita",
@@ -268,6 +313,7 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces"],
   },
   {
     name: "Brigadeiro",
@@ -275,6 +321,7 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces", "Mais Pedidas"],
   },
   {
     name: "Prestígio",
@@ -282,6 +329,7 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces"],
   },
   {
     name: "Romeu & Julieta",
@@ -289,6 +337,8 @@ const rawDoces: RawPizza[] = [
     p: 25,
     m: 30,
     g: 35,
+    tags: ["Doces"],
+    highlight: true,
   },
 ];
 
@@ -302,19 +352,81 @@ export function slugify(text: string): string {
 }
 
 export const CRUST_OPTIONS: CrustOption[] = [
-  { id: "sem-borda", name: "Borda Tradicional (Sem recheio)", price: 0 },
-  { id: "catupiry", name: "Borda de Catupiry Original", price: 8 },
-  { id: "cheddar", name: "Borda de Cheddar Cremoso", price: 8 },
-  { id: "chocolate", name: "Borda de Chocolate ao Leite", price: 10 },
-  { id: "vulcao", name: "Borda Vulcão de Catupiry", price: 12 },
+  {
+    id: "sem-borda",
+    name: "Borda Tradicional (Sem recheio)",
+    price: 0,
+    compatibleWith: ["salgada", "doce"],
+  },
+  {
+    id: "catupiry",
+    name: "Borda de Catupiry Original",
+    price: 8,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "cheddar",
+    name: "Borda de Cheddar Cremoso",
+    price: 8,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "chocolate",
+    name: "Borda de Chocolate ao Leite",
+    price: 10,
+    compatibleWith: ["doce"],
+  },
+  {
+    id: "vulcao",
+    name: "Borda Vulcão de Catupiry",
+    price: 12,
+    compatibleWith: ["salgada"],
+  },
 ];
 
 export const EXTRA_INGREDIENTS: ExtraIngredient[] = [
-  { id: "extra-bacon", name: "Bacon Crocante Extra", price: 5 },
-  { id: "extra-mussarela", name: "Queijo Mussarela Extra", price: 6 },
-  { id: "extra-catupiry", name: "Catupiry Original Extra", price: 5 },
-  { id: "extra-palmito", name: "Palmito Especial Extra", price: 6 },
-  { id: "extra-azeitonas", name: "Azeitonas Extras", price: 3 },
+  {
+    id: "extra-bacon",
+    name: "Bacon Crocante Extra",
+    price: 5,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "extra-mussarela",
+    name: "Queijo Mussarela Extra",
+    price: 6,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "extra-catupiry",
+    name: "Catupiry Original Extra",
+    price: 5,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "extra-palmito",
+    name: "Palmito Especial Extra",
+    price: 6,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "extra-azeitonas",
+    name: "Azeitonas Extras",
+    price: 3,
+    compatibleWith: ["salgada"],
+  },
+  {
+    id: "extra-chocolate",
+    name: "Cobertura Extra de Chocolate",
+    price: 6,
+    compatibleWith: ["doce"],
+  },
+  {
+    id: "extra-leite-condensado",
+    name: "Leite Condensado Extra",
+    price: 4,
+    compatibleWith: ["doce"],
+  },
 ];
 
 export const COMMON_REMOVALS: string[] = [
@@ -324,13 +436,22 @@ export const COMMON_REMOVALS: string[] = [
   "Sem Orégano",
 ];
 
+export const SWEET_REMOVALS: string[] = [
+  "Sem Leite Condensado",
+  "Sem Canela",
+  "Sem Granulado",
+];
+
 function addIds(arr: RawPizza[], cat: "salgada" | "doce"): Pizza[] {
   return arr.map((item, i) => ({
     ...item,
     id: `${cat}-${i}`,
     slug: slugify(item.name),
     category: cat,
-    imgIdx: i % PIZZA_IMAGES.length,
+    imgIdx:
+      cat === "salgada" && i === 0
+        ? 0
+        : 1 + ((cat === "doce" ? i + 5 : i) % (PIZZA_IMAGES.length - 1)),
     available: item.available ?? true,
   }));
 }
