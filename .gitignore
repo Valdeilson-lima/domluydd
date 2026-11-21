@@ -16,9 +16,10 @@ next-env.d.ts
 .env*.local
 .env
 
-# Next.js agent
+# Next.js agent & local AI skills
 AGENTS.md
 .taste-skill/
+.agents/
 
 # OS
 .DS_Store
