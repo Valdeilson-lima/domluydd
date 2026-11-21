@@ -8,14 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { allPizzas } from "@/data/pizzas";
-import { combos } from "@/data/combos";
-import { bebidas } from "@/data/drinks";
 import { normalizeText } from "@/lib/utils";
+import type { CatalogSnapshot } from "@/types";
 
 interface StockModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  catalog?: CatalogSnapshot;
   isPaused: (name: string) => boolean;
   onToggleStock: (name: string, available: boolean) => Promise<void>;
 }
@@ -23,6 +22,7 @@ interface StockModalProps {
 export function StockModal({
   open,
   onOpenChange,
+  catalog,
   isPaused,
   onToggleStock,
 }: StockModalProps) {
@@ -31,20 +31,23 @@ export function StockModal({
   const [error, setError] = useState<string | null>(null);
 
   const catalogItems = useMemo(() => {
+    const pizzasSource = catalog?.pizzas ?? [];
+    const combosSource = catalog?.combos ?? [];
+    const drinksSource = catalog?.drinks ?? [];
     const list = [
-      ...allPizzas.map((p) => ({
+      ...pizzasSource.map((p) => ({
         id: p.id,
         name: p.name,
         group: p.category === "doce" ? "Pizza doce" : "Pizza salgada",
       })),
-      ...combos.map((c) => ({ id: c.id, name: c.name, group: "Combo" })),
-      ...bebidas.map((d) => ({ id: d.id, name: d.name, group: "Bebida" })),
+      ...combosSource.map((c) => ({ id: c.id, name: c.name, group: "Combo" })),
+      ...drinksSource.map((d) => ({ id: d.id, name: d.name, group: "Bebida" })),
     ];
 
     const q = normalizeText(query);
     if (!q) return list;
     return list.filter((it) => normalizeText(it.name).includes(q));
-  }, [query]);
+  }, [catalog, query]);
 
   const handleToggle = async (name: string, currentlyPaused: boolean) => {
     setBusyName(name);
@@ -64,12 +67,10 @@ export function StockModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-xl flex-col border border-border bg-background text-foreground p-6">
-        <DialogHeader className="text-left">
-          <DialogTitle className="font-serif text-2xl font-normal text-foreground">
-            Disponibilidade de sabores e bebidas
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+      <DialogContent className="flex max-h-[90vh] max-w-xl flex-col">
+        <DialogHeader>
+          <DialogTitle>Disponibilidade de sabores e bebidas</DialogTitle>
+          <DialogDescription>
             Itens pausados ficam indisponíveis no cardápio e no seletor meio a
             meio imediatamente.
           </DialogDescription>
@@ -87,20 +88,19 @@ export function StockModal({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ex.: Marguerita, combo ou bebida…"
-            className="min-h-11 w-full border border-input bg-card px-3 text-base text-foreground sm:text-sm"
-            style={{ borderRadius: "2px" }}
+            className="min-h-11 w-full rounded-xl border border-input bg-card px-3 text-base text-foreground sm:text-sm"
           />
           {error && (
             <p
               role="alert"
-              className="border border-foreground bg-secondary px-3 py-2 text-xs font-semibold"
+              className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive"
             >
               {error}
             </p>
           )}
         </div>
 
-        <ul className="mt-3 flex-1 divide-y divide-border overflow-y-auto border border-border bg-card">
+        <ul className="mt-3 flex-1 divide-y divide-border overflow-y-auto rounded-xl border border-border bg-card">
           {catalogItems.map((item) => {
             const paused = isPaused(item.name);
             const busy = busyName === item.name;
@@ -110,7 +110,7 @@ export function StockModal({
                 className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
               >
                 <div>
-                  <p className="font-semibold text-foreground">{item.name}</p>
+                  <p className="font-bold text-foreground">{item.name}</p>
                   <p className="text-xs text-muted-foreground">{item.group}</p>
                 </div>
 
@@ -118,12 +118,11 @@ export function StockModal({
                   type="button"
                   disabled={busy}
                   onClick={() => handleToggle(item.name, paused)}
-                  className={`h-11 border px-3 text-xs font-semibold ${
+                  className={`min-h-10 rounded-xl border px-3.5 text-xs font-bold transition-colors ${
                     paused
-                      ? "border-foreground bg-primary text-primary-foreground"
+                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary-hover"
                       : "border-border bg-background text-foreground hover:bg-secondary"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 >
                   {busy ? "Salvando…" : paused ? "Retomar" : "Pausar"}
                 </button>

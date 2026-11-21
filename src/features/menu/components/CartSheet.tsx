@@ -55,12 +55,12 @@ export function CartSheet({
         {cart.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
             <span
-              className="flex size-12 items-center justify-center border border-border bg-card text-muted-foreground"
+              className="flex size-14 items-center justify-center rounded-2xl border border-border bg-secondary text-primary"
               aria-hidden="true"
             >
-              <ShoppingBag className="size-5" />
+              <ShoppingBag className="size-6" />
             </span>
-            <p className="font-serif text-xl text-foreground">
+            <p className="font-serif text-xl font-bold text-foreground">
               Sua sacola está vazia
             </p>
             <p className="max-w-xs text-sm text-muted-foreground">
@@ -70,8 +70,7 @@ export function CartSheet({
             <button
               type="button"
               onClick={() => handleOpenChange(false)}
-              className="mt-2 inline-flex min-h-11 items-center border border-foreground bg-secondary px-5 text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-              style={{ borderRadius: "2px" }}
+              className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               Explorar sabores
             </button>
@@ -81,21 +80,25 @@ export function CartSheet({
             {cart.map((item, idx) => (
               <div
                 key={item.id}
-                className="space-y-2.5 border border-border bg-card p-4"
+                className="space-y-2.5 rounded-xl border border-border bg-card p-4 shadow-xs"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-serif text-base leading-snug text-foreground">
+                    <p className="font-serif text-base font-bold leading-snug text-foreground">
                       {item.flavors.map((f) => f.name).join(" + ")}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Tamanho {item.size}
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {item.category === "combo"
+                        ? "Combo da casa"
+                        : item.category === "bebida"
+                          ? "Bebida gelada"
+                          : `Tamanho ${item.size}`}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => onRemove(idx)}
-                    className="flex size-11 -mr-2 -mt-2 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex size-10 -mr-2 -mt-2 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     aria-label={`Remover ${item.flavors.map((f) => f.name).join(" + ")} da sacola`}
                   >
                     <Trash2 className="size-4" aria-hidden="true" />
@@ -119,13 +122,15 @@ export function CartSheet({
                   </p>
                 )}
                 {item.observation && (
-                  <p className="text-xs text-muted-foreground">
-                    Obs.: {item.observation}
+                  <p className="rounded-lg bg-secondary/70 px-2.5 py-1.5 text-xs leading-relaxed text-foreground">
+                    {item.category === "combo"
+                      ? item.observation
+                      : `Obs.: ${item.observation}`}
                   </p>
                 )}
 
                 <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center border border-border bg-background">
+                  <div className="flex items-center overflow-hidden rounded-lg border border-border bg-background">
                     <button
                       type="button"
                       onClick={() => onUpdateQty(idx, -1)}
@@ -134,7 +139,7 @@ export function CartSheet({
                     >
                       −
                     </button>
-                    <span className="w-9 text-center font-mono text-xs font-semibold tabular-nums">
+                    <span className="w-9 text-center text-xs font-bold tabular-nums">
                       {item.qty}
                     </span>
                     <button
@@ -147,7 +152,7 @@ export function CartSheet({
                     </button>
                   </div>
 
-                  <p className="font-mono text-sm font-semibold text-foreground tabular-nums">
+                  <p className="text-sm font-extrabold text-foreground tabular-nums">
                     R$ {formatPrice(item.price * item.qty)}
                   </p>
                 </div>
@@ -160,24 +165,23 @@ export function CartSheet({
           <div className="space-y-3 border-t border-border bg-background px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-muted-foreground">
-                Subtotal (taxa calculada na entrega)
+                Subtotal (taxa na entrega)
               </span>
-              <span className="font-mono text-lg font-semibold text-foreground tabular-nums">
+              <span className="text-lg font-extrabold text-foreground tabular-nums">
                 R$ {formatPrice(subtotal)}
               </span>
             </div>
 
             {confirmingClear ? (
-              <div className="flex items-center justify-between gap-2 border border-foreground bg-secondary p-2.5 text-xs">
-                <span className="font-semibold text-foreground">
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs">
+                <span className="font-bold text-destructive">
                   Esvaziar toda a sacola?
                 </span>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setConfirmingClear(false)}
-                    className="min-h-9 border border-border bg-background px-3 font-semibold text-foreground"
-                    style={{ borderRadius: "2px" }}
+                    className="min-h-9 rounded-lg border border-border bg-card px-3 font-semibold text-foreground"
                   >
                     Manter
                   </button>
@@ -187,10 +191,9 @@ export function CartSheet({
                       onClear();
                       setConfirmingClear(false);
                     }}
-                    className="min-h-9 bg-primary px-3 font-semibold text-primary-foreground"
-                    style={{ borderRadius: "2px" }}
+                    className="min-h-9 rounded-lg bg-destructive px-3 font-bold text-destructive-foreground"
                   >
-                    Sim, limpar
+                    Limpar
                   </button>
                 </div>
               </div>
@@ -200,16 +203,14 @@ export function CartSheet({
               <button
                 type="button"
                 onClick={() => setConfirmingClear(true)}
-                className="min-h-11 border border-border bg-secondary px-4 text-xs font-semibold text-foreground transition-colors hover:border-foreground hover:bg-background"
-                style={{ borderRadius: "2px" }}
+                className="min-h-12 rounded-xl border border-border bg-secondary px-4 text-xs font-bold text-foreground transition-colors hover:bg-card"
               >
                 Limpar
               </button>
               <button
                 type="button"
                 onClick={onCheckout}
-                className="min-h-11 flex-1 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.985]"
-                style={{ borderRadius: "2px" }}
+                className="min-h-12 flex-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm transition-[background-color,transform] duration-150 hover:bg-primary-hover active:scale-[0.985]"
               >
                 Continuar para entrega
               </button>

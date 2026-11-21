@@ -25,12 +25,10 @@ export function OvenSummaryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border border-border bg-background text-foreground p-6">
-        <DialogHeader className="text-left">
-          <DialogTitle className="font-serif text-2xl font-normal text-foreground">
-            Resumo do forno e bancada
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Resumo do forno e bancada</DialogTitle>
+          <DialogDescription>
             Total acumulado nos pedidos Novos e Em preparo (
             {summary.totalPizzas} pizzas na fila; meias contam como 0,5).
           </DialogDescription>

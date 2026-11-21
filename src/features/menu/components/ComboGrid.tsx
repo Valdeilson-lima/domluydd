@@ -16,14 +16,15 @@ export function ComboGrid({ combos, isPaused, onAdd }: ComboGridProps) {
     <section className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3">
         <div>
-          <h2 className="font-serif text-2xl font-normal text-foreground sm:text-3xl">
+          <h2 className="font-serif text-2xl font-extrabold text-foreground sm:text-3xl">
             Combos da casa
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Combinações com preço fechado e refrigerante incluso.
+            Combinações com preço fechado, escolha de sabores e refrigerante
+            incluso.
           </p>
         </div>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
           {combos.length} {combos.length === 1 ? "combo" : "combos"}
         </span>
       </div>

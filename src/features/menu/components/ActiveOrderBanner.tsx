@@ -79,27 +79,28 @@ export function ActiveOrderBanner() {
 
   return (
     <div
-      className="border-b border-foreground/20 bg-primary px-4 py-3 text-primary-foreground sm:px-6"
+      className="border-b border-primary-hover bg-primary px-4 py-3 text-primary-foreground sm:px-6"
       role="region"
       aria-label="Pedido em andamento"
       aria-live="polite"
     >
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <StatusIcon className="size-4 shrink-0" aria-hidden="true" />
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/15">
+            <StatusIcon className="size-4" aria-hidden="true" />
+          </span>
           <div className="min-w-0">
-            <p className="font-mono text-xs uppercase tracking-wider opacity-85 tabular-nums">
+            <p className="font-mono text-xs uppercase tracking-wider text-white/85 tabular-nums">
               Pedido #{activeOrder.id.slice(0, 8)} · R${" "}
               {formatPrice(activeOrder.total)}
             </p>
-            <p className="text-sm font-semibold">{meta.label}</p>
+            <p className="text-sm font-bold">{meta.label}</p>
           </div>
         </div>
 
         <Link
           href={`/pedido/${activeOrder.id}`}
-          className="inline-flex min-h-11 items-center gap-1.5 bg-background px-4 text-xs font-semibold text-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
-          style={{ borderRadius: "2px" }}
+          className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-xs font-extrabold text-primary shadow-xs transition-[background-color,transform] duration-150 hover:bg-background active:scale-[0.98]"
         >
           Acompanhar pedido
           <ArrowRight className="size-3.5" aria-hidden="true" />

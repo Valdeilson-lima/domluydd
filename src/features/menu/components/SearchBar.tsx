@@ -38,7 +38,7 @@ export function SearchBar({
   return (
     <section
       aria-label="Busca e categorias do cardápio"
-      className="border-b border-border bg-background/95 py-3 backdrop-blur-sm md:sticky md:top-16 md:z-20 md:py-3.5"
+      className="border-b border-border bg-background/95 py-3 backdrop-blur-md md:sticky md:top-16 md:z-20 md:py-3.5"
     >
       <div className="mx-auto max-w-6xl space-y-2.5 px-4 sm:px-6">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-3">
@@ -58,14 +58,13 @@ export function SearchBar({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Buscar sabor, ingrediente ou combo…"
-              className="min-h-11 w-full border border-input bg-card pl-10 pr-11 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
-              style={{ borderRadius: "2px" }}
+              className="min-h-11 w-full rounded-xl border border-input bg-card pl-10 pr-11 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => onSearchChange("")}
-                className="absolute right-0.5 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-0.5 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
                 aria-label="Limpar busca"
               >
                 <X className="size-4" aria-hidden="true" />
@@ -87,17 +86,18 @@ export function SearchBar({
                   role="tab"
                   aria-selected={selected}
                   onClick={() => onTabChange(tab.id)}
-                  className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] sm:px-3.5 ${
+                  className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
                     selected
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border bg-card text-foreground hover:bg-secondary"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "border border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`font-mono text-[11px] tabular-nums ${
-                      selected ? "opacity-85" : "text-muted-foreground"
+                    className={`rounded-full px-1.5 py-0.2 text-[11px] tabular-nums ${
+                      selected
+                        ? "bg-white/20 text-white"
+                        : "bg-secondary text-muted-foreground"
                     }`}
                   >
                     {counts[tab.id]}
@@ -122,12 +122,11 @@ export function SearchBar({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => onTagChange(tag)}
-                    className={`min-h-9 shrink-0 border px-3 text-xs font-medium transition-[background-color,color,border-color] duration-150 ${
+                    className={`min-h-9 shrink-0 rounded-full border px-3 text-xs font-semibold transition-[background-color,color,border-color] duration-150 ${
                       selected
-                        ? "border-foreground bg-secondary font-semibold text-foreground"
-                        : "border-border bg-transparent text-muted-foreground hover:border-foreground/50 hover:text-foreground"
+                        ? "border-primary/40 bg-accent-gold-soft text-accent-gold-ink"
+                        : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                     }`}
-                    style={{ borderRadius: "2px" }}
                   >
                     {tag}
                   </button>
@@ -139,7 +138,7 @@ export function SearchBar({
           )}
 
           <p
-            className="shrink-0 font-mono text-xs font-medium text-muted-foreground tabular-nums"
+            className="shrink-0 text-xs font-semibold text-muted-foreground tabular-nums"
             aria-live="polite"
           >
             {totalResults}{" "}

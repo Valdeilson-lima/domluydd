@@ -1,9 +1,7 @@
 import {
-  COMMON_REMOVALS,
-  CRUST_OPTIONS,
-  EXTRA_INGREDIENTS,
-  SWEET_REMOVALS,
-} from "@/data/pizzas";
+  DEFAULT_COMMON_REMOVALS,
+  DEFAULT_SWEET_REMOVALS,
+} from "@/lib/store-config";
 import { normalizeText } from "@/lib/utils";
 import type { Combo, Drink, Pizza, PizzaCategory } from "@/types";
 
@@ -72,14 +70,6 @@ export function filterCombos(list: Combo[], search?: string): Combo[] {
   });
 }
 
-export function getCrustOptionsForCategory(category: PizzaCategory) {
-  return CRUST_OPTIONS.filter((c) => c.compatibleWith.includes(category));
-}
-
-export function getExtraIngredientsForCategory(category: PizzaCategory) {
-  return EXTRA_INGREDIENTS.filter((e) => e.compatibleWith.includes(category));
-}
-
 export function getRemovalsForCategory(category: PizzaCategory): string[] {
-  return category === "doce" ? SWEET_REMOVALS : COMMON_REMOVALS;
+  return category === "doce" ? DEFAULT_SWEET_REMOVALS : DEFAULT_COMMON_REMOVALS;
 }

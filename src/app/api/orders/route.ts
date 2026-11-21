@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequestAuthorized } from "@/lib/admin-auth";
+import { applyRefreshedCookies, requireAdminSession } from "@/lib/admin-auth";
+import { getFullCatalog } from "@/lib/catalog-store";
 import {
   calculateOrderTotals,
   findBairroFee,
@@ -9,7 +10,6 @@ import {
   createOrder,
   getEffectiveStoreStatus,
   getOrderById,
-  getPausedItems,
   listOrders,
   updateOrderStatus,
 } from "@/lib/server-store";
@@ -26,16 +26,17 @@ const VALID_ORDER_STATUSES: OrderStatus[] = [
 ];
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequestAuthorized(request)) {
-    return NextResponse.json(
-      { error: "Autenticação administrativa necessária." },
-      { status: 401 }
-    );
+  const auth = await requireAdminSession(request, ["owner", "kitchen"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
     const orders = await listOrders(100);
-    return NextResponse.json({ orders });
+    return applyRefreshedCookies(
+      NextResponse.json({ orders }),
+      auth.refreshedTokens
+    );
   } catch {
     return NextResponse.json(
       { error: "Erro ao carregar pedidos." },
@@ -93,6 +94,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const catalog = await getFullCatalog();
+
     if (deliveryType === "delivery") {
       if (!address) {
         return NextResponse.json(
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      if (!bairro || findBairroFee(bairro) === null) {
+      if (!bairro || findBairroFee(bairro, catalog.bairros) === null) {
         return NextResponse.json(
           { error: "Selecione um bairro atendido válido para entrega." },
           { status: 400 }
@@ -108,8 +111,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const pausedItems = await getPausedItems();
-    const repriced = validateAndRepriceItems(rawItems, pausedItems);
+    const repriced = validateAndRepriceItems(rawItems, [], catalog);
     if (!repriced.ok) {
       return NextResponse.json({ error: repriced.error }, { status: 400 });
     }
@@ -118,6 +120,7 @@ export async function POST(request: NextRequest) {
       items: repriced.items,
       deliveryType,
       bairroName: bairro,
+      bairros: catalog.bairros,
     });
 
     if (
@@ -178,11 +181,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!isAdminRequestAuthorized(request)) {
-    return NextResponse.json(
-      { error: "Autenticação administrativa necessária." },
-      { status: 401 }
-    );
+  const auth = await requireAdminSession(request, ["owner", "kitchen"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
@@ -217,11 +218,14 @@ export async function PATCH(request: NextRequest) {
         ? await sendOrderWhatsAppNotification(updated, updated.status)
         : false;
 
-    return NextResponse.json({
-      ...updated,
-      whatsapp_accepted: whatsappAccepted,
-      whatsapp_sent: whatsappAccepted,
-    });
+    return applyRefreshedCookies(
+      NextResponse.json({
+        ...updated,
+        whatsapp_accepted: whatsappAccepted,
+        whatsapp_sent: whatsappAccepted,
+      }),
+      auth.refreshedTokens
+    );
   } catch {
     return NextResponse.json(
       { error: "Erro ao atualizar pedido." },

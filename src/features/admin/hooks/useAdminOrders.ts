@@ -21,6 +21,8 @@ export function useAdminOrders({
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const hasLoadedOnceRef = useRef(false);
   const onNewOrderRef = useRef(onNewOrder);
   const onUnauthorizedRef = useRef(onUnauthorized);
   const soundEnabledRef = useRef(soundEnabled);
@@ -95,7 +97,19 @@ export function useAdminOrders({
       }
       const data = await res.json();
       if (Array.isArray(data.orders)) {
-        setOrders(data.orders);
+        const incomingOrders = data.orders as DbOrder[];
+        if (hasLoadedOnceRef.current) {
+          const brandNew = incomingOrders.filter(
+            (o) => !seenIdsRef.current.has(o.id)
+          );
+          if (brandNew.length > 0) {
+            playAlertSound();
+            brandNew.forEach((o) => onNewOrderRef.current?.(o));
+          }
+        }
+        incomingOrders.forEach((o) => seenIdsRef.current.add(o.id));
+        hasLoadedOnceRef.current = true;
+        setOrders(incomingOrders);
         setError(null);
       }
     } catch {
@@ -103,14 +117,18 @@ export function useAdminOrders({
     } finally {
       setLoading(false);
     }
-  }, [enabled]);
+  }, [enabled, playAlertSound]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      hasLoadedOnceRef.current = false;
+      seenIdsRef.current.clear();
+      return;
+    }
     setLoading(true);
     refresh();
 
-    const interval = window.setInterval(refresh, 25000);
+    const interval = window.setInterval(refresh, 10000);
 
     let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null =
       null;

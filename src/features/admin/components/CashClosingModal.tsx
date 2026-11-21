@@ -57,12 +57,10 @@ export function CashClosingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border border-border bg-background text-foreground p-6">
-        <DialogHeader className="text-left">
-          <DialogTitle className="font-serif text-2xl font-normal text-foreground">
-            Fechamento de caixa
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Fechamento de caixa</DialogTitle>
+          <DialogDescription>
             Faturamento válido (excluindo cancelamentos), formas de pagamento e
             taxas de entrega.
           </DialogDescription>
@@ -73,84 +71,82 @@ export function CashClosingModal({
             <button
               type="button"
               onClick={() => setScope("today")}
-              className={`h-11 border px-4 text-xs font-semibold ${
+              className={`min-h-11 rounded-xl border px-4 text-xs font-bold transition-colors ${
                 scope === "today"
-                  ? "border-foreground bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
               }`}
-              style={{ borderRadius: "2px" }}
             >
               Turno de hoje
             </button>
             <button
               type="button"
               onClick={() => setScope("all")}
-              className={`h-11 border px-4 text-xs font-semibold ${
+              className={`min-h-11 rounded-xl border px-4 text-xs font-bold transition-colors ${
                 scope === "all"
-                  ? "border-foreground bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
               }`}
-              style={{ borderRadius: "2px" }}
             >
               Todo histórico carregado
             </button>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-4">
-            <div className="border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-xl border border-border bg-card p-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Faturamento
               </p>
-              <p className="mt-1 font-mono text-lg font-bold tabular-nums">
+              <p className="mt-1 text-lg font-extrabold text-primary tabular-nums">
                 R$ {formatPrice(stats.totalRevenue)}
               </p>
             </div>
-            <div className="border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-xl border border-border bg-card p-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Pedidos válidos
               </p>
-              <p className="mt-1 font-mono text-lg font-bold tabular-nums">
+              <p className="mt-1 text-lg font-extrabold tabular-nums">
                 {stats.validOrders.length}
               </p>
             </div>
-            <div className="border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-xl border border-border bg-card p-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Ticket médio
               </p>
-              <p className="mt-1 font-mono text-lg font-bold tabular-nums">
+              <p className="mt-1 text-lg font-extrabold tabular-nums">
                 R$ {formatPrice(stats.averageTicket)}
               </p>
             </div>
-            <div className="border border-border bg-card p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-xl border border-border bg-card p-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Cancelados
               </p>
-              <p className="mt-1 font-mono text-lg font-bold tabular-nums">
+              <p className="mt-1 text-lg font-extrabold tabular-nums">
                 {stats.cancelledOrders.length}
               </p>
             </div>
           </div>
 
-          <section className="space-y-2 border border-border bg-card p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <section className="space-y-2 rounded-xl border border-border bg-card p-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Totais por pagamento e logística
             </h3>
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex justify-between border-b border-border pb-1">
                 <dt>Pix ({stats.payments.pix.count}x)</dt>
-                <dd className="font-mono font-semibold tabular-nums">
+                <dd className="font-bold tabular-nums">
                   R$ {formatPrice(stats.payments.pix.total)}
                 </dd>
               </div>
               <div className="flex justify-between border-b border-border pb-1">
                 <dt>Cartão ({stats.payments.cartao.count}x)</dt>
-                <dd className="font-mono font-semibold tabular-nums">
+                <dd className="font-bold tabular-nums">
                   R$ {formatPrice(stats.payments.cartao.total)}
                 </dd>
               </div>
               <div className="flex justify-between border-b border-border pb-1">
                 <dt>Dinheiro ({stats.payments.dinheiro.count}x)</dt>
-                <dd className="font-mono font-semibold tabular-nums">
+                <dd className="font-bold tabular-nums">
                   R$ {formatPrice(stats.payments.dinheiro.total)}
                 </dd>
               </div>
@@ -159,7 +155,7 @@ export function CashClosingModal({
                   Taxas entrega ({stats.deliveryCount} ent. /{" "}
                   {stats.takeawayCount} ret.)
                 </dt>
-                <dd className="font-mono font-semibold tabular-nums">
+                <dd className="font-bold tabular-nums">
                   R$ {formatPrice(stats.totalDeliveryFees)}
                 </dd>
               </div>
@@ -168,17 +164,17 @@ export function CashClosingModal({
 
           {stats.topFlavors.length > 0 && (
             <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Sabores mais vendidos no período
               </h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {stats.topFlavors.map(([name, qty]) => (
                   <div
                     key={name}
-                    className="flex justify-between border border-border bg-card px-3 py-2 text-xs"
+                    className="flex justify-between rounded-xl border border-border bg-card px-3 py-2 text-xs"
                   >
-                    <span>{name}</span>
-                    <span className="font-mono font-semibold">{qty}x</span>
+                    <span className="font-semibold">{name}</span>
+                    <span className="font-mono font-bold">{qty}x</span>
                   </div>
                 ))}
               </div>
@@ -188,10 +184,9 @@ export function CashClosingModal({
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90"
-            style={{ borderRadius: "2px" }}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary-hover"
           >
-            <Printer className="h-4 w-4" aria-hidden="true" />
+            <Printer className="size-4" aria-hidden="true" />
             Imprimir fechamento de caixa
           </button>
         </div>

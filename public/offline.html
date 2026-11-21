@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#f8f5ef" />
+    <meta name="theme-color" content="#c81e1e" />
     <title>Sem conexão | Don Luydd Pizzaria</title>
     <style>
       * {
@@ -18,10 +18,10 @@
         display: grid;
         place-items: center;
         padding: 24px;
-        background: #f8f5ef;
-        color: #1f1b18;
+        background: #fffbf5;
+        color: #1c1512;
         font-family:
-          "Roboto",
+          "Plus Jakarta Sans",
           system-ui,
           -apple-system,
           sans-serif;
@@ -30,27 +30,38 @@
       main {
         width: 100%;
         max-width: 420px;
-        background: #fffdf9;
-        border: 1px solid rgba(31, 27, 24, 0.16);
+        background: #ffffff;
+        border: 1px solid rgba(28, 21, 18, 0.12);
+        border-radius: 16px;
         padding: 28px 24px;
+        box-shadow: 0 12px 32px -16px rgba(28, 21, 18, 0.18);
       }
-      .mark {
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        border: 4px solid #962413;
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         margin-bottom: 18px;
+      }
+      .brand img {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+      .brand strong {
+        font-size: 18px;
+        letter-spacing: -0.02em;
       }
       h1 {
         margin: 0 0 8px;
         font-size: 24px;
-        font-weight: 500;
-        letter-spacing: -0.02em;
+        font-weight: 800;
+        letter-spacing: -0.025em;
       }
       p {
         margin: 0 0 20px;
         font-size: 15px;
-        color: #534b43;
+        color: #5e524a;
       }
       .actions {
         display: flex;
@@ -64,27 +75,35 @@
         justify-content: center;
         min-height: 44px;
         padding: 0 18px;
-        border-radius: 2px;
+        border-radius: 12px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         text-decoration: none;
         cursor: pointer;
       }
       button {
         border: 0;
-        background: #962413;
+        background: #c81e1e;
         color: #ffffff;
       }
       a {
-        border: 1px solid rgba(31, 27, 24, 0.22);
-        background: #f8f5ef;
-        color: #1f1b18;
+        border: 1px solid rgba(28, 21, 18, 0.18);
+        background: #f5ece0;
+        color: #1c1512;
       }
     </style>
   </head>
   <body>
     <main>
-      <div class="mark" aria-hidden="true"></div>
+      <div class="brand">
+        <img
+          src="/icons/icon-192.png"
+          alt="Don Luydd Pizzaria"
+          width="44"
+          height="44"
+        />
+        <strong>Don Luydd Pizzaria</strong>
+      </div>
       <h1>Você está sem internet</h1>
       <p>
         Assim que a conexão voltar, toque em tentar novamente para abrir o

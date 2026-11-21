@@ -39,13 +39,13 @@ export function OrderBoard({
           return (
             <section
               key={col.status}
-              className="min-h-55 space-y-3 border border-border bg-secondary/40 p-4"
+              className="min-h-55 space-y-3 rounded-2xl border border-border bg-secondary/50 p-4"
             >
-              <div className="flex items-center justify-between border-b border-border pb-2">
-                <h2 className="font-serif text-xl font-normal text-foreground">
+              <div className="flex items-center justify-between border-b border-border pb-2.5">
+                <h2 className="font-serif text-xl font-bold text-foreground">
                   {col.title}
                 </h2>
-                <span className="font-mono text-xs font-semibold text-muted-foreground">
+                <span className="rounded-full bg-card px-2.5 py-0.5 font-mono text-xs font-bold text-foreground shadow-2xs">
                   {columnOrders.length}
                 </span>
               </div>
@@ -104,12 +104,11 @@ export function OrderBoard({
             type="button"
             aria-pressed={filter === tab.id}
             onClick={() => onFilterChange(tab.id)}
-            className={`min-h-11 border px-3.5 text-xs font-semibold ${
+            className={`min-h-10 rounded-full border px-4 text-xs font-bold transition-colors ${
               filter === tab.id
-                ? "border-foreground bg-primary text-primary-foreground"
+                ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"
             }`}
-            style={{ borderRadius: "2px" }}
           >
             {tab.label}
           </button>
@@ -117,7 +116,7 @@ export function OrderBoard({
       </div>
 
       {visibleOrders.length === 0 ? (
-        <div className="border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Nenhum pedido encontrado neste filtro.
         </div>
       ) : (

@@ -10,29 +10,52 @@ export interface Pizza {
   g: number;
   category: PizzaCategory;
   imgIdx: number;
+  image?: string;
   tags: string[];
   highlight?: boolean;
   available?: boolean;
+  sortOrder?: number;
 }
 
 export interface Drink {
   id: string;
+  slug?: string;
   name: string;
   icon: string;
   price: number;
   desc: string;
+  image?: string;
   tags: string[];
   available?: boolean;
+  sortOrder?: number;
+}
+
+export interface ComboPizzaSlot {
+  label: string;
+  category: PizzaCategory;
+  size: "P" | "M" | "G";
+  allowHalf: boolean;
+}
+
+export interface ComboDrinkSlot {
+  label: string;
+  options: string[];
 }
 
 export interface Combo {
   id: string;
+  slug?: string;
   name: string;
   desc: string;
   price: number;
   originalPrice: number;
   items: string[];
+  image?: string;
+  pizzaSlots: ComboPizzaSlot[];
+  drinkSlots?: ComboDrinkSlot[];
+  fixedDrinkLabel?: string;
   available?: boolean;
+  sortOrder?: number;
 }
 
 export interface CartItemFlavor {
@@ -42,16 +65,43 @@ export interface CartItemFlavor {
 
 export interface CrustOption {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   compatibleWith: PizzaCategory[];
+  available?: boolean;
+  sortOrder?: number;
 }
 
 export interface ExtraIngredient {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   compatibleWith: PizzaCategory[];
+  available?: boolean;
+  sortOrder?: number;
+}
+
+export interface DeliveryBairro {
+  id?: string;
+  nome: string;
+  frete: number;
+  active?: boolean;
+  sortOrder?: number;
+}
+
+export interface CatalogSnapshot {
+  source: "supabase" | "memory" | "defaults";
+  supabaseConnected: boolean;
+  hasServiceRoleKey: boolean;
+  needsSeed: boolean;
+  pizzas: Pizza[];
+  drinks: Drink[];
+  combos: Combo[];
+  crusts: CrustOption[];
+  extras: ExtraIngredient[];
+  bairros: DeliveryBairro[];
 }
 
 export interface CartItem {

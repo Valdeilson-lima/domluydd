@@ -74,10 +74,9 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         onClick={handleInstallClick}
-        className={`inline-flex min-h-11 items-center gap-2 border border-border bg-card font-semibold text-foreground transition-colors hover:border-primary hover:text-primary ${
+        className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card font-bold text-foreground transition-colors hover:border-primary hover:text-primary ${
           compact ? "px-3 text-xs" : "px-4 text-sm"
         }`}
-        style={{ borderRadius: "2px" }}
       >
         {isIos && !deferredPrompt ? (
           <Share className="size-4 shrink-0" aria-hidden="true" />
@@ -91,20 +90,17 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
         <div
           role="region"
           aria-label="Como instalar o aplicativo no iPhone"
-          className="relative max-w-xs border border-border bg-card p-3.5 pr-9 text-xs leading-relaxed text-muted-foreground"
-          style={{ borderRadius: "2px" }}
+          className="relative max-w-xs rounded-xl border border-border bg-card p-3.5 pr-9 text-xs leading-relaxed text-muted-foreground shadow-sm"
         >
           <button
             type="button"
             onClick={() => setShowIosGuide(false)}
-            className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center text-muted-foreground hover:text-foreground"
+            className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
             aria-label="Fechar instrução"
           >
             <X className="size-3.5" aria-hidden="true" />
           </button>
-          <p className="font-semibold text-foreground">
-            Instalar no iPhone/iPad
-          </p>
+          <p className="font-bold text-foreground">Instalar no iPhone/iPad</p>
           <p className="mt-1">
             Toque em <strong>Compartilhar</strong> na barra do Safari e depois
             em <strong>Adicionar à Tela de Início</strong>.

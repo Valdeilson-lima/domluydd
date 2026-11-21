@@ -17,7 +17,7 @@ const DialogOverlay = forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-[#1f1b18]/55 backdrop-blur-[2px] transition-opacity duration-200",
+      "fixed inset-0 z-50 bg-[#1c1512]/55 backdrop-blur-[2px] transition-opacity duration-200",
       className
     )}
     {...props}
@@ -26,7 +26,7 @@ const DialogOverlay = forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const CLOSE_BUTTON_CLASSES =
-  "absolute right-3.5 top-3.5 z-10 flex size-11 items-center justify-center border border-border bg-card text-foreground transition-[color,background-color,border-color,transform] duration-150 hover:border-foreground hover:bg-primary hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95 disabled:pointer-events-none";
+  "absolute right-3.5 top-3.5 z-10 flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-[color,background-color,border-color,transform] duration-150 hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95 disabled:pointer-events-none";
 
 const DialogContent = forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
@@ -37,17 +37,15 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain border border-foreground/25 bg-background p-6 text-foreground shadow-[0_24px_64px_-24px_rgba(45,7,10,0.45)]",
+        "fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain rounded-2xl border border-border bg-background p-6 text-foreground shadow-2xl shadow-foreground/25",
         className
       )}
-      style={{ borderRadius: "2px" }}
       {...props}
     >
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar janela"
         className={CLOSE_BUTTON_CLASSES}
-        style={{ borderRadius: "2px" }}
       >
         <X className="size-4" aria-hidden="true" />
       </DialogPrimitive.Close>
@@ -65,7 +63,7 @@ const DialogDrawerContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-md flex-col overflow-hidden overscroll-contain border-l border-foreground/25 bg-background text-foreground shadow-[-16px_0_48px_-20px_rgba(45,7,10,0.35)] animate-drawer-in",
+        "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-md flex-col overflow-hidden overscroll-contain border-l border-border bg-background text-foreground shadow-2xl animate-drawer-in",
         className
       )}
       {...props}
@@ -74,7 +72,6 @@ const DialogDrawerContent = forwardRef<
       <DialogPrimitive.Close
         aria-label="Fechar sacola"
         className={CLOSE_BUTTON_CLASSES}
-        style={{ borderRadius: "2px" }}
       >
         <X className="size-4" aria-hidden="true" />
       </DialogPrimitive.Close>
@@ -101,7 +98,7 @@ const DialogTitle = forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "font-serif text-2xl font-normal leading-tight tracking-tight text-foreground",
+      "font-serif text-2xl font-bold leading-tight tracking-tight text-foreground",
       className
     )}
     {...props}

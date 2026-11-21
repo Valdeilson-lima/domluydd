@@ -85,8 +85,25 @@ export function justifyLine(left: string, right: string, width = 48): string {
   return l + " ".repeat(spaces) + r;
 }
 
+export interface ReceiptStoreHeader {
+  storeName?: string;
+  ovenLabel?: string;
+  whatsappDisplay?: string;
+}
+
+export function isWebUsbSupported(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return Boolean((navigator as NavigatorWithUsb).usb);
+}
+
 // Monta o buffer de bytes ESC/POS para a Epson TM-T20
-export function buildEpsonEscPos(order: DbOrder): Uint8Array {
+export function buildEpsonEscPos(
+  order: DbOrder,
+  header?: ReceiptStoreHeader
+): Uint8Array {
+  const storeName = (header?.storeName || "DON LUYDD PIZZARIA").toUpperCase();
+  const ovenLabel = header?.ovenLabel || STORE_OVEN_LABEL;
+  const whatsappDisplay = header?.whatsappDisplay || STORE_WHATSAPP_DISPLAY;
   const bytes: number[] = [];
 
   const addBytes = (...arr: number[]) => {
@@ -112,10 +129,10 @@ export function buildEpsonEscPos(order: DbOrder): Uint8Array {
   // Cabeçalho da Pizzaria
   addBytes(...CMD.ALIGN_CENTER);
   addBytes(...CMD.DOUBLE_ON);
-  addLine("DON LUYDD PIZZARIA");
+  addLine(storeName);
   addBytes(...CMD.NORMAL_TEXT);
-  addLine(`Pizzas Artesanais - ${STORE_OVEN_LABEL}`);
-  addLine(`WhatsApp: ${STORE_WHATSAPP_DISPLAY}`);
+  addLine(`Pizzas Artesanais - ${ovenLabel}`);
+  addLine(`WhatsApp: ${whatsappDisplay}`);
   addLine("=".repeat(48));
 
   // Dados do Pedido
@@ -267,7 +284,8 @@ export function getConnectedUsbDevice(): USBDevice | null {
 
 export async function printOrderViaWebUsb(
   device: USBDevice,
-  order: DbOrder
+  order: DbOrder,
+  header?: ReceiptStoreHeader
 ): Promise<void> {
   if (!device.opened) {
     await device.open();
@@ -285,7 +303,7 @@ export async function printOrderViaWebUsb(
   );
 
   const endpointNumber = endpoint ? endpoint.endpointNumber : 1;
-  const data = buildEpsonEscPos(order);
+  const data = buildEpsonEscPos(order, header);
 
   // Envia os bytes para a impressora
   await device.transferOut(endpointNumber, data);
@@ -295,7 +313,13 @@ export async function printOrderViaWebUsb(
 // Browser Iframe Print: Para impressão silenciosa (--kiosk-printing)
 // -------------------------------------------------------------
 
-export function printOrderViaBrowser(order: DbOrder): void {
+export function printOrderViaBrowser(
+  order: DbOrder,
+  header?: ReceiptStoreHeader
+): void {
+  const storeName = (header?.storeName || "DON LUYDD PIZZARIA").toUpperCase();
+  const ovenLabel = header?.ovenLabel || STORE_OVEN_LABEL;
+  const whatsappDisplay = header?.whatsappDisplay || STORE_WHATSAPP_DISPLAY;
   const isDelivery = order.delivery_type === "delivery";
   const dateObj = new Date(order.created_at);
   const dateFormatted = dateObj.toLocaleDateString("pt-BR");
@@ -382,9 +406,9 @@ export function printOrderViaBrowser(order: DbOrder): void {
         </style>
       </head>
       <body>
-        <div class="center title">🍕 DON LUYDD PIZZARIA</div>
-        <div class="center" style="font-size: 11px;">${STORE_OVEN_LABEL}</div>
-        <div class="center" style="font-size: 11px;">WhatsApp: ${STORE_WHATSAPP_DISPLAY}</div>
+        <div class="center title">🍕 ${storeName}</div>
+        <div class="center" style="font-size: 11px;">${ovenLabel}</div>
+        <div class="center" style="font-size: 11px;">WhatsApp: ${whatsappDisplay}</div>
         <div class="double-divider"></div>
 
         <div class="row bold">

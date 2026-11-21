@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { allPizzas } from "@/data/pizzas";
 import { useCart } from "@/hooks/useCart";
+import { useCatalog } from "@/hooks/useCatalog";
 import { useStock } from "@/hooks/useStock";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { MenuHeader } from "@/features/menu/components/MenuHeader";
 import { PizzaImage } from "@/features/menu/components/PizzaImage";
 import { PizzaConfigurator } from "@/features/menu/components/PizzaConfigurator";
@@ -13,7 +14,8 @@ import { CartSheet } from "@/features/menu/components/CartSheet";
 import { CheckoutModal } from "@/features/menu/components/CheckoutModal";
 import { MenuFooter } from "@/features/menu/components/MenuFooter";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem, Pizza } from "@/types";
+import type { CartItem, CatalogSnapshot, Pizza } from "@/types";
+import type { StoreStatusData } from "@/types/store";
 
 interface ToastNotice {
   message: string;
@@ -21,7 +23,17 @@ interface ToastNotice {
   onAction?: () => void;
 }
 
-export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
+export function PizzaDetailClient({
+  pizza,
+  initialCatalog,
+  initialStoreStatus,
+}: {
+  pizza: Pizza;
+  initialCatalog?: CatalogSnapshot;
+  initialStoreStatus?: StoreStatusData;
+}) {
+  const { catalog } = useCatalog(initialCatalog);
+  const storeStatus = useStoreStatus(initialStoreStatus);
   const {
     cart,
     totalQty,
@@ -32,7 +44,13 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
     clearCart,
     setCartItems,
   } = useCart();
-  const { isPaused } = useStock();
+  const { isPaused: isStockPaused } = useStock();
+
+  const isPaused = (name: string) => {
+    if (isStockPaused(name)) return true;
+    const item = catalog.pizzas.find((p) => p.name === name);
+    return item?.available === false;
+  };
 
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -45,7 +63,7 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
     };
   }, []);
 
-  const related = allPizzas
+  const related = catalog.pizzas
     .filter((p) => p.category === pizza.category && p.id !== pizza.id)
     .slice(0, 3);
 
@@ -80,22 +98,21 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
         backHref="/cardapio"
         backLabel="Cardápio"
         alwaysShowBackLabel
+        initialStoreStatus={storeStatus}
       />
 
       {toast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 right-4 z-40 flex max-w-sm items-center justify-between gap-3 border border-foreground bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground shadow-md animate-toast-in sm:bottom-6"
-          style={{ borderRadius: "2px" }}
+          className="fixed bottom-20 right-4 z-40 flex max-w-sm items-center justify-between gap-3 rounded-xl bg-foreground px-4 py-3 text-xs font-semibold text-white shadow-xl animate-toast-in sm:bottom-6"
         >
           <span>{toast.message}</span>
           {toast.actionLabel && toast.onAction && (
             <button
               type="button"
               onClick={toast.onAction}
-              className="shrink-0 border border-primary-foreground/40 bg-primary-foreground/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary-foreground hover:text-primary"
-              style={{ borderRadius: "2px" }}
+              className="shrink-0 rounded-lg bg-accent-gold px-3 py-1.5 text-xs font-extrabold text-foreground transition-opacity hover:opacity-90"
             >
               {toast.actionLabel}
             </button>
@@ -111,61 +128,73 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
           aria-label="Navegação estrutural"
           className="flex items-center gap-2 text-xs text-muted-foreground"
         >
-          <Link href="/" className="hover:text-foreground">
+          <Link href="/" className="hover:text-primary">
             Início
           </Link>
           <span aria-hidden="true">/</span>
-          <Link href="/cardapio" className="hover:text-foreground">
+          <Link href="/cardapio" className="hover:text-primary">
             Cardápio
           </Link>
           <span aria-hidden="true">/</span>
-          <span className="font-semibold text-foreground" aria-current="page">
+          <span className="font-bold text-foreground" aria-current="page">
             {pizza.name}
           </span>
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
           <div className="space-y-4 lg:col-span-5">
-            <PizzaImage imgIdx={pizza.imgIdx} name={pizza.name} priority />
-            <div className="space-y-2 border border-border bg-card p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {pizza.category === "doce" ? "Pizza doce" : "Pizza salgada"}
-              </p>
-              <h1 className="font-serif text-3xl font-medium text-foreground">
-                {pizza.name}
-              </h1>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {pizza.desc}
-              </p>
-              <dl className="grid grid-cols-3 gap-2 border-t border-border pt-3 text-xs">
-                <div>
-                  <dt className="text-muted-foreground">Pequena (4)</dt>
-                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                    R$ {formatPrice(pizza.p)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Média (6)</dt>
-                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                    R$ {formatPrice(pizza.m)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Grande (8)</dt>
-                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
-                    R$ {formatPrice(pizza.g)}
-                  </dd>
-                </div>
-              </dl>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <PizzaImage
+                imgIdx={pizza.imgIdx}
+                image={pizza.image}
+                name={pizza.name}
+                priority
+              />
+              <div className="space-y-2.5 p-5">
+                <span className="inline-flex rounded-full bg-accent-gold-soft px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-accent-gold-ink">
+                  {pizza.category === "doce" ? "Pizza doce" : "Pizza salgada"}
+                </span>
+                <h1 className="font-serif text-3xl font-extrabold text-foreground">
+                  {pizza.name}
+                </h1>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {pizza.desc}
+                </p>
+                <dl className="grid grid-cols-3 gap-2 border-t border-border pt-3.5 text-xs">
+                  <div>
+                    <dt className="text-muted-foreground">Pequena (4)</dt>
+                    <dd className="text-sm font-extrabold text-foreground tabular-nums">
+                      R$ {formatPrice(pizza.p)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Média (6)</dt>
+                    <dd className="text-sm font-extrabold text-foreground tabular-nums">
+                      R$ {formatPrice(pizza.m)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Grande (8)</dt>
+                    <dd className="text-sm font-extrabold text-foreground tabular-nums">
+                      R$ {formatPrice(pizza.g)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
             </div>
           </div>
 
-          <div className="border border-border bg-card p-5 sm:p-6 lg:col-span-7">
-            <h2 className="mb-4 font-serif text-2xl font-medium text-foreground">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs sm:p-6 lg:col-span-7">
+            <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
               Personalize tamanho, borda e adicionais
             </h2>
             <PizzaConfigurator
               pizza={pizza}
+              allPizzas={catalog.pizzas}
+              crusts={catalog.crusts}
+              extras={catalog.extras}
+              commonRemovals={storeStatus.profile.commonRemovals}
+              sweetRemovals={storeStatus.profile.sweetRemovals}
               isPaused={isPaused}
               onConfirm={(item) => {
                 addToCart(item);
@@ -184,12 +213,12 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
 
         <section className="space-y-4 border-t border-border pt-8">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-serif text-2xl font-medium text-foreground">
+            <h2 className="font-serif text-2xl font-bold text-foreground">
               Outros sabores {pizza.category === "doce" ? "doces" : "salgados"}
             </h2>
             <Link
               href="/cardapio"
-              className="text-xs font-semibold underline underline-offset-4"
+              className="text-xs font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
             >
               Ver todo o cardápio
             </Link>
@@ -200,14 +229,18 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
               <Link
                 key={item.id}
                 href={`/pizza/${item.slug}`}
-                className="group border border-border bg-card transition-colors hover:border-foreground"
+                className="group overflow-hidden rounded-2xl border border-border bg-card shadow-xs transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
               >
-                <PizzaImage imgIdx={item.imgIdx} name={item.name} />
+                <PizzaImage
+                  imgIdx={item.imgIdx}
+                  image={item.image}
+                  name={item.name}
+                />
                 <div className="p-4">
-                  <p className="font-serif text-lg text-foreground group-hover:underline">
+                  <p className="font-serif text-lg font-bold text-foreground group-hover:text-primary">
                     {item.name}
                   </p>
-                  <p className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground tabular-nums">
                     A partir de R$ {formatPrice(item.p)}
                   </p>
                 </div>
@@ -217,7 +250,10 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
         </section>
       </main>
 
-      <MenuFooter />
+      <MenuFooter
+        profile={storeStatus.profile}
+        hoursLabel={storeStatus.hoursLabel}
+      />
 
       <CartBar
         totalQty={totalQty}
@@ -243,6 +279,8 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         cart={cart}
+        bairros={catalog.bairros}
+        initialStoreStatus={storeStatus}
         onOrderSuccess={clearCart}
       />
     </div>

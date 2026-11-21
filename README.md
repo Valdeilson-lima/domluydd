@@ -1,127 +1,91 @@
 <div align="center">
   <br />
-  <h1>🍕 Don Luydd Pizzaria</h1>
-  <p><strong>Cardápio Digital</strong></p>
-  <p>Catálogo interativo de pizzas artesanais com pedidos via WhatsApp</p>
+  <h1>Don Luydd Pizzaria</h1>
+  <p><strong>Vitrine, Cardápio Digital, Rastreio ao Vivo & Painel Admin/KDS</strong></p>
+  <p>Plataforma completa de pedidos online de pizzaria artesanal em João Pessoa (PB) com Next.js 16, Supabase (PostgreSQL + Auth + Realtime), Cloudinary, PWA e notificações no WhatsApp.</p>
   <br />
 </div>
 
-## Sobre
+## Visão Geral
 
-O **Don Luydd Pizzaria — Cardápio Digital** é uma aplicação web single-page desenvolvida para servir como cardápio digital interativo de uma pizzaria artesanal brasileira. Os clientes podem navegar por pizzas salgadas, pizzas doces e bebidas, personalizar pizzas meio a meio, montar um carrinho e enviar o pedido diretamente pelo WhatsApp — tudo sem backend, sem autenticação e sem banco de dados.
+A aplicação **Don Luydd Pizzaria** reúne em um único projeto Next.js (App Router):
 
-## Funcionalidades
-
-- **Cardápio completo** em 3 abas: Salgadas (32 sabores), Doces (6 sabores) e Bebidas
-- **Busca em tempo real** por nome ou descrição
-- **Personalização de pizzas**: seleção de tamanho (P/M/G) e opção meio a meio com dois sabores
-- **Visualizador de pizza**: representação visual das metades escolhidas
-- **Carrinho de compras** com barra flutuante e gaveta lateral
-- **Finalização via WhatsApp**: seleção de bairro (com cálculo de frete), endereço, forma de pagamento e troco
-- **Notificações toast** para feedback de ações
-- **Design responsivo e mobile-first**
-- **Tema escuro** com identidade visual de pizzaria
-- **Acessível**: navegação por teclado, atributos ARIA, link "pular para conteúdo"
+- **Vitrine (`/`)**: página inicial dinâmica com status de abertura em tempo real, destaques do forno, combos, horários configuráveis e bairros atendidos.
+- **Cardápio Digital (`/cardapio`)**: pizzas salgadas e doces, combos personalizáveis (sabores + refrigerantes) e bebidas geladas com busca, filtros e atualização em tempo real via Supabase Realtime.
+- **Páginas por sabor (`/pizza/[slug]`)**: páginas dinâmicas otimizadas para SEO (`sitemap.ts`, `robots.ts`, `llms.txt`) com configurador de tamanho (P/M/G), meio a meio, bordas recheadas, adicionais e retiradas configuráveis.
+- **Acompanhamento de pedido (`/pedido/[id]`)**: linha do tempo atualizada automaticamente em cada etapa do preparo e entrega, com atalho direto para o WhatsApp.
+- **Painel Admin & KDS (`/admin`)**:
+  - **Autenticação via Supabase Auth** com perfis **Dono (`owner`)** e **Cozinha (`kitchen`)** em cookies `HttpOnly`.
+  - **Pedidos (KDS)**: Kanban/Grade com alertas sonoros, controle de SLA (`>= 35 min`), resumo de forno, botão rápido de **Estoque** e fechamento de caixa (Dono).
+  - **Produtos (Dono)**: CRUD completo de Pizzas, Bebidas, Combos, Bordas/Adicionais e Bairros/Taxas com upload direto de fotos para o **Cloudinary**.
+  - **Configurações**: Loja Aberta/Fechada/Automático, dados de contato, chave PIX, grade semanal de horários, retiradas rápidas, **Impressora Térmica USB (ESC/POS 80mm)** e gestão de equipe.
+- **PWA instalável**: `manifest.webmanifest`, service worker ([public/sw.js](public/sw.js)) e página offline ([public/offline.html](public/offline.html)).
 
 ## Tecnologias
 
-|                                            |                                                             |
-| ------------------------------------------ | ----------------------------------------------------------- |
-| **Next.js 16 (App Router)**                | Framework React com Turbopack e SSR/SSG                     |
-| **React 19**                               | Interface de usuário                                        |
-| **Supabase (PostgreSQL + Realtime)**       | Banco de dados na nuvem e streaming de pedidos ao vivo      |
-| **TypeScript**                             | Tipagem estática                                            |
-| **Tailwind CSS 4**                         | Estilização utilitária com PostCSS                          |
-| **Radix UI**                               | Componentes headless acessíveis (Dialog, Select, Tabs, etc) |
-| **Lucide React**                           | Ícones                                                      |
-| **class-variance-authority**               | Variantes de componentes                                    |
-| **ESLint + Prettier + Husky + commitlint** | Qualidade e padronização de código                          |
+| Tecnologia                                  | Uso                                                                                                                    |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Next.js 16 (App Router)**                 | Renderização dinâmica SSR, API Routes e otimização de fontes (`Bricolage Grotesque` + `Plus Jakarta Sans`)             |
+| **React 19 + TypeScript 6**                 | Interface tipada e componentes interativos                                                                             |
+| **Tailwind CSS 4**                          | Design System unificado (_Forno Quente & Delivery Contemporâneo_)                                                      |
+| **Radix UI Dialog + Lucide React**          | Modais/gavetas acessíveis e iconografia                                                                                |
+| **Supabase (PostgreSQL + Auth + Realtime)** | Pedidos, catálogo dinâmico, configurações da loja, autenticação com perfis (`owner`/`kitchen`) e sincronização ao vivo |
+| **Cloudinary**                              | Hospedagem e otimização (`f_auto,q_auto`) de fotos de produtos (apenas a URL é salva no Supabase)                      |
+| **Evolution API**                           | Disparo automático de atualizações de status via WhatsApp                                                              |
+| **ESLint + Prettier + Husky + commitlint**  | Padronização e qualidade de código                                                                                     |
 
-## Como usar
+## Como executar localmente
 
 ```bash
 # 1. Instalar dependências
 npm install
 
-# 2. Configurar variáveis de ambiente do Supabase (opcional para modo local)
+# 2. Configurar variáveis de ambiente
 cp .env.example .env.local
 
-# 3. Iniciar servidor de desenvolvimento (Next.js Turbopack)
+# 3. Iniciar servidor de desenvolvimento
 npm run dev
 
-# 4. Build de produção
-npm run build
+# 4. Verificar tipos, lint e build de produção
+npx tsc --noEmit && npm run lint && npm run build
 
-# 5. Iniciar servidor de produção
+# 5. Iniciar em produção
 npm run start
 ```
 
-## Painel da Cozinha & Gestão (`/admin`)
+## Configuração do Supabase + Cloudinary
 
-- Acesse `http://localhost:3000/admin`
-- **PIN Padrão:** `1234`
-- Acompanhamento em tempo real de novos pedidos com alerta sonoro
-- Atualização de status: _Pendente_ ➔ _No Forno_ ➔ _A Caminho/Pronto_ ➔ _Concluído_
-- Botão para imprimir comanda térmica de produção
-- Notificação de status direto no WhatsApp do cliente
+1. Crie um projeto em [supabase.com](https://supabase.com).
+2. No **SQL Editor**, execute [`supabase/schema.sql`](supabase/schema.sql) para criar as tabelas (`orders`, `store_settings`, `admin_users`, `pizzas`, `drinks`, `combos`, `crust_options`, `extra_ingredients`, `delivery_neighborhoods`), políticas RLS e publicação Realtime.
+3. Configure as variáveis no `.env.local` (ou no provedor de hospedagem):
+   - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (**somente servidor**, nunca com prefixo `NEXT_PUBLIC_`)
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET` (ou `CLOUDINARY_UPLOAD_PRESET`)
+   - `NEXT_PUBLIC_SITE_URL` e variáveis da `EVOLUTION_*` (opcional para WhatsApp automático)
+4. Acesse `/admin` para criar a primeira conta de **Dono** (Supabase Auth) e gerenciar o catálogo e configurações diretamente no banco.
 
-## Configuração do Supabase
+## Estrutura Principal
 
-1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
-2. No painel do Supabase, abra o **SQL Editor** e execute o script `supabase/schema.sql`.
-3. Copie a **URL do Projeto** e a **Anon Key** para o seu arquivo `.env.local`.
-
-## Como funciona
-
-1. O cliente abre o cardápio no navegador
-2. Navega pelas abas de pizzas salgadas, doces ou bebidas
-3. Pesquisa por nome ou descrição (opcional)
-4. Clica em uma pizza para abrir o modal de detalhes
-5. Escolhe tamanho, ativa meio a meio (opcional) e seleciona os sabores
-6. Adiciona ao carrinho
-7. Revisa os itens no carrinho e clica em "Finalizar Pedido"
-8. Preenche bairro, endereço e forma de pagamento
-9. O pedido é enviado via WhatsApp para a pizzaria
-
-## Estrutura
-
-```
+```text
 src/
-├── App.tsx                  # Componente raiz
-├── main.tsx                 # Entry point
-├── index.css                # Estilos globais e tema
-├── types/index.ts           # Interfaces TypeScript
-├── data/
-│   ├── pizzas.ts            # Catálogo de pizzas
-│   ├── drinks.ts            # Catálogo de bebidas
-│   └── bairros.ts           # Bairros com taxa de entrega
-├── hooks/
-│   └── useCart.ts           # Estado do carrinho
-├── lib/
-│   └── utils.ts             # Utilitários (cn, formatPrice)
-└── components/
-    ├── Header.tsx           # Cabeçalho com abas de navegação
-    ├── Hero.tsx             # Banner principal
-    ├── SearchBar.tsx        # Campo de busca
-    ├── PizzaCard.tsx        # Card de pizza na listagem
-    ├── PizzaGrid.tsx        # Grade de pizzas
-    ├── DrinkCard.tsx        # Card de bebida na listagem
-    ├── DrinkGrid.tsx        # Grade de bebidas
-    ├── DetailModal.tsx      # Modal de detalhes e personalização
-    ├── PizzaVisualizer.tsx  # Visualizador de pizza meio a meio
-    ├── CartBar.tsx          # Barra flutuante do carrinho
-    ├── CartSheet.tsx        # Gaveta lateral do carrinho
-    ├── CheckoutModal.tsx    # Formulário de finalização
-    ├── Footer.tsx           # Rodapé
-    └── ui/                  # Wrappers dos componentes Radix UI
-```
-
-## Deploy
-
-O build gera uma pasta `dist/` com arquivos estáticos. Pode ser hospedado em qualquer servidor estático:
-
-```bash
-npm run build
+├── app/
+│   ├── (app)/
+│   │   ├── layout.tsx               # Layout raiz com Bricolage Grotesque + Plus Jakarta Sans
+│   │   ├── app.css                  # Tokens visuais e estilos globais Tailwind v4
+│   │   ├── page.tsx                 # Vitrine inicial (/)
+│   │   ├── cardapio/page.tsx        # Cardápio interativo (/cardapio)
+│   │   ├── pizza/[slug]/            # Página dinâmica de cada sabor
+│   │   ├── pedido/[id]/             # Rastreamento do pedido em tempo real
+│   │   └── admin/                   # Painel Admin/KDS + /admin/reset-password
+│   ├── api/                         # API Routes (catalog, orders, stock, store-status, admin/*)
+│   ├── manifest.ts                  # Web App Manifest (PWA)
+│   └── robots.ts / sitemap.ts       # SEO
+├── components/                      # BrandMark, PWA e Dialog/Drawer (Radix UI)
+├── features/
+│   ├── menu/                        # Cardápio, configurador pizza/combo, sacola e checkout
+│   └── admin/                       # KDS, Produtos, Configurações/PIX/Equipe, Estoque e ESC/POS
+├── hooks/                           # useCart, useCatalog (Realtime), useStock, useStoreStatus
+└── lib/                             # Supabase server/public, auth RBAC, precificação, Cloudinary media, WhatsApp
 ```
 
 ## Licença

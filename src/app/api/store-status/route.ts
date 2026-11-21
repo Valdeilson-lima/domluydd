@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequestAuthorized } from "@/lib/admin-auth";
-import { getEffectiveStoreStatus, saveStoreSettings } from "@/lib/server-store";
-import type { StoreMode } from "@/types/store";
+import { applyRefreshedCookies, requireAdminSession } from "@/lib/admin-auth";
+import {
+  getEffectiveStoreStatus,
+  saveStoreProfile,
+  saveStoreSettings,
+} from "@/lib/server-store";
+import type { StoreMode, StoreProfile } from "@/types/store";
 
 const VALID_MODES: StoreMode[] = ["auto", "open", "closed"];
 
 export async function GET() {
   try {
     const status = await getEffectiveStoreStatus();
-    return NextResponse.json(status);
+    return NextResponse.json(status, {
+      headers: { "cache-control": "no-store" },
+    });
   } catch {
     return NextResponse.json(
       { error: "Erro ao consultar status da loja." },
@@ -18,11 +24,9 @@ export async function GET() {
 }
 
 async function handleUpdateStoreStatus(request: NextRequest) {
-  if (!isAdminRequestAuthorized(request)) {
-    return NextResponse.json(
-      { error: "Autenticação administrativa necessária." },
-      { status: 401 }
-    );
+  const auth = await requireAdminSession(request, ["owner"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
@@ -46,7 +50,10 @@ async function handleUpdateStoreStatus(request: NextRequest) {
       mode,
       custom_message: customMessage,
     });
-    return NextResponse.json(updated);
+    return applyRefreshedCookies(
+      NextResponse.json(updated),
+      auth.refreshedTokens
+    );
   } catch {
     return NextResponse.json(
       { error: "Erro ao salvar status da loja." },
@@ -61,4 +68,33 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   return handleUpdateStoreStatus(request);
+}
+
+/** Atualização completa das Configurações da Loja (PIX, horários, contato, retiradas) — somente Dono. */
+export async function PUT(request: NextRequest) {
+  const auth = await requireAdminSession(request, ["owner"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  try {
+    const body = (await request.json()) as Partial<StoreProfile>;
+    const result = await saveStoreProfile(body);
+    if (!result.ok || !result.status) {
+      return NextResponse.json(
+        { error: result.error || "Não foi possível salvar as configurações." },
+        { status: 400 }
+      );
+    }
+
+    return applyRefreshedCookies(
+      NextResponse.json(result.status),
+      auth.refreshedTokens
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "Erro ao salvar configurações da loja." },
+      { status: 500 }
+    );
+  }
 }

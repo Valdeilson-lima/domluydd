@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { bairros } from "@/data/bairros";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import {
   loadCustomerDraft,
@@ -18,18 +17,16 @@ import {
   saveLastOrder,
 } from "@/lib/order-storage";
 import { calculateChange, calculateOrderTotals } from "@/lib/pricing";
-import {
-  STORE_PICKUP_ADDRESS,
-  STORE_PIX_KEY,
-  STORE_PIX_KEY_FORMATTED,
-} from "@/lib/store-config";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem, CustomerData } from "@/types";
+import type { CartItem, CustomerData, DeliveryBairro } from "@/types";
+import type { StoreStatusData } from "@/types/store";
 
 interface CheckoutModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cart: CartItem[];
+  bairros?: DeliveryBairro[];
+  initialStoreStatus?: StoreStatusData;
   onOrderSuccess: () => void;
 }
 
@@ -50,7 +47,7 @@ const DEFAULT_DRAFT: CustomerData = {
   phone: "",
   deliveryType: "delivery",
   cep: "",
-  bairro: bairros[0]?.nome ?? "Centro",
+  bairro: "",
   rua: "",
   numero: "",
   complemento: "",
@@ -63,11 +60,23 @@ export function CheckoutModal({
   open,
   onOpenChange,
   cart,
+  bairros: propBairros,
+  initialStoreStatus,
   onOrderSuccess,
 }: CheckoutModalProps) {
   const router = useRouter();
-  const { isOpen: storeIsOpen, customMessage, nextLabel } = useStoreStatus();
+  const {
+    isOpen: storeIsOpen,
+    customMessage,
+    nextLabel,
+    profile,
+  } = useStoreStatus(initialStoreStatus);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+
+  const activeBairros = useMemo(() => {
+    const source = propBairros ?? [];
+    return source.filter((b) => b.active !== false);
+  }, [propBairros]);
 
   const [form, setForm] = useState<CustomerData>(DEFAULT_DRAFT);
   const [submitting, setSubmitting] = useState(false);
@@ -81,17 +90,28 @@ export function CheckoutModal({
     if (!open) return;
     const saved = loadCustomerDraft();
     if (saved) {
+      const validBairro =
+        saved.bairro && activeBairros.some((b) => b.nome === saved.bairro)
+          ? saved.bairro
+          : (activeBairros[0]?.nome ?? DEFAULT_DRAFT.bairro);
       setForm((prev) => ({
         ...prev,
         ...saved,
-        bairro: saved.bairro || prev.bairro,
+        bairro: validBairro,
         paymentMethod:
           saved.paymentMethod || saved.payment || prev.paymentMethod,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        bairro: activeBairros.some((b) => b.nome === prev.bairro)
+          ? prev.bairro
+          : (activeBairros[0]?.nome ?? DEFAULT_DRAFT.bairro),
       }));
     }
     setServerError(null);
     setFieldErrors({});
-  }, [open]);
+  }, [open, activeBairros]);
 
   const updateField = <K extends keyof CustomerData>(
     key: K,
@@ -117,8 +137,9 @@ export function CheckoutModal({
         items: cart,
         deliveryType: form.deliveryType,
         bairroName: form.bairro,
+        bairros: activeBairros,
       }),
-    [cart, form.deliveryType, form.bairro]
+    [cart, form.deliveryType, form.bairro, activeBairros]
   );
 
   const parsedTroco = form.trocoPara.trim()
@@ -131,7 +152,7 @@ export function CheckoutModal({
 
   const handleCopyPix = async () => {
     try {
-      await navigator.clipboard.writeText(STORE_PIX_KEY);
+      await navigator.clipboard.writeText(profile.pixKey);
       setCopiedPix(true);
       window.setTimeout(() => setCopiedPix(false), 2000);
     } catch {
@@ -204,7 +225,7 @@ export function CheckoutModal({
     const formattedAddress =
       form.deliveryType === "delivery"
         ? `${form.rua.trim()}, ${form.numero.trim()}`
-        : STORE_PICKUP_ADDRESS;
+        : profile.pickupAddress;
 
     setSubmitting(true);
     try {
@@ -285,7 +306,7 @@ export function CheckoutModal({
         {!storeIsOpen && (
           <div
             role="status"
-            className="flex items-start gap-2 border border-foreground bg-secondary px-4 py-3 text-xs font-semibold text-foreground"
+            className="flex items-start gap-2 rounded-xl border border-accent-gold/50 bg-accent-gold-soft px-4 py-3 text-xs font-bold text-accent-gold-ink"
           >
             <AlertCircle
               className="mt-0.5 size-4 shrink-0"
@@ -300,9 +321,9 @@ export function CheckoutModal({
             ref={errorSummaryRef}
             tabIndex={-1}
             role="alert"
-            className="space-y-1.5 border border-foreground bg-secondary p-3.5 text-xs"
+            className="space-y-1.5 rounded-xl border border-destructive/40 bg-destructive/10 p-3.5 text-xs text-destructive"
           >
-            <p className="font-semibold text-foreground">
+            <p className="font-bold">
               Corrija os {errorEntries.length} campos abaixo para enviar:
             </p>
             <ul className="list-disc space-y-1 pl-4">
@@ -326,14 +347,14 @@ export function CheckoutModal({
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               1. Identificação
             </legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <label
                   htmlFor="checkout-name"
-                  className="block text-xs font-semibold text-foreground"
+                  className="block text-xs font-bold text-foreground"
                 >
                   Nome completo <span aria-hidden="true">*</span>
                 </label>
@@ -348,15 +369,14 @@ export function CheckoutModal({
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
                   placeholder="Ex.: Maria Oliveira…"
-                  className={`min-h-11 w-full border bg-card px-3 text-base text-foreground sm:text-sm ${
-                    fieldErrors.name ? "border-foreground" : "border-input"
+                  className={`min-h-11 w-full rounded-xl border bg-card px-3 text-base text-foreground sm:text-sm ${
+                    fieldErrors.name ? "border-destructive" : "border-input"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 />
                 {fieldErrors.name && (
                   <p
                     id="err-name"
-                    className="text-xs font-semibold text-foreground"
+                    className="text-xs font-semibold text-destructive"
                   >
                     {fieldErrors.name}
                   </p>
@@ -366,7 +386,7 @@ export function CheckoutModal({
               <div className="space-y-1">
                 <label
                   htmlFor="checkout-phone"
-                  className="block text-xs font-semibold text-foreground"
+                  className="block text-xs font-bold text-foreground"
                 >
                   WhatsApp / Telefone <span aria-hidden="true">*</span>
                 </label>
@@ -383,25 +403,21 @@ export function CheckoutModal({
                   value={form.phone}
                   onChange={(e) => updateField("phone", e.target.value)}
                   placeholder="(83) 99999-9999…"
-                  className={`min-h-11 w-full border bg-card px-3 text-base text-foreground sm:text-sm ${
-                    fieldErrors.phone ? "border-foreground" : "border-input"
+                  className={`min-h-11 w-full rounded-xl border bg-card px-3 text-base text-foreground sm:text-sm ${
+                    fieldErrors.phone ? "border-destructive" : "border-input"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 />
                 {fieldErrors.phone && (
                   <p
                     id="err-phone"
-                    className="text-xs font-semibold text-foreground"
+                    className="text-xs font-semibold text-destructive"
                   >
                     {fieldErrors.phone}
                   </p>
                 )}
               </div>
             </div>
-            <label
-              className="flex min-h-11 cursor-pointer items-center gap-2.5 border border-border bg-card px-3 py-2 text-xs text-foreground"
-              style={{ borderRadius: "2px" }}
-            >
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-foreground">
               <input
                 type="checkbox"
                 name="whatsappNotifications"
@@ -416,7 +432,7 @@ export function CheckoutModal({
           </fieldset>
 
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               2. Entrega ou retirada
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -424,12 +440,11 @@ export function CheckoutModal({
                 type="button"
                 aria-pressed={form.deliveryType === "delivery"}
                 onClick={() => updateField("deliveryType", "delivery")}
-                className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
+                className={`min-h-11 rounded-xl border px-3 text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
                   form.deliveryType === "delivery"
-                    ? "border-foreground bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground shadow-xs"
                     : "border-border bg-card text-foreground hover:bg-secondary"
                 }`}
-                style={{ borderRadius: "2px" }}
               >
                 Entrega em casa
               </button>
@@ -437,32 +452,32 @@ export function CheckoutModal({
                 type="button"
                 aria-pressed={form.deliveryType === "takeaway"}
                 onClick={() => updateField("deliveryType", "takeaway")}
-                className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
+                className={`min-h-11 rounded-xl border px-3 text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
                   form.deliveryType === "takeaway"
-                    ? "border-foreground bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground shadow-xs"
                     : "border-border bg-card text-foreground hover:bg-secondary"
                 }`}
-                style={{ borderRadius: "2px" }}
               >
                 Retirar no balcão
               </button>
             </div>
 
             {form.deliveryType === "takeaway" ? (
-              <div className="border border-border bg-card p-3.5 text-xs">
-                <p className="font-semibold text-foreground">
-                  Retirada no balcão (sem taxa de entrega):
+              <div className="rounded-xl border border-border bg-card p-3.5 text-xs">
+                <p className="font-bold text-foreground">
+                  Retirada no balcão (sem taxa de entrega ·{" "}
+                  {profile.estimatedPickup}):
                 </p>
                 <p className="mt-1 text-muted-foreground">
-                  {STORE_PICKUP_ADDRESS}
+                  {profile.pickupAddress}
                 </p>
               </div>
             ) : (
-              <div className="space-y-3 border border-border bg-card p-3.5">
+              <div className="space-y-3 rounded-xl border border-border bg-card p-3.5">
                 <div className="space-y-1">
                   <label
                     htmlFor="checkout-bairro"
-                    className="block text-xs font-semibold text-foreground"
+                    className="block text-xs font-bold text-foreground"
                   >
                     Bairro atendido <span aria-hidden="true">*</span>
                   </label>
@@ -475,10 +490,9 @@ export function CheckoutModal({
                     }
                     value={form.bairro}
                     onChange={(e) => updateField("bairro", e.target.value)}
-                    className="min-h-11 w-full border border-input bg-background px-3 text-base text-foreground sm:text-sm"
-                    style={{ borderRadius: "2px" }}
+                    className="min-h-11 w-full rounded-xl border border-input bg-background px-3 text-base text-foreground sm:text-sm"
                   >
-                    {bairros.map((b) => (
+                    {activeBairros.map((b) => (
                       <option key={b.nome} value={b.nome}>
                         {b.nome} (+R$ {formatPrice(b.frete)})
                       </option>
@@ -487,7 +501,7 @@ export function CheckoutModal({
                   {fieldErrors.bairro && (
                     <p
                       id="err-bairro"
-                      className="text-xs font-semibold text-foreground"
+                      className="text-xs font-semibold text-destructive"
                     >
                       {fieldErrors.bairro}
                     </p>
@@ -498,7 +512,7 @@ export function CheckoutModal({
                   <div className="space-y-1">
                     <label
                       htmlFor="checkout-rua"
-                      className="block text-xs font-semibold text-foreground"
+                      className="block text-xs font-bold text-foreground"
                     >
                       Rua / Avenida <span aria-hidden="true">*</span>
                     </label>
@@ -513,15 +527,14 @@ export function CheckoutModal({
                       value={form.rua}
                       onChange={(e) => updateField("rua", e.target.value)}
                       placeholder="Ex.: Av. Epitácio Pessoa…"
-                      className={`min-h-11 w-full border bg-background px-3 text-base text-foreground sm:text-sm ${
-                        fieldErrors.rua ? "border-foreground" : "border-input"
+                      className={`min-h-11 w-full rounded-xl border bg-background px-3 text-base text-foreground sm:text-sm ${
+                        fieldErrors.rua ? "border-destructive" : "border-input"
                       }`}
-                      style={{ borderRadius: "2px" }}
                     />
                     {fieldErrors.rua && (
                       <p
                         id="err-rua"
-                        className="text-xs font-semibold text-foreground"
+                        className="text-xs font-semibold text-destructive"
                       >
                         {fieldErrors.rua}
                       </p>
@@ -531,7 +544,7 @@ export function CheckoutModal({
                   <div className="space-y-1">
                     <label
                       htmlFor="checkout-numero"
-                      className="block text-xs font-semibold text-foreground"
+                      className="block text-xs font-bold text-foreground"
                     >
                       Número <span aria-hidden="true">*</span>
                     </label>
@@ -549,17 +562,16 @@ export function CheckoutModal({
                       value={form.numero}
                       onChange={(e) => updateField("numero", e.target.value)}
                       placeholder="Ex.: 420…"
-                      className={`min-h-11 w-full border bg-background px-3 text-base text-foreground sm:text-sm ${
+                      className={`min-h-11 w-full rounded-xl border bg-background px-3 text-base text-foreground sm:text-sm ${
                         fieldErrors.numero
-                          ? "border-foreground"
+                          ? "border-destructive"
                           : "border-input"
                       }`}
-                      style={{ borderRadius: "2px" }}
                     />
                     {fieldErrors.numero && (
                       <p
                         id="err-numero"
-                        className="text-xs font-semibold text-foreground"
+                        className="text-xs font-semibold text-destructive"
                       >
                         {fieldErrors.numero}
                       </p>
@@ -571,7 +583,7 @@ export function CheckoutModal({
                   <div className="space-y-1">
                     <label
                       htmlFor="checkout-cep"
-                      className="block text-xs font-semibold text-foreground"
+                      className="block text-xs font-bold text-foreground"
                     >
                       CEP (opcional)
                     </label>
@@ -585,14 +597,13 @@ export function CheckoutModal({
                       value={form.cep}
                       onChange={(e) => updateField("cep", e.target.value)}
                       placeholder="58000-000…"
-                      className="min-h-11 w-full border border-input bg-background px-3 text-base text-foreground sm:text-sm"
-                      style={{ borderRadius: "2px" }}
+                      className="min-h-11 w-full rounded-xl border border-input bg-background px-3 text-base text-foreground sm:text-sm"
                     />
                   </div>
                   <div className="space-y-1">
                     <label
                       htmlFor="checkout-complemento"
-                      className="block text-xs font-semibold text-foreground"
+                      className="block text-xs font-bold text-foreground"
                     >
                       Complemento / Referência
                     </label>
@@ -606,8 +617,7 @@ export function CheckoutModal({
                         updateField("complemento", e.target.value)
                       }
                       placeholder="Apto, bloco ou referência…"
-                      className="min-h-11 w-full border border-input bg-background px-3 text-base text-foreground sm:text-sm"
-                      style={{ borderRadius: "2px" }}
+                      className="min-h-11 w-full rounded-xl border border-input bg-background px-3 text-base text-foreground sm:text-sm"
                     />
                   </div>
                 </div>
@@ -616,7 +626,7 @@ export function CheckoutModal({
           </fieldset>
 
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               3. Pagamento
             </legend>
             <div className="grid grid-cols-3 gap-2">
@@ -628,12 +638,11 @@ export function CheckoutModal({
                     type="button"
                     aria-pressed={active}
                     onClick={() => updateField("paymentMethod", method)}
-                    className={`min-h-11 border px-2 text-xs font-semibold transition-colors ${
+                    className={`min-h-11 rounded-xl border px-2 text-xs font-bold transition-colors ${
                       active
-                        ? "border-foreground bg-secondary text-foreground"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:text-foreground"
                     }`}
-                    style={{ borderRadius: "2px" }}
                   >
                     {method === "Cartão (Crédito/Débito)" ? "Cartão" : method}
                   </button>
@@ -642,24 +651,32 @@ export function CheckoutModal({
             </div>
 
             {form.paymentMethod === "Pix" && (
-              <div className="flex items-center justify-between gap-3 border border-border bg-card p-3.5 text-xs">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 text-xs">
                 <div>
-                  <p className="font-semibold text-foreground">
-                    Chave PIX (Telefone)
+                  <p className="font-bold text-foreground">
+                    Chave PIX ({profile.pixKeyType})
                   </p>
                   <p className="font-mono text-muted-foreground">
-                    {STORE_PIX_KEY_FORMATTED}
+                    {profile.pixKeyDisplay}
                   </p>
+                  {profile.pixRecipient && (
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Favorecido: {profile.pixRecipient}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyPix}
-                  className="inline-flex min-h-10 items-center gap-1.5 border border-border bg-background px-3.5 font-semibold text-foreground transition-colors hover:border-foreground hover:bg-secondary"
-                  style={{ borderRadius: "2px" }}
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 font-bold text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
                 >
                   {copiedPix ? (
                     <>
-                      <Check className="size-3.5" aria-hidden="true" /> Copiado
+                      <Check
+                        className="size-3.5 text-status-open"
+                        aria-hidden="true"
+                      />{" "}
+                      Copiado
                     </>
                   ) : (
                     <>
@@ -674,7 +691,7 @@ export function CheckoutModal({
               <div className="space-y-1">
                 <label
                   htmlFor="checkout-troco"
-                  className="block text-xs font-semibold text-foreground"
+                  className="block text-xs font-bold text-foreground"
                 >
                   Troco para quanto? (deixe em branco se não precisar)
                 </label>
@@ -692,22 +709,23 @@ export function CheckoutModal({
                   value={form.trocoPara}
                   onChange={(e) => updateField("trocoPara", e.target.value)}
                   placeholder={`Ex.: ${Math.ceil(totals.total / 10) * 10}…`}
-                  className={`min-h-11 w-full border bg-card px-3 text-base text-foreground sm:text-sm ${
-                    fieldErrors.trocoPara ? "border-foreground" : "border-input"
+                  className={`min-h-11 w-full rounded-xl border bg-card px-3 text-base text-foreground sm:text-sm ${
+                    fieldErrors.trocoPara
+                      ? "border-destructive"
+                      : "border-input"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 />
                 {fieldErrors.trocoPara ? (
                   <p
                     id="err-troco"
-                    className="text-xs font-semibold text-foreground"
+                    className="text-xs font-semibold text-destructive"
                   >
                     {fieldErrors.trocoPara}
                   </p>
                 ) : changePreview !== null ? (
                   <p
                     id="hint-troco"
-                    className="font-mono text-xs font-semibold text-status-open tabular-nums"
+                    className="text-xs font-bold text-status-open tabular-nums"
                   >
                     Troco a levar: R$ {formatPrice(changePreview)}
                   </p>
@@ -723,21 +741,21 @@ export function CheckoutModal({
           <dl className="space-y-1.5 border-t border-border pt-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Itens ({cart.length})</dt>
-              <dd className="font-mono tabular-nums">
+              <dd className="font-semibold tabular-nums">
                 R$ {formatPrice(totals.subtotal)}
               </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Taxa de entrega</dt>
-              <dd className="font-mono tabular-nums">
+              <dd className="font-semibold tabular-nums">
                 {totals.deliveryFee > 0
                   ? `R$ ${formatPrice(totals.deliveryFee)}`
                   : "Grátis"}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">
+            <div className="flex justify-between border-t border-border pt-2 text-base font-extrabold">
               <dt>Total do pedido</dt>
-              <dd className="font-mono tabular-nums">
+              <dd className="text-primary tabular-nums">
                 R$ {formatPrice(totals.total)}
               </dd>
             </div>
@@ -746,7 +764,7 @@ export function CheckoutModal({
           {serverError && (
             <div
               role="alert"
-              className="flex items-start gap-2 border border-foreground bg-secondary px-3.5 py-2.5 text-xs font-semibold text-foreground"
+              className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive"
             >
               <AlertCircle
                 className="mt-0.5 size-4 shrink-0"
@@ -759,8 +777,7 @@ export function CheckoutModal({
           <button
             type="submit"
             disabled={submitting || !storeIsOpen}
-            className="min-h-12 w-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
-            style={{ borderRadius: "2px" }}
+            className="min-h-12 w-full rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition-[background-color,transform] duration-150 hover:bg-primary-hover active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
           >
             {submitting
               ? "Enviando pedido…"

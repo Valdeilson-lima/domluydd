@@ -1,49 +1,98 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  DEFAULT_STORE_PROFILE,
+  normalizeStoreProfile,
+} from "@/lib/store-config";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { resolveStoreStatus, isScheduleOpen } from "@/lib/utils";
-import type { StoreMode, StoreStatusData } from "@/types/store";
+import {
+  formatScheduleSummary,
+  isScheduleOpen,
+  resolveStoreStatus,
+} from "@/lib/utils";
+import type { StoreMode, StoreProfile, StoreStatusData } from "@/types/store";
 
 const BROADCAST_CHANNEL_NAME = "donluydd_store_status_channel";
 
-export function useStoreStatus() {
-  const [data, setData] = useState<StoreStatusData>(() => {
-    const initial = resolveStoreStatus({ mode: "auto" });
-    return {
-      isOpen: initial.open,
-      mode: "auto",
-      customMessage: null,
-      nextLabel: initial.nextLabel,
-      updatedAt: new Date().toISOString(),
-      isAutoOpen: isScheduleOpen(),
-    };
+function buildDefaultStatus(): StoreStatusData {
+  const initial = resolveStoreStatus({
+    mode: "auto",
+    schedule: DEFAULT_STORE_PROFILE.schedule,
   });
+  const summary = formatScheduleSummary(DEFAULT_STORE_PROFILE.schedule);
+  return {
+    isOpen: initial.open,
+    mode: "auto",
+    customMessage: null,
+    nextLabel: initial.nextLabel,
+    updatedAt: new Date().toISOString(),
+    isAutoOpen: isScheduleOpen(new Date(), DEFAULT_STORE_PROFILE.schedule),
+    hoursLabel: summary.full,
+    hoursShort: summary.short,
+    profile: DEFAULT_STORE_PROFILE,
+  };
+}
 
-  const [loading, setLoading] = useState(true);
+function normalizeStatusPayload(
+  json: Record<string, unknown>
+): StoreStatusData {
+  const profile = normalizeStoreProfile(
+    json.profile as Record<string, unknown> | undefined
+  );
+  const summary = formatScheduleSummary(profile.schedule);
+  return {
+    isOpen: Boolean(json.isOpen),
+    mode:
+      json.mode === "open" || json.mode === "closed" || json.mode === "auto"
+        ? json.mode
+        : "auto",
+    customMessage:
+      typeof json.customMessage === "string" ? json.customMessage : null,
+    nextLabel: typeof json.nextLabel === "string" ? json.nextLabel : "",
+    updatedAt:
+      typeof json.updatedAt === "string"
+        ? json.updatedAt
+        : new Date().toISOString(),
+    isAutoOpen: Boolean(json.isAutoOpen),
+    hoursLabel:
+      typeof json.hoursLabel === "string" ? json.hoursLabel : summary.full,
+    hoursShort:
+      typeof json.hoursShort === "string" ? json.hoursShort : summary.short,
+    profile,
+  };
+}
 
-  // Busca o status mais recente da API
+function broadcastStoreUpdate(updated: StoreStatusData) {
+  if (typeof window === "undefined" || !("BroadcastChannel" in window)) return;
+  try {
+    const bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+    bc.postMessage(updated);
+    bc.close();
+  } catch {
+    /* ignore */
+  }
+}
+
+export function useStoreStatus(initialStatus?: StoreStatusData) {
+  const [data, setData] = useState<StoreStatusData>(
+    () => initialStatus ?? buildDefaultStatus()
+  );
+  const [loading, setLoading] = useState(!initialStatus);
+
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/store-status");
+      const res = await fetch("/api/store-status", { cache: "no-store" });
       if (!res.ok) return;
-      const json = await res.json();
-      setData({
-        isOpen: Boolean(json.isOpen),
-        mode: json.mode || "auto",
-        customMessage: json.customMessage || null,
-        nextLabel: json.nextLabel || "",
-        updatedAt: json.updatedAt || new Date().toISOString(),
-        isAutoOpen: Boolean(json.isAutoOpen),
-      });
+      const json = (await res.json()) as Record<string, unknown>;
+      setData(normalizeStatusPayload(json));
     } catch {
-      // Falha de rede: mantém status local resolvido
+      // Falha de rede: mantém status atual
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Atualiza o status (usado pelo dono no Admin)
   const updateStatus = useCallback(
     async (
       mode: StoreMode,
@@ -57,30 +106,10 @@ export function useStoreStatus() {
         });
 
         if (!res.ok) return false;
-        const result = await res.json();
-
-        const updated: StoreStatusData = {
-          isOpen: Boolean(result.isOpen),
-          mode: result.mode,
-          customMessage: result.customMessage || null,
-          nextLabel: result.nextLabel,
-          updatedAt: result.updatedAt,
-          isAutoOpen: Boolean(result.isAutoOpen),
-        };
-
+        const json = (await res.json()) as Record<string, unknown>;
+        const updated = normalizeStatusPayload(json);
         setData(updated);
-
-        // Notifica outras abas locais instantaneamente via BroadcastChannel
-        if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-          try {
-            const bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
-            bc.postMessage(updated);
-            bc.close();
-          } catch {
-            /* ignore */
-          }
-        }
-
+        broadcastStoreUpdate(updated);
         return true;
       } catch {
         return false;
@@ -89,17 +118,54 @@ export function useStoreStatus() {
     []
   );
 
-  useEffect(() => {
-    refresh();
+  const updateProfile = useCallback(
+    async (
+      patch: Partial<StoreProfile>
+    ): Promise<{ ok: boolean; error?: string }> => {
+      try {
+        const res = await fetch("/api/store-status", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+        const json = (await res.json().catch(() => null)) as Record<
+          string,
+          unknown
+        > | null;
+        if (!res.ok || !json) {
+          return {
+            ok: false,
+            error:
+              (typeof json?.error === "string" && json.error) ||
+              "Não foi possível salvar as configurações.",
+          };
+        }
+        const updated = normalizeStatusPayload(json);
+        setData(updated);
+        broadcastStoreUpdate(updated);
+        return { ok: true };
+      } catch {
+        return { ok: false, error: "Erro de rede ao salvar configurações." };
+      }
+    },
+    []
+  );
 
-    // 1. Escuta canal local entre abas
+  useEffect(() => {
+    if (!initialStatus) {
+      refresh();
+    }
+
+    // 1. Canal local instantâneo entre abas do mesmo aparelho
     let bc: BroadcastChannel | null = null;
     if (typeof window !== "undefined" && "BroadcastChannel" in window) {
       try {
         bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
         bc.onmessage = (event) => {
           if (event.data && typeof event.data.isOpen === "boolean") {
-            setData(event.data);
+            setData(
+              normalizeStatusPayload(event.data as Record<string, unknown>)
+            );
           }
         };
       } catch {
@@ -107,10 +173,9 @@ export function useStoreStatus() {
       }
     }
 
-    // 2. Escuta mudanças em tempo real pelo Supabase Realtime (se conectado)
+    // 2. Supabase Realtime em store_settings (reflete status, PIX, horários, contato e retiradas)
     let channel: ReturnType<NonNullable<typeof supabase>["channel"]> | null =
       null;
-
     if (isSupabaseConfigured && supabase) {
       try {
         channel = supabase
@@ -122,29 +187,8 @@ export function useStoreStatus() {
               schema: "public",
               table: "store_settings",
             },
-            (payload) => {
-              const newRow = payload.new as
-                | {
-                    mode?: StoreMode;
-                    custom_message?: string | null;
-                    updated_at?: string;
-                  }
-                | undefined;
-
-              if (newRow) {
-                const resolved = resolveStoreStatus({
-                  mode: newRow.mode,
-                  custom_message: newRow.custom_message,
-                });
-                setData({
-                  isOpen: resolved.open,
-                  mode: newRow.mode || "auto",
-                  customMessage: newRow.custom_message || null,
-                  nextLabel: resolved.nextLabel,
-                  updatedAt: newRow.updated_at || new Date().toISOString(),
-                  isAutoOpen: isScheduleOpen(),
-                });
-              }
+            () => {
+              refresh();
             }
           )
           .subscribe();
@@ -153,10 +197,10 @@ export function useStoreStatus() {
       }
     }
 
-    // 3. Atualiza ao focar na janela ou periodicamente a cada 30 segundos
+    // 3. Revalidação ao focar janela e a cada 60s (cobre viradas automáticas de horário)
     const handleFocus = () => refresh();
     window.addEventListener("focus", handleFocus);
-    const interval = setInterval(refresh, 30000);
+    const interval = window.setInterval(refresh, 60000);
 
     return () => {
       bc?.close();
@@ -164,14 +208,15 @@ export function useStoreStatus() {
         supabase.removeChannel(channel).catch(() => {});
       }
       window.removeEventListener("focus", handleFocus);
-      clearInterval(interval);
+      window.clearInterval(interval);
     };
-  }, [refresh]);
+  }, [initialStatus, refresh]);
 
   return {
     ...data,
     loading,
     refresh,
     updateStatus,
+    updateProfile,
   };
 }

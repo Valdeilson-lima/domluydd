@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequestAuthorized } from "@/lib/admin-auth";
-import { getPausedItems, setItemAvailability } from "@/lib/server-store";
+import { applyRefreshedCookies, requireAdminSession } from "@/lib/admin-auth";
+import {
+  extractPausedItemNames,
+  getFullCatalog,
+  setCatalogItemAvailability,
+} from "@/lib/catalog-store";
 
 export async function GET() {
   try {
-    const paused = await getPausedItems();
-    return NextResponse.json({ paused });
+    const catalog = await getFullCatalog();
+    return NextResponse.json(
+      { paused: extractPausedItemNames(catalog) },
+      { headers: { "cache-control": "no-store" } }
+    );
   } catch {
     return NextResponse.json({ paused: [] });
   }
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequestAuthorized(request)) {
-    return NextResponse.json(
-      { error: "Autenticação administrativa necessária." },
-      { status: 401 }
-    );
+  const auth = await requireAdminSession(request, ["owner", "kitchen"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
@@ -32,8 +37,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const paused = await setItemAvailability(itemName, available);
-    return NextResponse.json({ paused });
+    const result = await setCatalogItemAvailability(itemName, available);
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: result.error || "Erro ao atualizar disponibilidade." },
+        { status: 400 }
+      );
+    }
+
+    return applyRefreshedCookies(
+      NextResponse.json({
+        paused: result.paused,
+        catalog: result.catalog,
+      }),
+      auth.refreshedTokens
+    );
   } catch {
     return NextResponse.json(
       { error: "Erro ao atualizar disponibilidade." },

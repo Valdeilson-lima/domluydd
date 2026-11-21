@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { allPizzas, getPizzaBySlug } from "@/data/pizzas";
 import { PizzaDetailClient } from "@/features/menu/components/PizzaDetailClient";
+import { getFullCatalog } from "@/lib/catalog-store";
+import { getEffectiveStoreStatus } from "@/lib/server-store";
 import { SITE_URL, STORE_NAME } from "@/lib/store-config";
 
-export function generateStaticParams() {
-  return allPizzas.map((pizza) => ({ slug: pizza.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -14,7 +13,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const pizza = getPizzaBySlug(slug);
+  const catalog = await getFullCatalog();
+  const pizza = catalog.pizzas.find((p) => p.slug === slug);
   if (!pizza) {
     return { title: "Sabor não encontrado" };
   }
@@ -34,10 +34,20 @@ export default async function PizzaSlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const pizza = getPizzaBySlug(slug);
+  const [catalog, storeStatus] = await Promise.all([
+    getFullCatalog(),
+    getEffectiveStoreStatus(),
+  ]);
+  const pizza = catalog.pizzas.find((p) => p.slug === slug);
   if (!pizza) {
     notFound();
   }
 
-  return <PizzaDetailClient pizza={pizza} />;
+  return (
+    <PizzaDetailClient
+      pizza={pizza}
+      initialCatalog={catalog}
+      initialStoreStatus={storeStatus}
+    />
+  );
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "donluydd-pwa-v1";
+const CACHE_NAME = "donluydd-pwa-v3";
 const PRECACHE_URLS = [
   "/offline.html",
   "/favicon.svg",
@@ -63,7 +63,6 @@ self.addEventListener("fetch", (event) => {
   const isStaticAsset =
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
-    url.pathname.startsWith("/assets/img/") ||
     /\.(?:png|jpg|jpeg|webp|svg|woff2?)$/i.test(url.pathname);
 
   if (isStaticAsset) {

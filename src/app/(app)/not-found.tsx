@@ -1,19 +1,17 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
 
 export default function AppNotFound() {
   return (
     <main
-      id="conteudo-principal"
+      id="main-content"
       className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-start justify-center gap-5 px-6 py-20"
     >
-      <div
-        className="h-14 w-14 rounded-full border-[5px] border-primary"
-        aria-hidden="true"
-      />
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <BrandMark subtitle="Pizzaria Delivery" size="lg" />
+      <p className="text-xs font-bold uppercase tracking-widest text-primary">
         Página não encontrada
       </p>
-      <h1 className="font-serif text-4xl font-medium tracking-tight text-foreground">
+      <h1 className="font-serif text-4xl font-extrabold tracking-tight text-foreground">
         Este endereço não existe no cardápio.
       </h1>
       <p className="text-base text-muted-foreground">
@@ -23,13 +21,13 @@ export default function AppNotFound() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/"
-          className="inline-flex h-11 items-center border border-border bg-secondary px-5 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+          className="inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
         >
           Página inicial
         </Link>
         <Link
           href="/cardapio"
-          className="inline-flex h-11 items-center bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           Ver cardápio completo
         </Link>

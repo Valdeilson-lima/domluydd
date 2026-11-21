@@ -1,25 +1,26 @@
-import { PIZZA_IMAGES } from "@/data/pizzas";
+import { getPizzaImageSrc } from "@/lib/media";
 
 interface PizzaImageProps {
   imgIdx: number;
+  image?: string;
   name: string;
   priority?: boolean;
   className?: string;
+  wrapperClassName?: string;
 }
 
 export function PizzaImage({
   imgIdx,
+  image,
   name,
   priority = false,
-  className = "aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none",
+  className = "aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transform-none",
+  wrapperClassName = "overflow-hidden bg-secondary",
 }: PizzaImageProps) {
-  const src = PIZZA_IMAGES[imgIdx % PIZZA_IMAGES.length] || PIZZA_IMAGES[1];
+  const src = getPizzaImageSrc(imgIdx, image);
 
   return (
-    <div
-      className="overflow-hidden bg-secondary"
-      style={{ borderRadius: "0px" }}
-    >
+    <div className={wrapperClassName}>
       <img
         src={src}
         alt={`Pizza sabor ${name}`}

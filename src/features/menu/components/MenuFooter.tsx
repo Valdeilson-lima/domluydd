@@ -1,36 +1,51 @@
-import Link from "next/link";
-import { InstallAppButton } from "@/components/pwa/InstallAppButton";
-import {
-  STORE_HOURS_LABEL,
-  STORE_NAME,
-  STORE_OVEN_LABEL,
-  STORE_PICKUP_ADDRESS,
-  STORE_WHATSAPP_DISPLAY,
-  STORE_WHATSAPP_NUMBER,
-} from "@/lib/store-config";
+"use client";
 
-export function MenuFooter() {
+import Link from "next/link";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
+import { DEFAULT_STORE_PROFILE, STORE_HOURS_LABEL } from "@/lib/store-config";
+import type { StoreProfile } from "@/types/store";
+
+interface MenuFooterProps {
+  profile?: StoreProfile;
+  hoursLabel?: string;
+}
+
+export function MenuFooter({
+  profile = DEFAULT_STORE_PROFILE,
+  hoursLabel = STORE_HOURS_LABEL,
+}: MenuFooterProps) {
   return (
-    <footer className="mt-16 border-t border-border bg-secondary px-4 py-10 sm:px-6">
+    <footer className="mt-16 border-t border-border bg-[#1c1512] px-4 py-12 text-[#f5ece0] sm:px-6">
       <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-3">
-        <div className="space-y-2">
-          <p className="font-serif text-lg text-foreground">{STORE_NAME}</p>
-          <p className="text-sm text-muted-foreground">
-            {STORE_OVEN_LABEL} · {STORE_HOURS_LABEL}
+        <div className="space-y-3">
+          <BrandMark subtitle="Pizzaria Delivery" size="md" inverted />
+          <p className="text-sm text-[#c9bdb3]">
+            {profile.ovenLabel} · {hoursLabel}
           </p>
         </div>
 
-        <div className="space-y-1 text-sm">
-          <p className="font-semibold text-foreground">Balcão para retirada</p>
-          <p className="text-muted-foreground">{STORE_PICKUP_ADDRESS}</p>
+        <div className="space-y-1.5 text-sm">
+          <p className="font-bold text-white">Balcão para retirada</p>
+          <p className="text-[#c9bdb3]">{profile.pickupAddress}</p>
           <p>
             <a
-              href={`https://wa.me/${STORE_WHATSAPP_NUMBER}`}
+              href={`https://wa.me/${profile.whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-foreground underline underline-offset-4"
+              className="font-semibold text-accent-gold underline underline-offset-4 hover:text-white"
             >
-              WhatsApp: {STORE_WHATSAPP_DISPLAY}
+              WhatsApp: {profile.whatsappDisplay}
+            </a>
+          </p>
+          <p>
+            <a
+              href={profile.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[#c9bdb3] underline underline-offset-4 hover:text-white"
+            >
+              Instagram {profile.instagramHandle}
             </a>
           </p>
         </div>
@@ -40,13 +55,16 @@ export function MenuFooter() {
           <p>
             <Link
               href="/"
-              className="font-semibold text-foreground underline underline-offset-4"
+              className="font-semibold text-white underline underline-offset-4 hover:text-accent-gold"
             >
               Voltar para a página inicial
             </Link>
           </p>
-          <p className="text-xs text-muted-foreground">
-            <a href="/credits.html" className="underline underline-offset-2">
+          <p className="text-xs text-[#a99b90]">
+            <a
+              href="/credits.html"
+              className="underline underline-offset-2 hover:text-white"
+            >
               Créditos das fotografias
             </a>
           </p>

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { broadcastCatalogUpdate } from "@/hooks/useCatalog";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { normalizeText } from "@/lib/utils";
+import type { CatalogSnapshot } from "@/types";
 
 const STOCK_CHANNEL_NAME = "donluydd_stock_channel";
+const CATALOG_CHANNEL_NAME = "donluydd_catalog_channel";
+const REALTIME_STOCK_TABLES = ["pizzas", "drinks", "combos"] as const;
 
 export function useStock() {
   const [pausedItems, setPausedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const debounceRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -27,20 +33,72 @@ export function useStock() {
   useEffect(() => {
     refresh();
 
-    let channel: BroadcastChannel | null = null;
+    const scheduleRefresh = () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      debounceRef.current = window.setTimeout(() => {
+        refresh();
+      }, 350);
+    };
+
+    let stockChannel: BroadcastChannel | null = null;
+    let catalogChannel: BroadcastChannel | null = null;
     if (typeof BroadcastChannel !== "undefined") {
-      channel = new BroadcastChannel(STOCK_CHANNEL_NAME);
-      channel.onmessage = (event) => {
+      stockChannel = new BroadcastChannel(STOCK_CHANNEL_NAME);
+      stockChannel.onmessage = (event) => {
         if (event.data && Array.isArray(event.data.paused)) {
           setPausedItems(event.data.paused);
         } else {
-          refresh();
+          scheduleRefresh();
+        }
+      };
+
+      catalogChannel = new BroadcastChannel(CATALOG_CHANNEL_NAME);
+      catalogChannel.onmessage = (event) => {
+        const cat = event.data?.catalog as CatalogSnapshot | undefined;
+        if (cat && Array.isArray(cat.pizzas)) {
+          setPausedItems([
+            ...cat.pizzas
+              .filter((p) => p.available === false)
+              .map((p) => p.name),
+            ...cat.drinks
+              .filter((d) => d.available === false)
+              .map((d) => d.name),
+            ...cat.combos
+              .filter((c) => c.available === false)
+              .map((c) => c.name),
+          ]);
+        } else {
+          scheduleRefresh();
         }
       };
     }
 
+    let realtimeChannel: ReturnType<
+      NonNullable<typeof supabase>["channel"]
+    > | null = null;
+    if (isSupabaseConfigured && supabase) {
+      try {
+        let builder = supabase.channel("realtime_stock_availability");
+        for (const table of REALTIME_STOCK_TABLES) {
+          builder = builder.on(
+            "postgres_changes",
+            { event: "*", schema: "public", table },
+            scheduleRefresh
+          );
+        }
+        realtimeChannel = builder.subscribe();
+      } catch {
+        // ignore
+      }
+    }
+
     return () => {
-      channel?.close();
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      stockChannel?.close();
+      catalogChannel?.close();
+      if (realtimeChannel && supabase) {
+        supabase.removeChannel(realtimeChannel).catch(() => {});
+      }
     };
   }, [refresh]);
 
@@ -53,7 +111,10 @@ export function useStock() {
   );
 
   const toggleStock = useCallback(
-    async (itemName: string, available: boolean) => {
+    async (
+      itemName: string,
+      available: boolean
+    ): Promise<CatalogSnapshot | undefined> => {
       const res = await fetch("/api/stock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -74,6 +135,11 @@ export function useStock() {
           ch.close();
         }
       }
+      if (data.catalog) {
+        broadcastCatalogUpdate(data.catalog as CatalogSnapshot);
+        return data.catalog as CatalogSnapshot;
+      }
+      return undefined;
     },
     []
   );

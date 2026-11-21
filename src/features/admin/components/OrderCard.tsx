@@ -53,8 +53,8 @@ export function OrderCard({
 
   return (
     <article
-      className={`space-y-3 border bg-card p-4 ${
-        sla.isDelayed ? "border-2 border-foreground" : "border-border"
+      className={`space-y-3 rounded-2xl border bg-card p-4 shadow-xs ${
+        sla.isDelayed ? "border-2 border-primary" : "border-border"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -66,9 +66,9 @@ export function OrderCard({
               <span
                 className={
                   sla.isDelayed
-                    ? "inline-flex items-center gap-1 bg-primary px-1.5 py-0.5 font-semibold text-primary-foreground"
+                    ? "inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 font-bold text-primary-foreground"
                     : sla.isWarning
-                      ? "inline-flex items-center gap-1 border border-status-warn px-1.5 py-0.5 font-semibold text-status-warn"
+                      ? "inline-flex items-center gap-1 rounded-full bg-accent-gold-soft px-2 py-0.5 font-bold text-accent-gold-ink"
                       : "inline-flex items-center gap-1"
                 }
               >
@@ -78,7 +78,7 @@ export function OrderCard({
             )}
           </div>
 
-          <h3 className="mt-1 font-serif text-lg font-normal text-foreground break-words">
+          <h3 className="mt-1 font-serif text-lg font-bold text-foreground break-words">
             {order.customer_name}
           </h3>
           {order.customer_phone && (
@@ -88,7 +88,7 @@ export function OrderCard({
           )}
         </div>
 
-        <span className="shrink-0 border border-border bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+        <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
           {STATUS_META[order.status]}
         </span>
       </div>
@@ -97,7 +97,7 @@ export function OrderCard({
         {isDelivery ? (
           <>
             <Bike
-              className="size-3.5 shrink-0 text-foreground"
+              className="size-3.5 shrink-0 text-primary"
               aria-hidden="true"
             />
             <span className="truncate">
@@ -109,10 +109,10 @@ export function OrderCard({
         ) : (
           <>
             <Store
-              className="size-3.5 shrink-0 text-foreground"
+              className="size-3.5 shrink-0 text-status-open"
               aria-hidden="true"
             />
-            <span className="font-semibold text-foreground">
+            <span className="font-bold text-foreground">
               Retirada no balcão
             </span>
           </>
@@ -123,20 +123,20 @@ export function OrderCard({
         {order.items.map((item, idx) => (
           <li
             key={`${item.id}-${idx}`}
-            className="space-y-1 bg-background/75 p-2.5"
+            className="space-y-1 rounded-xl bg-secondary/50 p-2.5"
           >
-            <div className="flex justify-between gap-2 font-semibold text-foreground">
+            <div className="flex justify-between gap-2 font-bold text-foreground">
               <span className="min-w-0 break-words">
                 {item.qty}x {item.flavors.map((f) => f.name).join(" + ")} (
                 {item.size})
               </span>
-              <span className="shrink-0 font-mono tabular-nums">
+              <span className="shrink-0 tabular-nums">
                 R$ {formatPrice(item.price * item.qty)}
               </span>
             </div>
 
             {item.crust && (
-              <p className="text-[11px] font-semibold text-foreground">
+              <p className="text-[11px] font-bold text-accent-gold-ink">
                 Borda: {item.crust.name}
               </p>
             )}
@@ -150,7 +150,7 @@ export function OrderCard({
                 {item.removals.map((rem) => (
                   <span
                     key={rem}
-                    className="inline-flex items-center gap-1 border border-foreground bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase text-foreground"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent-gold-soft px-2 py-0.5 text-[10px] font-bold uppercase text-accent-gold-ink"
                   >
                     <AlertTriangle className="size-2.5" aria-hidden="true" />
                     {rem}
@@ -159,8 +159,10 @@ export function OrderCard({
               </div>
             )}
             {item.observation && (
-              <p className="text-[11px] italic text-foreground">
-                Obs.: {item.observation}
+              <p className="text-[11px] font-medium text-foreground">
+                {item.category === "combo"
+                  ? item.observation
+                  : `Obs.: ${item.observation}`}
               </p>
             )}
           </li>
@@ -168,7 +170,7 @@ export function OrderCard({
       </ul>
 
       {order.status === "cancelled" && order.notes && (
-        <p className="border border-foreground bg-secondary p-2 text-xs text-foreground">
+        <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
           <strong>Cancelado:</strong> {order.notes}
         </p>
       )}
@@ -180,7 +182,7 @@ export function OrderCard({
             ? ` (troco R$ ${formatPrice(order.change_for)})`
             : ""}
         </span>
-        <span className="font-mono text-sm font-bold text-foreground tabular-nums">
+        <span className="text-sm font-extrabold text-foreground tabular-nums">
           R$ {formatPrice(order.total)}
         </span>
       </div>
@@ -190,8 +192,7 @@ export function OrderCard({
           <button
             type="button"
             onClick={() => onUpdateStatus(order.id, nextStep.next)}
-            className="min-h-11 flex-1 bg-primary px-3 text-xs font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
-            style={{ borderRadius: "2px" }}
+            className="min-h-11 flex-1 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground shadow-xs transition-[background-color,transform] duration-150 hover:bg-primary-hover active:scale-[0.98]"
           >
             {nextStep.label}
           </button>
@@ -200,8 +201,7 @@ export function OrderCard({
         <button
           type="button"
           onClick={() => onPrint(order)}
-          className="inline-flex min-h-11 items-center gap-1.5 border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:border-foreground hover:bg-secondary"
-          style={{ borderRadius: "2px" }}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
           aria-label={`Imprimir comanda do pedido ${order.id.slice(0, 8)}`}
         >
           <Printer className="size-3.5" aria-hidden="true" />
@@ -212,8 +212,7 @@ export function OrderCard({
           <button
             type="button"
             onClick={() => onRequestCancel(order)}
-            className="inline-flex min-h-11 items-center gap-1.5 border border-border bg-background px-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
-            style={{ borderRadius: "2px" }}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
             aria-label={`Cancelar pedido ${order.id.slice(0, 8)}`}
           >
             <XCircle className="size-3.5" aria-hidden="true" />

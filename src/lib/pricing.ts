@@ -1,9 +1,5 @@
-import { allPizzas, CRUST_OPTIONS, EXTRA_INGREDIENTS } from "@/data/pizzas";
-import { bebidas } from "@/data/drinks";
-import { combos } from "@/data/combos";
-import { bairros } from "@/data/bairros";
 import { normalizeText, roundCurrency } from "@/lib/utils";
-import type { CartItem, Pizza } from "@/types";
+import type { CartItem, CatalogSnapshot, DeliveryBairro, Pizza } from "@/types";
 
 export type PizzaSizeKey = "p" | "m" | "g";
 
@@ -35,32 +31,37 @@ export function calculatePizzaUnitPrice(params: {
 }
 
 export function findBairroFee(
-  bairroName: string | null | undefined
+  bairroName: string | null | undefined,
+  bairrosList: DeliveryBairro[] = []
 ): number | null {
   if (!bairroName) return null;
   const target = normalizeText(bairroName);
-  const match = bairros.find((b) => normalizeText(b.nome) === target);
+  const match = bairrosList.find(
+    (b) => b.active !== false && normalizeText(b.nome) === target
+  );
   return match ? match.frete : null;
 }
 
 export function getDeliveryFee(
   deliveryType: "delivery" | "takeaway",
-  bairroName?: string | null
+  bairroName?: string | null,
+  bairrosList: DeliveryBairro[] = []
 ): number {
   if (deliveryType === "takeaway") return 0;
-  return findBairroFee(bairroName) ?? 0;
+  return findBairroFee(bairroName, bairrosList) ?? 0;
 }
 
 export function calculateOrderTotals(params: {
   items: Pick<CartItem, "price" | "qty">[];
   deliveryType: "delivery" | "takeaway";
   bairroName?: string | null;
+  bairros?: DeliveryBairro[];
 }): { subtotal: number; deliveryFee: number; total: number } {
   const subtotal = roundCurrency(
     params.items.reduce((sum, item) => sum + item.price * item.qty, 0)
   );
   const deliveryFee = roundCurrency(
-    getDeliveryFee(params.deliveryType, params.bairroName)
+    getDeliveryFee(params.deliveryType, params.bairroName, params.bairros)
   );
   const total = roundCurrency(subtotal + deliveryFee);
   return { subtotal, deliveryFee, total };
@@ -87,11 +88,21 @@ export interface RepriceError {
 
 export function validateAndRepriceItems(
   rawItems: CartItem[],
-  pausedItems: string[]
+  pausedItems: string[],
+  catalog?: Pick<
+    CatalogSnapshot,
+    "pizzas" | "drinks" | "combos" | "crusts" | "extras"
+  >
 ): RepriceResult | RepriceError {
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     return { ok: false, error: "O pedido precisa conter pelo menos um item." };
   }
+
+  const catalogPizzas = catalog?.pizzas ?? [];
+  const catalogDrinks = catalog?.drinks ?? [];
+  const catalogCombos = catalog?.combos ?? [];
+  const catalogCrusts = catalog?.crusts ?? [];
+  const catalogExtras = catalog?.extras ?? [];
 
   const pausedSet = new Set(pausedItems.map((name) => normalizeText(name)));
   const repriced: CartItem[] = [];
@@ -102,7 +113,7 @@ export function validateAndRepriceItems(
 
     if (cat === "bebida") {
       const targetName = item.flavors?.[0]?.name;
-      const drink = bebidas.find(
+      const drink = catalogDrinks.find(
         (d) => normalizeText(d.name) === normalizeText(targetName ?? "")
       );
       if (!drink) {
@@ -134,10 +145,11 @@ export function validateAndRepriceItems(
 
     if (cat === "combo") {
       const targetName = item.flavors?.[0]?.name;
-      const combo = combos.find(
+      const combo = catalogCombos.find(
         (c) =>
           normalizeText(c.name) === normalizeText(targetName ?? "") ||
-          c.id === targetName
+          c.id === targetName ||
+          c.slug === targetName
       );
       if (!combo) {
         return {
@@ -161,7 +173,7 @@ export function validateAndRepriceItems(
         flavors: [{ name: combo.name, price: combo.price }],
         price: combo.price,
         qty,
-        observation: item.observation?.trim().slice(0, 160) || undefined,
+        observation: item.observation?.trim().slice(0, 360) || undefined,
       });
       continue;
     }
@@ -185,7 +197,7 @@ export function validateAndRepriceItems(
 
     const resolvedFlavors: Pizza[] = [];
     for (const rf of rawFlavors) {
-      const found = allPizzas.find(
+      const found = catalogPizzas.find(
         (p) => normalizeText(p.name) === normalizeText(rf.name)
       );
       if (!found) {
@@ -213,8 +225,10 @@ export function validateAndRepriceItems(
 
     let resolvedCrust: { name: string; price: number } | undefined;
     if (item.crust?.name) {
-      const crustMatch = CRUST_OPTIONS.find(
-        (c) => normalizeText(c.name) === normalizeText(item.crust!.name)
+      const crustMatch = catalogCrusts.find(
+        (c) =>
+          c.available !== false &&
+          normalizeText(c.name) === normalizeText(item.crust!.name)
       );
       if (!crustMatch) {
         return { ok: false, error: `Borda inválida: ${item.crust.name}.` };
@@ -233,8 +247,10 @@ export function validateAndRepriceItems(
     const resolvedExtras: Array<{ name: string; price: number }> = [];
     if (Array.isArray(item.extras)) {
       for (const ext of item.extras) {
-        const extraMatch = EXTRA_INGREDIENTS.find(
-          (e) => normalizeText(e.name) === normalizeText(ext.name)
+        const extraMatch = catalogExtras.find(
+          (e) =>
+            e.available !== false &&
+            normalizeText(e.name) === normalizeText(ext.name)
         );
         if (!extraMatch) {
           return { ok: false, error: `Adicional inválido: ${ext.name}.` };

@@ -2,24 +2,24 @@
 
 import { useState, useMemo } from "react";
 import { AlertCircle } from "lucide-react";
-import { allPizzas } from "@/data/pizzas";
 import { PizzaVisualizer } from "@/features/menu/components/PizzaVisualizer";
 import { PizzaImage } from "@/features/menu/components/PizzaImage";
-import {
-  getCrustOptionsForCategory,
-  getExtraIngredientsForCategory,
-  getRemovalsForCategory,
-} from "@/lib/catalog";
+import { getRemovalsForCategory } from "@/lib/catalog";
 import {
   calculatePizzaUnitPrice,
   getPizzaSizePrice,
   type PizzaSizeKey,
 } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
-import type { CartItem, Pizza } from "@/types";
+import type { CartItem, CrustOption, ExtraIngredient, Pizza } from "@/types";
 
 interface PizzaConfiguratorProps {
   pizza: Pizza;
+  allPizzas?: Pizza[];
+  crusts?: CrustOption[];
+  extras?: ExtraIngredient[];
+  commonRemovals?: string[];
+  sweetRemovals?: string[];
   isPaused: (name: string) => boolean;
   onConfirm: (item: Omit<CartItem, "id" | "qty"> & { qty: number }) => void;
   initialSize?: PizzaSizeKey;
@@ -35,6 +35,11 @@ const SIZES: Array<{ key: PizzaSizeKey; label: string; slices: string }> = [
 
 export function PizzaConfigurator({
   pizza,
+  allPizzas = [],
+  crusts = [],
+  extras = [],
+  commonRemovals,
+  sweetRemovals,
   isPaused,
   onConfirm,
   initialSize = "m",
@@ -47,29 +52,43 @@ export function PizzaConfigurator({
         (candidate) =>
           candidate.category === pizza.category && candidate.name !== pizza.name
       ),
-    [pizza.category, pizza.name]
+    [allPizzas, pizza.category, pizza.name]
   );
 
   const firstAvailablePeer = useMemo(
     () =>
-      sameCategoryPeers.find((p) => !isPaused(p.name))?.name ??
+      sameCategoryPeers.find((p) => p.available !== false && !isPaused(p.name))
+        ?.name ??
       sameCategoryPeers[0]?.name ??
       "",
     [sameCategoryPeers, isPaused]
   );
 
   const crustOptions = useMemo(
-    () => getCrustOptionsForCategory(pizza.category),
-    [pizza.category]
+    () =>
+      crusts.filter(
+        (c) =>
+          c.available !== false && c.compatibleWith.includes(pizza.category)
+      ),
+    [crusts, pizza.category]
   );
   const extraOptions = useMemo(
-    () => getExtraIngredientsForCategory(pizza.category),
-    [pizza.category]
+    () =>
+      extras.filter(
+        (e) =>
+          e.available !== false && e.compatibleWith.includes(pizza.category)
+      ),
+    [extras, pizza.category]
   );
-  const removalOptions = useMemo(
-    () => getRemovalsForCategory(pizza.category),
-    [pizza.category]
-  );
+  const removalOptions = useMemo(() => {
+    if (pizza.category === "doce" && Array.isArray(sweetRemovals)) {
+      return sweetRemovals;
+    }
+    if (pizza.category === "salgada" && Array.isArray(commonRemovals)) {
+      return commonRemovals;
+    }
+    return getRemovalsForCategory(pizza.category);
+  }, [pizza.category, commonRemovals, sweetRemovals]);
 
   const resolvedInitialSize: PizzaSizeKey =
     initialHalf && initialSize === "p" ? "m" : initialSize;
@@ -197,9 +216,14 @@ export function PizzaConfigurator({
     <form onSubmit={handleSubmit} className="space-y-5">
       {showHeaderPreview && (
         <div className="grid items-center gap-4 sm:grid-cols-[140px_1fr]">
-          <PizzaImage imgIdx={pizza.imgIdx} name={pizza.name} />
+          <PizzaImage
+            imgIdx={pizza.imgIdx}
+            image={pizza.image}
+            name={pizza.name}
+            wrapperClassName="overflow-hidden rounded-xl bg-secondary"
+          />
           <div className="space-y-1">
-            <h2 className="font-serif text-2xl text-foreground">
+            <h2 className="font-serif text-2xl font-bold text-foreground">
               {pizza.name}
             </h2>
             <p className="text-sm text-muted-foreground">{pizza.desc}</p>
@@ -210,7 +234,7 @@ export function PizzaConfigurator({
       {primaryPaused && (
         <div
           role="alert"
-          className="flex items-start gap-2 border border-foreground bg-secondary px-3.5 py-2.5 text-xs font-semibold text-foreground"
+          className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>Este sabor está temporariamente pausado pela cozinha.</span>
@@ -220,8 +244,10 @@ export function PizzaConfigurator({
       <PizzaVisualizer
         flavor1={pizza.name}
         flavor1ImgIdx={pizza.imgIdx}
+        flavor1Image={pizza.image}
         flavor2={secondPizza?.name ?? null}
         flavor2ImgIdx={secondPizza?.imgIdx ?? null}
+        flavor2Image={secondPizza?.image}
         isHalf={isHalf}
         sizeLabel={
           sizeInfo ? `${sizeInfo.label} (${sizeInfo.slices})` : undefined
@@ -229,7 +255,7 @@ export function PizzaConfigurator({
       />
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Modo de montagem
         </legend>
         <div className="grid grid-cols-2 gap-2">
@@ -237,12 +263,11 @@ export function PizzaConfigurator({
             type="button"
             aria-pressed={!isHalf}
             onClick={() => handleToggleHalf(false)}
-            className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
+            className={`min-h-11 rounded-xl border px-3 text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
               !isHalf
-                ? "border-foreground bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-secondary"
+                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary"
             }`}
-            style={{ borderRadius: "2px" }}
           >
             Inteira (1 sabor)
           </button>
@@ -250,12 +275,11 @@ export function PizzaConfigurator({
             type="button"
             aria-pressed={isHalf}
             onClick={() => handleToggleHalf(true)}
-            className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
+            className={`min-h-11 rounded-xl border px-3 text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
               isHalf
-                ? "border-foreground bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-secondary"
+                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary"
             }`}
-            style={{ borderRadius: "2px" }}
           >
             Meio a Meio (2 sabores)
           </button>
@@ -266,7 +290,7 @@ export function PizzaConfigurator({
         <div className="space-y-1.5">
           <label
             htmlFor={`second-flavor-${pizza.id}`}
-            className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
           >
             Escolha a segunda metade ({pizza.category})
           </label>
@@ -278,8 +302,7 @@ export function PizzaConfigurator({
               setSecondFlavorName(e.target.value);
               setError(null);
             }}
-            className="min-h-11 w-full border border-input bg-card px-3 text-base text-foreground sm:text-sm"
-            style={{ borderRadius: "2px" }}
+            className="min-h-11 w-full rounded-xl border border-input bg-card px-3 text-base text-foreground sm:text-sm"
           >
             {sameCategoryPeers.map((peer) => {
               const peerPaused = isPaused(peer.name);
@@ -295,7 +318,7 @@ export function PizzaConfigurator({
       )}
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Tamanho
         </legend>
         <div className="grid grid-cols-3 gap-2">
@@ -316,17 +339,16 @@ export function PizzaConfigurator({
                   setSize(opt.key);
                   setError(null);
                 }}
-                className={`min-h-14 border p-2.5 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`min-h-14 rounded-xl border p-2.5 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${
                   active
-                    ? "border-foreground bg-secondary text-foreground"
-                    : "border-border bg-card text-foreground hover:bg-secondary/60"
+                    ? "border-primary bg-primary/8 text-foreground ring-1 ring-primary/30"
+                    : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary/60"
                 }`}
-                style={{ borderRadius: "2px" }}
               >
                 <span className="block text-sm font-bold">
                   {opt.label} · {opt.slices}
                 </span>
-                <span className="block font-mono text-xs text-muted-foreground tabular-nums">
+                <span className="block text-xs font-bold text-primary tabular-nums">
                   R$ {formatPrice(optionPrice)}
                 </span>
               </button>
@@ -342,7 +364,7 @@ export function PizzaConfigurator({
       </fieldset>
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Borda
         </legend>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -351,12 +373,11 @@ export function PizzaConfigurator({
             return (
               <label
                 key={crust.id}
-                className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 border px-3 py-2.5 text-xs transition-colors ${
+                className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs transition-colors ${
                   selected
-                    ? "border-foreground bg-secondary font-semibold"
+                    ? "border-primary bg-primary/8 font-bold text-foreground"
                     : "border-border bg-card hover:bg-secondary/50"
                 }`}
-                style={{ borderRadius: "2px" }}
               >
                 <span className="flex items-center gap-2.5">
                   <input
@@ -369,7 +390,11 @@ export function PizzaConfigurator({
                   />
                   <span>{crust.name}</span>
                 </span>
-                <span className="shrink-0 font-mono tabular-nums">
+                <span
+                  className={`shrink-0 font-bold tabular-nums ${
+                    crust.price > 0 ? "text-foreground" : "text-status-open"
+                  }`}
+                >
                   {crust.price > 0
                     ? `+R$ ${formatPrice(crust.price)}`
                     : "Grátis"}
@@ -382,7 +407,7 @@ export function PizzaConfigurator({
 
       {extraOptions.length > 0 && (
         <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Adicionais (opcional)
           </legend>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -391,12 +416,11 @@ export function PizzaConfigurator({
               return (
                 <label
                   key={extra.id}
-                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 border px-3 py-2.5 text-xs transition-colors ${
+                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs transition-colors ${
                     checked
-                      ? "border-foreground bg-secondary font-semibold"
+                      ? "border-primary bg-primary/8 font-bold text-foreground"
                       : "border-border bg-card hover:bg-secondary/50"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 >
                   <span className="flex items-center gap-2.5">
                     <input
@@ -409,7 +433,7 @@ export function PizzaConfigurator({
                     />
                     <span>{extra.name}</span>
                   </span>
-                  <span className="shrink-0 font-mono tabular-nums">
+                  <span className="shrink-0 font-bold tabular-nums">
                     +R$ {formatPrice(extra.price)}
                   </span>
                 </label>
@@ -421,7 +445,7 @@ export function PizzaConfigurator({
 
       {removalOptions.length > 0 && (
         <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Retirar ingredientes
           </legend>
           <div className="flex flex-wrap gap-2">
@@ -433,12 +457,11 @@ export function PizzaConfigurator({
                   type="button"
                   onClick={() => toggleRemoval(rem)}
                   aria-pressed={active}
-                  className={`min-h-10 border px-3.5 text-xs font-medium transition-colors ${
+                  className={`min-h-10 rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                     active
-                      ? "border-foreground bg-secondary font-semibold text-foreground"
+                      ? "border-primary/40 bg-accent-gold-soft text-accent-gold-ink"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
-                  style={{ borderRadius: "2px" }}
                 >
                   {rem}
                 </button>
@@ -451,7 +474,7 @@ export function PizzaConfigurator({
       <div className="space-y-1.5">
         <label
           htmlFor={`obs-${pizza.id}`}
-          className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
         >
           Observações para a cozinha (opcional)
         </label>
@@ -463,15 +486,14 @@ export function PizzaConfigurator({
           value={observation}
           onChange={(e) => setObservation(e.target.value)}
           placeholder="Ex.: massa bem assada, cortar em 8 fatias…"
-          className="w-full border border-input bg-card p-3 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
-          style={{ borderRadius: "2px" }}
+          className="w-full rounded-xl border border-input bg-card p-3 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
         />
       </div>
 
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-2 border border-foreground bg-secondary px-3.5 py-2.5 text-xs font-semibold text-foreground"
+          className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
@@ -480,7 +502,7 @@ export function PizzaConfigurator({
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <div
-          className="flex items-center border border-border bg-card"
+          className="flex items-center overflow-hidden rounded-xl border border-border bg-card"
           aria-label="Quantidade"
         >
           <button
@@ -491,7 +513,7 @@ export function PizzaConfigurator({
           >
             −
           </button>
-          <span className="w-10 text-center font-mono text-sm font-semibold tabular-nums">
+          <span className="w-10 text-center text-sm font-bold tabular-nums">
             {qty}
           </span>
           <button
@@ -507,8 +529,7 @@ export function PizzaConfigurator({
         <button
           type="submit"
           disabled={primaryPaused}
-          className="min-h-11 flex-1 min-w-[210px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
-          style={{ borderRadius: "2px" }}
+          className="min-h-12 flex-1 min-w-[210px] rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition-[background-color,transform] duration-150 hover:bg-primary-hover active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
         >
           Adicionar à sacola · R$ {formatPrice(unitPrice * qty)}
         </button>
