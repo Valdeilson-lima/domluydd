@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { AlertCircle } from "lucide-react";
 import { allPizzas } from "@/data/pizzas";
 import { PizzaVisualizer } from "@/features/menu/components/PizzaVisualizer";
 import { PizzaImage } from "@/features/menu/components/PizzaImage";
@@ -21,6 +22,8 @@ interface PizzaConfiguratorProps {
   pizza: Pizza;
   isPaused: (name: string) => boolean;
   onConfirm: (item: Omit<CartItem, "id" | "qty"> & { qty: number }) => void;
+  initialSize?: PizzaSizeKey;
+  initialHalf?: boolean;
   showHeaderPreview?: boolean;
 }
 
@@ -34,6 +37,8 @@ export function PizzaConfigurator({
   pizza,
   isPaused,
   onConfirm,
+  initialSize = "m",
+  initialHalf = false,
   showHeaderPreview = false,
 }: PizzaConfiguratorProps) {
   const sameCategoryPeers = useMemo(
@@ -66,8 +71,11 @@ export function PizzaConfigurator({
     [pizza.category]
   );
 
-  const [size, setSize] = useState<PizzaSizeKey>("m");
-  const [isHalf, setIsHalf] = useState(false);
+  const resolvedInitialSize: PizzaSizeKey =
+    initialHalf && initialSize === "p" ? "m" : initialSize;
+
+  const [size, setSize] = useState<PizzaSizeKey>(resolvedInitialSize);
+  const [isHalf, setIsHalf] = useState(initialHalf);
   const [secondFlavorName, setSecondFlavorName] = useState(firstAvailablePeer);
   const [crustId, setCrustId] = useState(crustOptions[0]?.id ?? "sem-borda");
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
@@ -140,7 +148,7 @@ export function PizzaConfigurator({
     setError(null);
 
     if (primaryPaused) {
-      setError(`O sabor ${pizza.name} está temporariamente pausado.`);
+      setError(`O sabor ${pizza.name} está pausado pela cozinha no momento.`);
       return;
     }
 
@@ -188,7 +196,7 @@ export function PizzaConfigurator({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {showHeaderPreview && (
-        <div className="grid gap-4 sm:grid-cols-[140px_1fr] items-center">
+        <div className="grid items-center gap-4 sm:grid-cols-[140px_1fr]">
           <PizzaImage imgIdx={pizza.imgIdx} name={pizza.name} />
           <div className="space-y-1">
             <h2 className="font-serif text-2xl text-foreground">
@@ -200,17 +208,20 @@ export function PizzaConfigurator({
       )}
 
       {primaryPaused && (
-        <p
+        <div
           role="alert"
-          className="border border-foreground bg-secondary px-3 py-2 text-xs font-semibold text-foreground"
+          className="flex items-start gap-2 border border-foreground bg-secondary px-3.5 py-2.5 text-xs font-semibold text-foreground"
         >
-          Este sabor está temporariamente pausado pela cozinha.
-        </p>
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>Este sabor está temporariamente pausado pela cozinha.</span>
+        </div>
       )}
 
       <PizzaVisualizer
         flavor1={pizza.name}
+        flavor1ImgIdx={pizza.imgIdx}
         flavor2={secondPizza?.name ?? null}
+        flavor2ImgIdx={secondPizza?.imgIdx ?? null}
         isHalf={isHalf}
         sizeLabel={
           sizeInfo ? `${sizeInfo.label} (${sizeInfo.slices})` : undefined
@@ -224,8 +235,9 @@ export function PizzaConfigurator({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
+            aria-pressed={!isHalf}
             onClick={() => handleToggleHalf(false)}
-            className={`h-11 border text-xs font-semibold transition-colors ${
+            className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
               !isHalf
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"
@@ -236,8 +248,9 @@ export function PizzaConfigurator({
           </button>
           <button
             type="button"
+            aria-pressed={isHalf}
             onClick={() => handleToggleHalf(true)}
-            className={`h-11 border text-xs font-semibold transition-colors ${
+            className={`min-h-11 border px-3 text-xs font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] ${
               isHalf
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"
@@ -259,19 +272,20 @@ export function PizzaConfigurator({
           </label>
           <select
             id={`second-flavor-${pizza.id}`}
+            name="secondFlavor"
             value={secondFlavorName}
             onChange={(e) => {
               setSecondFlavorName(e.target.value);
               setError(null);
             }}
-            className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+            className="min-h-11 w-full border border-input bg-card px-3 text-base text-foreground sm:text-sm"
             style={{ borderRadius: "2px" }}
           >
             {sameCategoryPeers.map((peer) => {
               const peerPaused = isPaused(peer.name);
               return (
                 <option key={peer.id} value={peer.name} disabled={peerPaused}>
-                  {peer.name} — R$ {formatPrice(getPizzaSizePrice(peer, size))}
+                  {peer.name} · R$ {formatPrice(getPizzaSizePrice(peer, size))}
                   {peerPaused ? " (Indisponível)" : ""}
                 </option>
               );
@@ -297,11 +311,12 @@ export function PizzaConfigurator({
                 key={opt.key}
                 type="button"
                 disabled={disabled}
+                aria-pressed={active}
                 onClick={() => {
                   setSize(opt.key);
                   setError(null);
                 }}
-                className={`border p-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`min-h-14 border p-2.5 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${
                   active
                     ? "border-foreground bg-secondary text-foreground"
                     : "border-border bg-card text-foreground hover:bg-secondary/60"
@@ -336,21 +351,21 @@ export function PizzaConfigurator({
             return (
               <label
                 key={crust.id}
-                className={`flex cursor-pointer items-center justify-between gap-2 border p-2.5 text-xs ${
+                className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 border px-3 py-2.5 text-xs transition-colors ${
                   selected
                     ? "border-foreground bg-secondary font-semibold"
-                    : "border-border bg-card"
+                    : "border-border bg-card hover:bg-secondary/50"
                 }`}
                 style={{ borderRadius: "2px" }}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2.5">
                   <input
                     type="radio"
                     name={`crust-${pizza.id}`}
                     value={crust.id}
                     checked={selected}
                     onChange={() => setCrustId(crust.id)}
-                    className="accent-primary"
+                    className="size-4 accent-primary"
                   />
                   <span>{crust.name}</span>
                 </span>
@@ -376,19 +391,21 @@ export function PizzaConfigurator({
               return (
                 <label
                   key={extra.id}
-                  className={`flex cursor-pointer items-center justify-between gap-2 border p-2.5 text-xs ${
+                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-2 border px-3 py-2.5 text-xs transition-colors ${
                     checked
                       ? "border-foreground bg-secondary font-semibold"
-                      : "border-border bg-card"
+                      : "border-border bg-card hover:bg-secondary/50"
                   }`}
                   style={{ borderRadius: "2px" }}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2.5">
                     <input
                       type="checkbox"
+                      name="extras"
+                      value={extra.id}
                       checked={checked}
                       onChange={() => toggleExtra(extra.id)}
-                      className="accent-primary"
+                      className="size-4 accent-primary"
                     />
                     <span>{extra.name}</span>
                   </span>
@@ -416,7 +433,7 @@ export function PizzaConfigurator({
                   type="button"
                   onClick={() => toggleRemoval(rem)}
                   aria-pressed={active}
-                  className={`h-11 border px-3 text-xs font-medium transition-colors ${
+                  className={`min-h-10 border px-3.5 text-xs font-medium transition-colors ${
                     active
                       ? "border-foreground bg-secondary font-semibold text-foreground"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -440,31 +457,36 @@ export function PizzaConfigurator({
         </label>
         <textarea
           id={`obs-${pizza.id}`}
+          name="observation"
           rows={2}
           maxLength={160}
           value={observation}
           onChange={(e) => setObservation(e.target.value)}
-          placeholder="Ex.: Massa bem assada, cortar em 8 fatias…"
-          className="w-full border border-input bg-card p-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+          placeholder="Ex.: massa bem assada, cortar em 8 fatias…"
+          className="w-full border border-input bg-card p-3 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
           style={{ borderRadius: "2px" }}
         />
       </div>
 
       {error && (
-        <p
+        <div
           role="alert"
-          className="border border-foreground bg-secondary px-3 py-2 text-xs font-semibold text-foreground"
+          className="flex items-start gap-2 border border-foreground bg-secondary px-3.5 py-2.5 text-xs font-semibold text-foreground"
         >
-          {error}
-        </p>
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-        <div className="flex items-center border border-border bg-card">
+        <div
+          className="flex items-center border border-border bg-card"
+          aria-label="Quantidade"
+        >
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="h-11 w-11 text-base font-bold text-foreground hover:bg-secondary"
+            className="flex size-11 items-center justify-center text-base font-bold text-foreground transition-colors hover:bg-secondary"
             aria-label="Diminuir quantidade"
           >
             −
@@ -475,7 +497,7 @@ export function PizzaConfigurator({
           <button
             type="button"
             onClick={() => setQty((q) => Math.min(20, q + 1))}
-            className="h-11 w-11 text-base font-bold text-foreground hover:bg-secondary"
+            className="flex size-11 items-center justify-center text-base font-bold text-foreground transition-colors hover:bg-secondary"
             aria-label="Aumentar quantidade"
           >
             +
@@ -485,7 +507,7 @@ export function PizzaConfigurator({
         <button
           type="submit"
           disabled={primaryPaused}
-          className="h-11 flex-1 min-w-50 bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+          className="min-h-11 flex-1 min-w-[210px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
           style={{ borderRadius: "2px" }}
         >
           Adicionar à sacola · R$ {formatPrice(unitPrice * qty)}

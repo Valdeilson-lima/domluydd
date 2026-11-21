@@ -13,8 +13,9 @@ import { CashClosingModal } from "@/features/admin/components/CashClosingModal";
 import { StockModal } from "@/features/admin/components/StockModal";
 import { StoreStatusModal } from "@/features/admin/components/StoreStatusModal";
 import { CancelOrderModal } from "@/features/admin/components/CancelOrderModal";
+import { computeCashClosingStats, getOrderSla } from "@/features/admin/utils";
 import type { OrderFilter, ViewMode } from "@/features/admin/types";
-import { normalizeText } from "@/lib/utils";
+import { formatPrice, normalizeText } from "@/lib/utils";
 import type { DbOrder } from "@/types/supabase";
 
 export default function AdminKdsPage() {
@@ -109,24 +110,38 @@ export default function AdminKdsPage() {
     });
   }, [orders, search]);
 
-  const activeOrdersCount = useMemo(
+  const activeOrders = useMemo(
     () =>
       orders.filter(
         (o) =>
           o.status === "pending" ||
           o.status === "preparing" ||
           o.status === "delivering"
-      ).length,
+      ),
+    [orders]
+  );
+
+  const delayedCount = useMemo(
+    () => activeOrders.filter((o) => getOrderSla(o, nowMs).isDelayed).length,
+    [activeOrders, nowMs]
+  );
+
+  const todayStats = useMemo(
+    () => computeCashClosingStats(orders, "today"),
     [orders]
   );
 
   if (!authChecked) {
     return (
       <main
-        id="conteudo-principal"
-        className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-sm text-muted-foreground"
+        id="main-content"
+        className="mx-auto flex min-h-dvh max-w-md items-center justify-center px-4"
       >
-        Verificando sessão administrativa…
+        <div className="w-full space-y-3 border border-border bg-card p-6 animate-skeleton">
+          <div className="h-4 w-32 bg-secondary" />
+          <div className="h-8 w-56 bg-secondary" />
+          <div className="h-11 w-full bg-secondary" />
+        </div>
       </main>
     );
   }
@@ -136,9 +151,9 @@ export default function AdminKdsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AdminHeader
-        activeOrdersCount={activeOrdersCount}
+        activeOrdersCount={activeOrders.length}
         isStoreOpen={isStoreOpen}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -159,21 +174,77 @@ export default function AdminKdsPage() {
       />
 
       <main
-        id="conteudo-principal"
-        className="mx-auto max-w-7xl space-y-4 px-4 py-6 sm:px-6"
+        id="main-content"
+        className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6"
       >
+        <section
+          aria-label="Resumo operacional do turno"
+          className="grid grid-cols-2 gap-4 border-b border-border pb-4 sm:grid-cols-4"
+        >
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Na fila agora
+            </p>
+            <p className="mt-0.5 font-mono text-2xl font-semibold text-foreground tabular-nums">
+              {activeOrders.length}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Atrasados (&ge;35 min)
+            </p>
+            <p
+              className={`mt-0.5 font-mono text-2xl font-semibold tabular-nums ${
+                delayedCount > 0
+                  ? "text-foreground underline"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {delayedCount}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Faturamento hoje
+            </p>
+            <p className="mt-0.5 font-mono text-2xl font-semibold text-foreground tabular-nums">
+              R$ {formatPrice(todayStats.totalRevenue)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Ticket médio hoje
+            </p>
+            <p className="mt-0.5 font-mono text-2xl font-semibold text-foreground tabular-nums">
+              R$ {formatPrice(todayStats.averageTicket)}
+            </p>
+          </div>
+        </section>
+
         {(error || printerError) && (
           <div
             role="alert"
-            className="border border-foreground bg-secondary px-4 py-2.5 text-xs font-semibold text-foreground"
+            className="border border-foreground bg-secondary px-4 py-3 text-xs font-semibold text-foreground"
           >
             {error || printerError}
           </div>
         )}
 
         {loading && orders.length === 0 ? (
-          <div className="border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-            Carregando fila da cozinha…
+          <div
+            className="grid gap-5 lg:grid-cols-3"
+            aria-label="Carregando fila de pedidos"
+          >
+            {[0, 1, 2].map((col) => (
+              <div
+                key={col}
+                className="space-y-3 border border-border bg-secondary/40 p-4 animate-skeleton"
+              >
+                <div className="h-6 w-36 bg-card" />
+                <div className="h-44 w-full bg-card" />
+                <div className="h-36 w-full bg-card" />
+              </div>
+            ))}
           </div>
         ) : (
           <OrderBoard

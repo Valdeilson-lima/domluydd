@@ -15,36 +15,45 @@ html {
   scroll-behavior: smooth;
 }
 body {
-  letter-spacing: -0.005em;
+  line-height: 1.6;
 }
 ::selection {
-  background: #7d0c14;
-  color: #e2e2e2;
+  background: #962413;
+  color: #ffffff;
 }
 .nav__logo {
   font-family: var(--font-display);
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 .nav {
-  background: #e2e2e2 !important;
-  color: #7d0c14 !important;
-  border-bottom: 1px solid rgba(125, 12, 20, 0.22) !important;
+  background: #f8f5ef !important;
+  color: #1f1b18 !important;
+  border-bottom: 1px solid rgba(31, 27, 24, 0.14) !important;
 }
 .nav__logo,
 .nav__link,
 .nav__actions .nav__link,
 .nav__toggle {
-  color: #7d0c14 !important;
+  color: #1f1b18 !important;
+}
+.nav__link:hover,
+.nav__link:focus-visible {
+  color: #962413 !important;
 }
 .nav__logo .mark {
-  box-shadow: 0 0 0 3px var(--p-bg), 0 0 0 4px currentColor;
+  background: #962413 !important;
+  box-shadow: 0 0 0 3px var(--p-bg), 0 0 0 4px rgba(150, 36, 19, 0.28);
 }
-.ground-brand,
+.ground-brand {
+  background: #962413 !important;
+  color: #ffffff !important;
+}
 .ground-brand :is(h1, h2, h3, p, address, dt, dd, span, .section-head, .footer__address) {
-  color: #e2e2e2 !important;
+  color: #f8f5ef !important;
 }
 .ground-brand a {
-  color: #f2ecea !important;
+  color: #ffffff !important;
 }
 .ground-brand a:hover,
 .ground-brand a:focus-visible {
@@ -52,23 +61,32 @@ body {
   text-decoration-thickness: 2px !important;
 }
 .ground-brand .btn--primary {
-  background: #e2e2e2 !important;
-  color: #7d0c14 !important;
-  border-color: #e2e2e2 !important;
+  background: #f8f5ef !important;
+  color: #962413 !important;
+  border-color: #f8f5ef !important;
+  font-weight: 600;
+}
+.ground-brand .btn--primary:hover {
+  background: #ffffff !important;
+  color: #7d1c0e !important;
+}
+.ground-brand :focus-visible {
+  outline-color: #ffffff;
 }
 .ground-brand .footer__legal,
 .ground-brand .closing__links h3,
 .ground-brand .closing__links p,
 .ground-brand .closing__links dd {
-  color: #f2ecea !important;
+  color: #f8f5ef !important;
   opacity: 1 !important;
 }
 .hero__text h1 {
-  max-width: 11ch;
+  max-width: 13ch;
   text-wrap: balance;
 }
 .hero__lead {
-  max-width: 34rem;
+  max-width: 35rem;
+  color: var(--p-ink);
   text-wrap: pretty;
 }
 .section-head h2,
@@ -76,13 +94,25 @@ body {
 .closing h2 {
   text-wrap: balance;
 }
+.section-head p,
+.mo-ph__head p {
+  color: var(--p-muted);
+}
 .rows li,
 .mo-ph__ch,
 .visit__address {
   transition: border-color 180ms ease, color 180ms ease;
 }
 .rows li:hover {
-  border-color: var(--p-ink);
+  border-color: var(--p-accent);
+}
+.rows__name {
+  font-weight: 600;
+  color: var(--p-ink);
+}
+.rows__value {
+  font-weight: 600;
+  color: var(--p-ink);
 }
 .btn,
 .nav__link,
@@ -90,9 +120,20 @@ body {
   transition-duration: 180ms;
   transition-timing-function: ease-out;
 }
+.btn--primary {
+  font-weight: 600;
+}
+.link {
+  color: var(--p-ink);
+  text-decoration-color: rgba(150, 36, 19, 0.45);
+}
+.link:hover {
+  color: var(--p-accent);
+  text-decoration-color: var(--p-accent);
+}
 :focus-visible {
-  outline: 2px solid #7d0c14;
-  outline-offset: 4px;
+  outline: 2px solid #962413;
+  outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -108,21 +149,24 @@ body {
 }
 .rows .rows__name small {
   display: block;
+  margin-top: 2px;
   font-weight: 400;
-  color: var(--muted);
-  font-size: var(--t-small);
+  color: var(--p-muted);
+  font-size: 15px;
+  line-height: 1.45;
 }
 .visit__address {
   font-family: var(--font-display);
   font-weight: var(--display-weight, 400);
   font-size: var(--t-h2);
-  line-height: 1.08;
-  letter-spacing: var(--display-tracking, -0.015em);
+  line-height: 1.12;
+  letter-spacing: var(--display-tracking, -0.02em);
   margin: 0;
 }
 .visit__status {
-  font-size: var(--t-small);
-  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--p-muted);
   margin: 0;
 }
 .closing__band {
@@ -238,7 +282,7 @@ body {
     --padb: 28px;
   }
   #cardapio .rows .rows__name small {
-    font-size: 13px;
+    font-size: 14px;
   }
   #cardapio .pl-photo {
     margin-top: 24px;
@@ -262,6 +306,12 @@ body {
     display: none;
   }
 }
+@media (max-width: 360px) {
+  .nav:not(.is-open) .nav__actions .btn {
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+}
 `;
 
 function escapeHtml(value: string): string {
@@ -275,10 +325,14 @@ function escapeHtml(value: string): string {
 
 export function renderStorefrontHtml(status: StoreStatusData): string {
   const statusText = status.isOpen
-    ? `Aberto agora — ${status.nextLabel}`
+    ? /^aberto/i.test(status.nextLabel)
+      ? status.nextLabel
+      : `Aberto agora: ${status.nextLabel}`
     : status.customMessage
-      ? `Fechado agora — ${status.customMessage}`
-      : `Fechado agora — ${status.nextLabel}`;
+      ? `Fechado agora: ${status.customMessage}`
+      : /^fechado/i.test(status.nextLabel)
+        ? status.nextLabel
+        : `Fechado agora: ${status.nextLabel}`;
 
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
@@ -297,7 +351,7 @@ export function renderStorefrontHtml(status: StoreStatusData): string {
     },
   });
 
-  const pageTitle = `${STORE_NAME} — Pizza fresca no Centro de João Pessoa`;
+  const pageTitle = `${STORE_NAME}: pizza fresca no Centro de João Pessoa`;
   const pageDesc =
     "Trinta e oito sabores salgados e doces assados na hora em forno elétrico no Centro de João Pessoa, de terça a domingo, 18h às 22h. Pequena a partir de R$ 25.";
 
@@ -317,7 +371,7 @@ export function renderStorefrontHtml(status: StoreStatusData): string {
 <meta property="og:image" content="${escapeHtml(SITE_URL)}/share.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#e2e2e2">
+<meta name="theme-color" content="#f8f5ef">
 <link rel="canonical" href="${escapeHtml(SITE_URL)}/">
 <meta name="site-kind" content="other">
 <meta name="page-type" content="place">
@@ -344,14 +398,14 @@ ${PAGE_STYLE}
 <header class="nav nav--split">
   <div class="wrap nav__bar">
     <a class="skip-link" href="#top">Pular para o conteúdo</a>
-    <a class="nav__logo" href="#top"><span class="mark" data-mark="ring" aria-hidden="true"></span>${escapeHtml(STORE_SHORT_NAME)}</a>
+    <a class="nav__logo" href="#top" translate="no"><span class="mark" data-mark="ring" aria-hidden="true"></span>${escapeHtml(STORE_SHORT_NAME)}</a>
     <nav class="nav__links" aria-label="Navegação principal">
       <div class="nav__item"><a class="nav__link" href="#visita">Horário da pizzaria</a></div>
       <div class="nav__item"><a class="nav__link" href="#cardapio">Cardápio da pizzaria</a></div>
       <div class="nav__item"><a class="nav__link" href="#forno">Forno da pizzaria</a></div>
     </nav>
     <div class="nav__actions">
-      <a class="btn btn--primary" href="/cardapio">Pedir pizza</a>
+      <a class="btn btn--primary" href="/cardapio">Ver cardápio</a>
     </div>
     <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Menu">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -455,7 +509,7 @@ ${PAGE_STYLE}
           <p class="t-lead">Escolha inteira ou meio a meio, borda e pagamento.</p>
         </div>
         <div class="btn-row">
-          <a class="btn btn--primary" href="/cardapio">Pedir pizza<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+          <a class="btn btn--primary" href="/cardapio">Ver cardápio<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
         </div>
       </div>
       <figure class="pl-photo pl-photo--end span-6 inset-s-7 closing__photo-wrap" style="--pl-r: 1.5">
@@ -486,11 +540,6 @@ ${PAGE_STYLE}
     </div>
   </div>
 </footer>
-
-<nav class="actionbar" aria-label="Ações rápidas">
-  <a class="btn btn--secondary" href="${escapeHtml(STORE_MAP_URL)}" target="_blank" rel="noopener noreferrer">Mapa</a>
-  <a class="btn btn--primary" href="/cardapio">Pedir pizza</a>
-</nav>
 
 <script type="module" src="/assets/system.js"></script>
 <script type="module" src="/assets/motion/motion.js"></script>

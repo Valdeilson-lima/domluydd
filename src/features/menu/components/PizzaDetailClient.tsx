@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { allPizzas } from "@/data/pizzas";
 import { useCart } from "@/hooks/useCart";
@@ -13,7 +13,13 @@ import { CartSheet } from "@/features/menu/components/CartSheet";
 import { CheckoutModal } from "@/features/menu/components/CheckoutModal";
 import { MenuFooter } from "@/features/menu/components/MenuFooter";
 import { formatPrice } from "@/lib/utils";
-import type { Pizza } from "@/types";
+import type { CartItem, Pizza } from "@/types";
+
+interface ToastNotice {
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}
 
 export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
   const {
@@ -24,44 +30,81 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
     updateQty,
     removeFromCart,
     clearCart,
+    setCartItems,
   } = useCart();
   const { isPaused } = useStock();
 
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastNotice | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const related = allPizzas
     .filter((p) => p.category === pizza.category && p.id !== pizza.id)
     .slice(0, 3);
 
-  const showToast = (msg: string) => {
-    setFeedback(msg);
-    window.setTimeout(() => {
-      setFeedback((curr) => (curr === msg ? null : curr));
-    }, 2800);
+  const showToast = (notice: ToastNotice) => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast(notice);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleRemoveWithUndo = (index: number) => {
+    const previousCart: CartItem[] = [...cart];
+    const removed = previousCart[index];
+    removeFromCart(index);
+    if (removed) {
+      showToast({
+        message: `${removed.flavors.map((f) => f.name).join(" + ")} removido.`,
+        actionLabel: "Desfazer",
+        onAction: () => {
+          setCartItems(previousCart);
+          setToast(null);
+        },
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-0">
       <MenuHeader
         totalQty={totalQty}
         subtotal={subtotal}
         onOpenCart={() => setCartOpen(true)}
+        backHref="/cardapio"
+        backLabel="Cardápio"
+        alwaysShowBackLabel
       />
 
-      {feedback && (
+      {toast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed right-4 top-20 z-40 border border-foreground bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm"
+          className="fixed bottom-20 right-4 z-40 flex max-w-sm items-center justify-between gap-3 border border-foreground bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground shadow-md animate-toast-in sm:bottom-6"
+          style={{ borderRadius: "2px" }}
         >
-          {feedback}
+          <span>{toast.message}</span>
+          {toast.actionLabel && toast.onAction && (
+            <button
+              type="button"
+              onClick={toast.onAction}
+              className="shrink-0 border border-primary-foreground/40 bg-primary-foreground/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary-foreground hover:text-primary"
+              style={{ borderRadius: "2px" }}
+            >
+              {toast.actionLabel}
+            </button>
+          )}
         </div>
       )}
 
       <main
-        id="conteudo-principal"
+        id="main-content"
         className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:px-6"
       >
         <nav
@@ -69,24 +112,26 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
           className="flex items-center gap-2 text-xs text-muted-foreground"
         >
           <Link href="/" className="hover:text-foreground">
-            Casa
+            Início
           </Link>
-          <span>/</span>
+          <span aria-hidden="true">/</span>
           <Link href="/cardapio" className="hover:text-foreground">
             Cardápio
           </Link>
-          <span>/</span>
-          <span className="font-semibold text-foreground">{pizza.name}</span>
+          <span aria-hidden="true">/</span>
+          <span className="font-semibold text-foreground" aria-current="page">
+            {pizza.name}
+          </span>
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
           <div className="space-y-4 lg:col-span-5">
-            <PizzaImage imgIdx={pizza.imgIdx} name={pizza.name} />
-            <div className="border border-border bg-card p-5 space-y-2">
+            <PizzaImage imgIdx={pizza.imgIdx} name={pizza.name} priority />
+            <div className="space-y-2 border border-border bg-card p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {pizza.category === "doce" ? "Pizza doce" : "Pizza salgada"}
               </p>
-              <h1 className="font-serif text-3xl font-normal text-foreground">
+              <h1 className="font-serif text-3xl font-medium text-foreground">
                 {pizza.name}
               </h1>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -95,19 +140,19 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
               <dl className="grid grid-cols-3 gap-2 border-t border-border pt-3 text-xs">
                 <div>
                   <dt className="text-muted-foreground">Pequena (4)</dt>
-                  <dd className="font-mono font-semibold text-foreground tabular-nums">
+                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
                     R$ {formatPrice(pizza.p)}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Média (6)</dt>
-                  <dd className="font-mono font-semibold text-foreground tabular-nums">
+                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
                     R$ {formatPrice(pizza.m)}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Grande (8)</dt>
-                  <dd className="font-mono font-semibold text-foreground tabular-nums">
+                  <dd className="font-mono text-sm font-semibold text-foreground tabular-nums">
                     R$ {formatPrice(pizza.g)}
                   </dd>
                 </div>
@@ -115,8 +160,8 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
             </div>
           </div>
 
-          <div className="border border-border bg-background p-5 sm:p-6 lg:col-span-7">
-            <h2 className="mb-4 font-serif text-2xl font-normal text-foreground">
+          <div className="border border-border bg-card p-5 sm:p-6 lg:col-span-7">
+            <h2 className="mb-4 font-serif text-2xl font-medium text-foreground">
               Personalize tamanho, borda e adicionais
             </h2>
             <PizzaConfigurator
@@ -124,9 +169,14 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
               isPaused={isPaused}
               onConfirm={(item) => {
                 addToCart(item);
-                showToast(
-                  `${item.flavors.map((f) => f.name).join(" + ")} adicionado à sacola.`
-                );
+                showToast({
+                  message: `${item.flavors.map((f) => f.name).join(" + ")} adicionado à sacola.`,
+                  actionLabel: "Ver sacola",
+                  onAction: () => {
+                    setToast(null);
+                    setCartOpen(true);
+                  },
+                });
               }}
             />
           </div>
@@ -134,7 +184,7 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
 
         <section className="space-y-4 border-t border-border pt-8">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-serif text-2xl font-normal text-foreground">
+            <h2 className="font-serif text-2xl font-medium text-foreground">
               Outros sabores {pizza.category === "doce" ? "doces" : "salgados"}
             </h2>
             <Link
@@ -157,7 +207,7 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
                   <p className="font-serif text-lg text-foreground group-hover:underline">
                     {item.name}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">
                     A partir de R$ {formatPrice(item.p)}
                   </p>
                 </div>
@@ -181,7 +231,7 @@ export function PizzaDetailClient({ pizza }: { pizza: Pizza }) {
         cart={cart}
         subtotal={subtotal}
         onUpdateQty={updateQty}
-        onRemove={removeFromCart}
+        onRemove={handleRemoveWithUndo}
         onClear={clearCart}
         onCheckout={() => {
           setCartOpen(false);

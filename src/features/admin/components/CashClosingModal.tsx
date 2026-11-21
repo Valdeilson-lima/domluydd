@@ -33,15 +33,16 @@ export function CashClosingModal({
 
   const handlePrint = async () => {
     const now = new Date();
+    const formattedDate = new Intl.DateTimeFormat("pt-BR").format(now);
     const report: ClosingReportData = {
-      generatedAt: now.toLocaleTimeString("pt-BR", {
+      generatedAt: new Intl.DateTimeFormat("pt-BR", {
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      }).format(now),
       dateStr:
         scope === "today"
-          ? now.toLocaleDateString("pt-BR")
-          : `Histórico completo (${now.toLocaleDateString("pt-BR")})`,
+          ? formattedDate
+          : `Histórico completo (${formattedDate})`,
       totalSales: stats.totalRevenue,
       orderCount: stats.validOrders.length,
       averageTicket: stats.averageTicket,
@@ -190,7 +191,7 @@ export function CashClosingModal({
             className="inline-flex h-11 w-full items-center justify-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90"
             style={{ borderRadius: "2px" }}
           >
-            <Printer className="h-4 w-4" />
+            <Printer className="h-4 w-4" aria-hidden="true" />
             Imprimir fechamento de caixa
           </button>
         </div>

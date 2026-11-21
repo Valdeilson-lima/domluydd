@@ -2,19 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Flame, Bike, Clock } from "lucide-react";
 import { loadLastOrder, updateLastOrderStatus } from "@/lib/order-storage";
 import { formatPrice } from "@/lib/utils";
 import type { PastOrder } from "@/types";
 import type { OrderStatus } from "@/types/supabase";
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "Pedido enviado — aguardando confirmação da cozinha",
-  preparing: "Sua pizza está em preparo no forno",
-  delivering: "Pedido a caminho do seu endereço",
-  completed: "Pedido finalizado",
-  cancelled: "Pedido cancelado",
-};
+const STATUS_META: Record<OrderStatus, { label: string; icon: typeof Clock }> =
+  {
+    pending: {
+      label: "Pedido enviado, aguardando confirmação da cozinha",
+      icon: Clock,
+    },
+    preparing: {
+      label: "Sua pizza está em preparo no forno elétrico",
+      icon: Flame,
+    },
+    delivering: {
+      label: "Pedido pronto ou a caminho do seu endereço",
+      icon: Bike,
+    },
+    completed: { label: "Pedido finalizado", icon: Clock },
+    cancelled: { label: "Pedido cancelado", icon: Clock },
+  };
 
 export function ActiveOrderBanner() {
   const [activeOrder, setActiveOrder] = useState<PastOrder | null>(null);
@@ -49,7 +59,7 @@ export function ActiveOrderBanner() {
           );
         }
       } catch {
-        // keep local snapshot silently on network hiccup
+        // keep local snapshot silently on transient network failure
       }
     };
 
@@ -64,31 +74,35 @@ export function ActiveOrderBanner() {
   if (!activeOrder) return null;
 
   const currentStatus = (activeOrder.status ?? "pending") as OrderStatus;
+  const meta = STATUS_META[currentStatus] || STATUS_META.pending;
+  const StatusIcon = meta.icon;
 
   return (
     <div
-      className="border-b border-border bg-secondary px-4 py-3 sm:px-6"
+      className="border-b border-foreground/20 bg-primary px-4 py-3 text-primary-foreground sm:px-6"
       role="region"
       aria-label="Pedido em andamento"
+      aria-live="polite"
     >
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Pedido #{activeOrder.id.slice(0, 8)} · R${" "}
-            {formatPrice(activeOrder.total)}
-          </p>
-          <p className="text-sm font-semibold text-foreground">
-            {STATUS_LABELS[currentStatus] || "Acompanhar pedido"}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <StatusIcon className="size-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-mono text-xs uppercase tracking-wider opacity-85 tabular-nums">
+              Pedido #{activeOrder.id.slice(0, 8)} · R${" "}
+              {formatPrice(activeOrder.total)}
+            </p>
+            <p className="text-sm font-semibold">{meta.label}</p>
+          </div>
         </div>
 
         <Link
           href={`/pedido/${activeOrder.id}`}
-          className="inline-flex h-11 items-center gap-1.5 border border-foreground bg-background px-3.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+          className="inline-flex min-h-11 items-center gap-1.5 bg-background px-4 text-xs font-semibold text-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
           style={{ borderRadius: "2px" }}
         >
-          Acompanhar
-          <ArrowRight className="h-3.5 w-3.5" />
+          Acompanhar pedido
+          <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>
     </div>

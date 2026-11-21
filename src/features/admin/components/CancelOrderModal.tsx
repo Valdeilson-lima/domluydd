@@ -89,11 +89,12 @@ export function CancelOrderModal({
                 </label>
                 <textarea
                   id="cancel-reason-input"
+                  name="cancelReason"
                   rows={2}
                   required
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full border border-input bg-card p-2.5 text-sm text-foreground focus:border-foreground focus:outline-none"
+                  className="w-full border border-input bg-card p-2.5 text-base text-foreground sm:text-sm"
                   style={{ borderRadius: "2px" }}
                 />
               </div>

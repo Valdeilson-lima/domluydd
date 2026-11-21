@@ -81,11 +81,13 @@ export function StockModal({
           </label>
           <input
             id="stock-search"
+            name="stockSearch"
             type="search"
+            autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ex.: Marguerita, combo ou bebida…"
-            className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+            className="min-h-11 w-full border border-input bg-card px-3 text-base text-foreground sm:text-sm"
             style={{ borderRadius: "2px" }}
           />
           {error && (

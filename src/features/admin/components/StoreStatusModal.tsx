@@ -118,12 +118,13 @@ export function StoreStatusModal({
             </label>
             <input
               id="store-custom-message"
+              name="customMessage"
               type="text"
               maxLength={180}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ex.: Voltamos amanhã às 18h…"
-              className="h-11 w-full border border-input bg-card px-3 text-sm text-foreground focus:border-foreground focus:outline-none"
+              className="min-h-11 w-full border border-input bg-card px-3 text-base text-foreground sm:text-sm"
               style={{ borderRadius: "2px" }}
             />
           </div>

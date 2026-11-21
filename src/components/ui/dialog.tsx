@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
-
 const DialogPortal = DialogPrimitive.Portal;
 
 const DialogOverlay = forwardRef<
@@ -18,13 +17,16 @@ const DialogOverlay = forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-300 bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-[#1f1b18]/55 backdrop-blur-[2px] transition-opacity duration-200",
       className
     )}
     {...props}
   />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+
+const CLOSE_BUTTON_CLASSES =
+  "absolute right-3.5 top-3.5 z-10 flex size-11 items-center justify-center border border-border bg-card text-foreground transition-[color,background-color,border-color,transform] duration-150 hover:border-foreground hover:bg-primary hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95 disabled:pointer-events-none";
 
 const DialogContent = forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
@@ -35,30 +37,58 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-300 grid max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain border border-white/10 bg-black-light p-6 shadow-2xl duration-200 rounded-sm sm:w-full data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain border border-foreground/25 bg-background p-6 text-foreground shadow-[0_24px_64px_-24px_rgba(45,7,10,0.45)]",
         className
       )}
+      style={{ borderRadius: "2px" }}
       {...props}
     >
       {children}
       <DialogPrimitive.Close
-        aria-label="Fechar"
-        className="absolute right-3.5 top-3.5 z-50 flex size-11 cursor-pointer items-center justify-center rounded-sm border border-white/10 bg-black/70 text-muted transition-[color,background-color,border-color,transform] hover:border-red-primary hover:bg-red-primary hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow active:scale-95 disabled:pointer-events-none"
+        aria-label="Fechar janela"
+        className={CLOSE_BUTTON_CLASSES}
+        style={{ borderRadius: "2px" }}
       >
-        <X className="size-4" />
-        <span className="sr-only">Fechar</span>
+        <X className="size-4" aria-hidden="true" />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+const DialogDrawerContent = forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-md flex-col overflow-hidden overscroll-contain border-l border-foreground/25 bg-background text-foreground shadow-[-16px_0_48px_-20px_rgba(45,7,10,0.35)] animate-drawer-in",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close
+        aria-label="Fechar sacola"
+        className={CLOSE_BUTTON_CLASSES}
+        style={{ borderRadius: "2px" }}
+      >
+        <X className="size-4" aria-hidden="true" />
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+));
+DialogDrawerContent.displayName = "DialogDrawerContent";
+
 const DialogHeader = ({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col gap-1.5 text-center sm:text-left", className)}
+    className={cn("flex flex-col gap-1.5 pr-12 text-left", className)}
     {...props}
   />
 );
@@ -71,7 +101,7 @@ const DialogTitle = forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "font-display text-xl font-bold leading-none tracking-tight text-yellow",
+      "font-serif text-2xl font-normal leading-tight tracking-tight text-foreground",
       className
     )}
     {...props}
@@ -85,7 +115,7 @@ const DialogDescription = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted", className)}
+    className={cn("text-sm leading-relaxed text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -99,15 +129,15 @@ interface DialogBodyProps {
 const DialogBody = ({ children, className }: DialogBodyProps) => (
   <div className={cn("px-6 pb-6 -mx-6", className)}>{children}</div>
 );
-DialogBody.displayName = "DialogBody";
 
 export {
   Dialog,
-  DialogPortal,
-  DialogOverlay,
   DialogTrigger,
   DialogClose,
+  DialogPortal,
+  DialogOverlay,
   DialogContent,
+  DialogDrawerContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,

@@ -1,40 +1,41 @@
-// Dealt via design-taste-frontend start.mjs:
-// Palette: oxblood-grey (stone ground #e2e2e2, surface #d6d6d6, oxblood ink & accent #7d0c14)
-// Type: lora (Lora display 400 + Nunito Sans text 400/500)
+// Palette: chalk-tomato (AAA-tuned for restaurant readability)
+//   warm ivory ground #f8f5ef, warm linen surface #ede7dc, deep espresso ink #1f1b18 (15.7:1),
+//   warm umber muted #534b43 (7.86:1), roasted tomato accent #962413 (8.21:1 with #ffffff, 7.54:1 with #f8f5ef)
+// Type: Roboto (400..700 variable sans-serif for display and body text)
 // Structural deal (place / restaurant):
 //   nav: nav-split | footer: footer-visit | close: colour-band (.ground-brand) + close-photo
 //   buttons: block | mark: ring | offer: tall-small | place: trio | type-moment: address
 //   moment: photo-chapters
 
 export const THEME_PALETTE = {
-  bg: "#e2e2e2",
-  surface: "#d6d6d6",
-  ink: "#7d0c14",
-  muted: "#62383b",
-  accent: "#7d0c14",
-  accentInk: "#e2e2e2",
-  action: "#7d0c14",
-  actionInk: "#e2e2e2",
-  invBg: "#7d0c14",
-  invSurface: "#862323",
-  invInk: "#e2e2e2",
-  invMuted: "#d0b3af",
-  invAccent: "#e2e2e2",
-  invAccentInk: "#7d0c14",
-  invAction: "#e2e2e2",
-  invActionInk: "#7d0c14",
+  bg: "#f8f5ef",
+  surface: "#ede7dc",
+  ink: "#1f1b18",
+  muted: "#534b43",
+  accent: "#962413",
+  accentInk: "#ffffff",
+  action: "#962413",
+  actionInk: "#ffffff",
+  invBg: "#1f1b18",
+  invSurface: "#2c2724",
+  invInk: "#f8f5ef",
+  invMuted: "#c9c2b8",
+  invAccent: "#f8f5ef",
+  invAccentInk: "#1f1b18",
+  invAction: "#f8f5ef",
+  invActionInk: "#1f1b18",
 } as const;
 
 export const THEME_FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Lora:wght@400..600&family=Nunito+Sans:wght@400..600&display=swap";
+  "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400..700;1,400..700&display=swap";
 
 export const THEME_ROOT_CSS = `:root {
-  --p-bg: #e2e2e2; --p-surface: #d6d6d6; --p-ink: #7d0c14;   --p-muted: #62383b;
-  --p-accent: #7d0c14; --p-accent-ink: #e2e2e2; --p-action: #7d0c14; --p-action-ink: #e2e2e2;
-  --p-inv-bg: #7d0c14; --p-inv-surface: #862323; --p-inv-ink: #e2e2e2; --p-inv-muted: #d0b3af;
-  --p-inv-accent: #e2e2e2; --p-inv-accent-ink: #7d0c14; --p-inv-action: #e2e2e2; --p-inv-action-ink: #7d0c14;
-  --font-display: "Lora", Georgia, serif;
-  --font-text: "Nunito Sans", system-ui, sans-serif;
-  --display-weight: 400;
-  --display-tracking: -0.015em;
+  --p-bg: #f8f5ef; --p-surface: #ede7dc; --p-ink: #1f1b18; --p-muted: #534b43;
+  --p-accent: #962413; --p-accent-ink: #ffffff; --p-action: #962413; --p-action-ink: #ffffff;
+  --p-inv-bg: #1f1b18; --p-inv-surface: #2c2724; --p-inv-ink: #f8f5ef; --p-inv-muted: #c9c2b8;
+  --p-inv-accent: #f8f5ef; --p-inv-accent-ink: #1f1b18; --p-inv-action: #f8f5ef; --p-inv-action-ink: #1f1b18;
+  --font-display: "Roboto", system-ui, sans-serif;
+  --font-text: "Roboto", system-ui, sans-serif;
+  --display-weight: 500;
+  --display-tracking: -0.02em;
 }`;

@@ -8,10 +8,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PizzaConfigurator } from "@/features/menu/components/PizzaConfigurator";
+import type { PizzaSizeKey } from "@/lib/pricing";
 import type { CartItem, Pizza } from "@/types";
 
 interface DetailModalProps {
   pizza: Pizza | null;
+  initialSize?: PizzaSizeKey;
+  initialHalf?: boolean;
   onClose: () => void;
   isPaused: (name: string) => boolean;
   onAddToCart: (item: Omit<CartItem, "id" | "qty"> & { qty: number }) => void;
@@ -19,27 +22,27 @@ interface DetailModalProps {
 
 export function DetailModal({
   pizza,
+  initialSize = "m",
+  initialHalf = false,
   onClose,
   isPaused,
   onAddToCart,
 }: DetailModalProps) {
   return (
     <Dialog open={Boolean(pizza)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border border-border bg-background text-foreground p-6">
+      <DialogContent className="max-w-2xl">
         {pizza && (
           <>
-            <DialogHeader className="text-left">
-              <DialogTitle className="font-serif text-2xl font-normal text-foreground">
-                {pizza.name}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {pizza.desc}
-              </DialogDescription>
+            <DialogHeader>
+              <DialogTitle>{pizza.name}</DialogTitle>
+              <DialogDescription>{pizza.desc}</DialogDescription>
             </DialogHeader>
 
             <PizzaConfigurator
-              key={pizza.id}
+              key={`${pizza.id}-${initialSize}-${initialHalf}`}
               pizza={pizza}
+              initialSize={initialSize}
+              initialHalf={initialHalf}
               isPaused={isPaused}
               onConfirm={(item) => {
                 onAddToCart(item);

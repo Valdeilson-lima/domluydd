@@ -7,13 +7,13 @@ export default function AppNotFound() {
       className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-start justify-center gap-5 px-6 py-20"
     >
       <div
-        className="h-14 w-14 rounded-full border-[5px] border-foreground"
+        className="h-14 w-14 rounded-full border-[5px] border-primary"
         aria-hidden="true"
       />
       <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Página não encontrada
       </p>
-      <h1 className="font-serif text-4xl font-normal tracking-tight text-foreground">
+      <h1 className="font-serif text-4xl font-medium tracking-tight text-foreground">
         Este endereço não existe no cardápio.
       </h1>
       <p className="text-base text-muted-foreground">

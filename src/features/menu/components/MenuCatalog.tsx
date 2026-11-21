@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { SplitSquareHorizontal, ArrowRight } from "lucide-react";
 import { salgadas, doces, getPizzaBySlug } from "@/data/pizzas";
 import { bebidas } from "@/data/drinks";
 import { combos } from "@/data/combos";
 import { useCart } from "@/hooks/useCart";
 import { useStock } from "@/hooks/useStock";
 import { filterCombos, filterDrinks, filterPizzas } from "@/lib/catalog";
+import type { PizzaSizeKey } from "@/lib/pricing";
+import { formatPrice } from "@/lib/utils";
 import { MenuHeader } from "@/features/menu/components/MenuHeader";
 import { ActiveOrderBanner } from "@/features/menu/components/ActiveOrderBanner";
 import {
@@ -14,6 +17,7 @@ import {
   type CatalogSectionTab,
 } from "@/features/menu/components/SearchBar";
 import { PizzaGrid } from "@/features/menu/components/PizzaGrid";
+import { PizzaImage } from "@/features/menu/components/PizzaImage";
 import { ComboGrid } from "@/features/menu/components/ComboGrid";
 import { DrinkGrid } from "@/features/menu/components/DrinkGrid";
 import { DetailModal } from "@/features/menu/components/DetailModal";
@@ -21,7 +25,7 @@ import { CartBar } from "@/features/menu/components/CartBar";
 import { CartSheet } from "@/features/menu/components/CartSheet";
 import { CheckoutModal } from "@/features/menu/components/CheckoutModal";
 import { MenuFooter } from "@/features/menu/components/MenuFooter";
-import type { Combo, Drink, Pizza } from "@/types";
+import type { CartItem, Combo, Drink, Pizza } from "@/types";
 
 const SALGADA_TAGS = [
   "Mais Pedidas",
@@ -35,6 +39,12 @@ const SALGADA_TAGS = [
 const DOCE_TAGS = ["Mais Pedidas", "Doces"];
 const DRINK_TAGS = ["Clássicos", "Cítricos", "Regionais"];
 
+interface ToastNotice {
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}
+
 export function MenuCatalog() {
   const {
     cart,
@@ -44,16 +54,25 @@ export function MenuCatalog() {
     updateQty,
     removeFromCart,
     clearCart,
+    setCartItems,
   } = useCart();
   const { isPaused } = useStock();
 
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<CatalogSectionTab>("all");
   const [activeTag, setActiveTag] = useState("Todas");
-  const [selectedPizza, setSelectedPizza] = useState<Pizza | null>(null);
+  const [urlHydrated, setUrlHydrated] = useState(false);
+
+  const [modalState, setModalState] = useState<{
+    pizza: Pizza | null;
+    initialSize: PizzaSizeKey;
+    initialHalf: boolean;
+  }>({ pizza: null, initialSize: "m", initialHalf: false });
+
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastNotice | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -61,36 +80,80 @@ export function MenuCatalog() {
     const pizzaSlug = params.get("pizza");
     if (pizzaSlug) {
       const found = getPizzaBySlug(pizzaSlug);
-      if (found) setSelectedPizza(found);
+      if (found) {
+        setModalState({ pizza: found, initialSize: "m", initialHalf: false });
+      }
     }
     const cat = params.get("cat") as CatalogSectionTab | null;
     if (cat && ["all", "salgada", "doce", "combo", "bebida"].includes(cat)) {
       setActiveTab(cat);
     }
-    setSearch(params.get("q") || "");
-    const tag = params.get("tag");
-    if (tag) setActiveTag(tag);
+    const tagParam = params.get("tag");
+    if (tagParam) setActiveTag(tagParam);
+    const qParam = params.get("q");
+    if (qParam) setSearch(qParam);
+    setUrlHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!urlHydrated || typeof window === "undefined") return;
     const params = new URLSearchParams();
-    if (search) params.set("q", search);
     if (activeTab !== "all") params.set("cat", activeTab);
     if (activeTag !== "Todas") params.set("tag", activeTag);
-    const next = params.toString();
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${next ? `?${next}` : ""}`
-    );
-  }, [search, activeTab, activeTag]);
+    if (search.trim()) params.set("q", search.trim());
+    const qs = params.toString();
+    const nextUrl = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(null, "", nextUrl);
+  }, [activeTab, activeTag, search, urlHydrated]);
 
-  const showToast = (msg: string) => {
-    setFeedback(msg);
-    window.setTimeout(() => {
-      setFeedback((curr) => (curr === msg ? null : curr));
-    }, 2800);
-  };
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const showToast = useCallback((notice: ToastNotice) => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast(notice);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+    }, 4000);
+  }, []);
+
+  const openPizzaModal = useCallback(
+    (pizza: Pizza, initialSize: PizzaSizeKey = "m", initialHalf = false) => {
+      setModalState({ pizza, initialSize, initialHalf });
+    },
+    []
+  );
+
+  const openHalfAndHalfStarter = useCallback(() => {
+    const starter =
+      salgadas.find((p) => p.name === "Calabresa" && !isPaused(p.name)) ??
+      salgadas.find((p) => !isPaused(p.name)) ??
+      salgadas[0];
+    if (starter) {
+      openPizzaModal(starter, "m", true);
+    }
+  }, [isPaused, openPizzaModal]);
+
+  const featuredHighlights = useMemo(
+    () => salgadas.filter((p) => p.highlight).slice(0, 4),
+    []
+  );
+
+  const counts = useMemo<Record<CatalogSectionTab, number>>(
+    () => ({
+      all: salgadas.length + doces.length + combos.length + bebidas.length,
+      salgada: salgadas.length,
+      doce: doces.length,
+      combo: combos.length,
+      bebida: bebidas.length,
+    }),
+    []
+  );
 
   const availableTags = useMemo(() => {
     if (activeTab === "salgada") return SALGADA_TAGS;
@@ -149,6 +212,22 @@ export function MenuCatalog() {
     filteredCombos.length +
     filteredDrinks.length;
 
+  const handleRemoveWithUndo = (index: number) => {
+    const previousCart: CartItem[] = [...cart];
+    const removed = previousCart[index];
+    removeFromCart(index);
+    if (removed) {
+      showToast({
+        message: `${removed.flavors.map((f) => f.name).join(" + ")} removido.`,
+        actionLabel: "Desfazer",
+        onAction: () => {
+          setCartItems(previousCart);
+          setToast(null);
+        },
+      });
+    }
+  };
+
   const handleAddCombo = (combo: Combo) => {
     addToCart({
       category: "combo",
@@ -156,7 +235,14 @@ export function MenuCatalog() {
       flavors: [{ name: combo.name, price: combo.price }],
       price: combo.price,
     });
-    showToast(`${combo.name} adicionado à sacola.`);
+    showToast({
+      message: `${combo.name} adicionado à sacola.`,
+      actionLabel: "Ver sacola",
+      onAction: () => {
+        setToast(null);
+        setCartOpen(true);
+      },
+    });
   };
 
   const handleAddDrink = (drink: Drink) => {
@@ -166,11 +252,21 @@ export function MenuCatalog() {
       flavors: [{ name: drink.name, price: drink.price }],
       price: drink.price,
     });
-    showToast(`${drink.name} adicionado à sacola.`);
+    showToast({
+      message: `${drink.name} adicionado à sacola.`,
+      actionLabel: "Ver sacola",
+      onAction: () => {
+        setToast(null);
+        setCartOpen(true);
+      },
+    });
   };
 
+  const showCuratedStrip =
+    activeTab === "all" && activeTag === "Todas" && !search.trim();
+
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-0">
       <MenuHeader
         totalQty={totalQty}
         subtotal={subtotal}
@@ -179,29 +275,85 @@ export function MenuCatalog() {
 
       <ActiveOrderBanner />
 
-      <div className="border-b border-border bg-secondary/40 px-4 py-9 sm:px-6 sm:py-12">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-start gap-4 sm:gap-6">
-            <span
-              className="mt-1 hidden h-16 w-16 shrink-0 rounded-full border-[5px] border-foreground/90 sm:block"
-              aria-hidden="true"
-            />
-            <div className="max-w-3xl space-y-3">
-              <p className="dluydd-section-line text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Cardápio completo · Ter–Dom, 18h às 22h
-              </p>
-              <h1 className="font-serif text-4xl font-normal leading-[1.05] text-foreground sm:text-6xl">
-                Monte a sua mesa.
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Trinta e duas pizzas salgadas, seis doces, quatro combos e
-                bebidas geladas. Escolha inteira ou meio a meio nas médias e
-                grandes.
-              </p>
+      <section
+        aria-labelledby="cardapio-hero-heading"
+        className="border-b border-border bg-secondary/45 px-4 py-8 sm:px-6 lg:py-10"
+      >
+        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-12 lg:items-end">
+          <div className="space-y-4 lg:col-span-6">
+            <h1
+              id="cardapio-hero-heading"
+              className="font-serif text-3xl font-medium leading-tight text-foreground sm:text-5xl"
+            >
+              Cardápio do forno
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
+              32 pizzas salgadas, 6 doces, 4 combos e bebidas geladas. Toque em
+              qualquer tamanho ou monte sua meio a meio agora.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <button
+                type="button"
+                onClick={openHalfAndHalfStarter}
+                className="inline-flex min-h-11 items-center gap-2 bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
+                style={{ borderRadius: "2px" }}
+              >
+                <SplitSquareHorizontal className="size-4" aria-hidden="true" />
+                Montar pizza meio a meio
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("combo")}
+                className="inline-flex min-h-11 items-center gap-1.5 border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-foreground hover:bg-secondary"
+                style={{ borderRadius: "2px" }}
+              >
+                Ver 4 combos
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </button>
             </div>
           </div>
+
+          {showCuratedStrip && (
+            <div className="lg:col-span-6">
+              <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Atalho das mais pedidas
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {featuredHighlights.map((item) => {
+                  const paused = isPaused(item.name);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={paused}
+                      onClick={() => openPizzaModal(item, "m", false)}
+                      className="group flex min-h-20 items-center gap-3 border border-border bg-card p-2 text-left transition-[border-color,background-color,transform] duration-150 hover:border-foreground hover:bg-background active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-45"
+                      style={{ borderRadius: "2px" }}
+                    >
+                      <div className="size-16 shrink-0 overflow-hidden bg-secondary">
+                        <PizzaImage
+                          imgIdx={item.imgIdx}
+                          name={item.name}
+                          priority
+                          className="size-16 object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-serif text-base text-foreground group-hover:underline">
+                          {item.name}
+                        </p>
+                        <p className="font-mono text-xs text-muted-foreground tabular-nums">
+                          A partir de R$ {formatPrice(item.p)}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
 
       <SearchBar
         search={search}
@@ -212,26 +364,42 @@ export function MenuCatalog() {
         onTagChange={setActiveTag}
         availableTags={availableTags}
         totalResults={totalResults}
+        counts={counts}
       />
 
-      {feedback && (
+      {toast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed right-4 top-20 z-40 border border-foreground bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm"
+          className="fixed bottom-20 right-4 z-40 flex max-w-sm items-center justify-between gap-3 border border-foreground bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground shadow-md animate-toast-in sm:bottom-6"
+          style={{ borderRadius: "2px" }}
         >
-          {feedback}
+          <span>{toast.message}</span>
+          {toast.actionLabel && toast.onAction && (
+            <button
+              type="button"
+              onClick={toast.onAction}
+              className="shrink-0 border border-primary-foreground/40 bg-primary-foreground/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary-foreground hover:text-primary"
+              style={{ borderRadius: "2px" }}
+            >
+              {toast.actionLabel}
+            </button>
+          )}
         </div>
       )}
 
       <main
-        id="conteudo-principal"
+        id="main-content"
         className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:px-6"
       >
         {totalResults === 0 ? (
-          <div className="border border-border bg-card p-8 text-center">
-            <p className="font-serif text-xl text-foreground">
-              Nenhum item encontrado com esse filtro.
+          <div className="border border-border bg-card p-10 text-center">
+            <p className="font-serif text-2xl text-foreground">
+              Nenhum item encontrado para essa busca.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tente outro ingrediente (ex.: calabresa, catupiry, carne de sol)
+              ou exiba todo o cardápio novamente.
             </p>
             <button
               type="button"
@@ -240,28 +408,30 @@ export function MenuCatalog() {
                 setActiveTab("all");
                 setActiveTag("Todas");
               }}
-              className="mt-4 inline-flex h-10 items-center border border-foreground bg-secondary px-4 text-xs font-semibold text-foreground"
+              className="mt-5 inline-flex min-h-11 items-center border border-foreground bg-secondary px-5 text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
               style={{ borderRadius: "2px" }}
             >
-              Limpar filtros
+              Mostrar todo o cardápio
             </button>
           </div>
         ) : (
           <>
             <PizzaGrid
+              id="salgadas"
               title="Pizzas salgadas"
-              subtitle="Massa fresca em forno elétrico · Tamanhos P, M e G"
+              subtitle="Massa fresca em forno elétrico · Clique em P, M ou G para já abrir no tamanho escolhido"
               pizzas={filteredSalgadas}
               isPaused={isPaused}
-              onSelect={(p) => setSelectedPizza(p)}
+              onSelect={(p, sz) => openPizzaModal(p, sz ?? "m", false)}
             />
 
             <PizzaGrid
+              id="doces"
               title="Pizzas doces"
               subtitle="Sobremesas assadas na hora com massa leve"
               pizzas={filteredDoces}
               isPaused={isPaused}
-              onSelect={(p) => setSelectedPizza(p)}
+              onSelect={(p, sz) => openPizzaModal(p, sz ?? "m", false)}
             />
 
             <ComboGrid
@@ -282,14 +452,21 @@ export function MenuCatalog() {
       <MenuFooter />
 
       <DetailModal
-        pizza={selectedPizza}
-        onClose={() => setSelectedPizza(null)}
+        pizza={modalState.pizza}
+        initialSize={modalState.initialSize}
+        initialHalf={modalState.initialHalf}
+        onClose={() => setModalState((prev) => ({ ...prev, pizza: null }))}
         isPaused={isPaused}
         onAddToCart={(item) => {
           addToCart(item);
-          showToast(
-            `${item.flavors.map((f) => f.name).join(" + ")} adicionado à sacola.`
-          );
+          showToast({
+            message: `${item.flavors.map((f) => f.name).join(" + ")} adicionado à sacola.`,
+            actionLabel: "Ver sacola",
+            onAction: () => {
+              setToast(null);
+              setCartOpen(true);
+            },
+          });
         }}
       />
 
@@ -305,7 +482,7 @@ export function MenuCatalog() {
         cart={cart}
         subtotal={subtotal}
         onUpdateQty={updateQty}
-        onRemove={removeFromCart}
+        onRemove={handleRemoveWithUndo}
         onClear={clearCart}
         onCheckout={() => {
           setCartOpen(false);

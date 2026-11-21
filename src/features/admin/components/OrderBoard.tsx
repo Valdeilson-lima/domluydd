@@ -102,8 +102,9 @@ export function OrderBoard({
           <button
             key={tab.id}
             type="button"
+            aria-pressed={filter === tab.id}
             onClick={() => onFilterChange(tab.id)}
-            className={`h-11 border px-3 text-xs font-semibold ${
+            className={`min-h-11 border px-3.5 text-xs font-semibold ${
               filter === tab.id
                 ? "border-foreground bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-secondary"

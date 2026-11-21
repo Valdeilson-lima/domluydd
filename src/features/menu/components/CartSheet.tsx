@@ -1,9 +1,10 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Trash2, ShoppingBag } from "lucide-react";
 import {
   Dialog,
-  DialogContent,
+  DialogDrawerContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -32,37 +33,59 @@ export function CartSheet({
   onClear,
   onCheckout,
 }: CartSheetProps) {
+  const [confirmingClear, setConfirmingClear] = useState(false);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setConfirmingClear(false);
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-lg flex-col border border-border bg-background text-foreground p-6">
-        <DialogHeader className="text-left">
-          <DialogTitle className="font-serif text-2xl font-normal text-foreground">
-            Sua sacola
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            Revise sabores, bordas e quantidades antes de enviar para a cozinha.
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogDrawerContent>
+        <div className="border-b border-border px-6 py-5">
+          <DialogHeader>
+            <DialogTitle>Sua sacola</DialogTitle>
+            <DialogDescription>
+              Revise sabores, bordas e quantidades antes de enviar para o forno.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
         {cart.length === 0 ? (
-          <div className="my-8 border border-border bg-card p-6 text-center">
-            <p className="text-sm font-medium text-foreground">
-              Sua sacola está vazia.
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+            <span
+              className="flex size-12 items-center justify-center border border-border bg-card text-muted-foreground"
+              aria-hidden="true"
+            >
+              <ShoppingBag className="size-5" />
+            </span>
+            <p className="font-serif text-xl text-foreground">
+              Sua sacola está vazia
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Escolha pizzas, combos ou bebidas no cardápio para começar.
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Escolha pizzas inteiras, meio a meio, combos ou bebidas geladas no
+              cardápio para começar.
             </p>
+            <button
+              type="button"
+              onClick={() => handleOpenChange(false)}
+              className="mt-2 inline-flex min-h-11 items-center border border-foreground bg-secondary px-5 text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+              style={{ borderRadius: "2px" }}
+            >
+              Explorar sabores
+            </button>
           </div>
         ) : (
-          <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+          <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-6 py-5">
             {cart.map((item, idx) => (
               <div
                 key={item.id}
-                className="space-y-2 border border-border bg-card p-3.5"
+                className="space-y-2.5 border border-border bg-card p-4"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-serif text-base text-foreground">
+                  <div className="min-w-0">
+                    <p className="font-serif text-base leading-snug text-foreground">
                       {item.flavors.map((f) => f.name).join(" + ")}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -72,10 +95,10 @@ export function CartSheet({
                   <button
                     type="button"
                     onClick={() => onRemove(idx)}
-                    className="p-1 text-muted-foreground hover:text-foreground"
-                    aria-label={`Remover ${item.flavors.map((f) => f.name).join(" + ")}`}
+                    className="flex size-11 -mr-2 -mt-2 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={`Remover ${item.flavors.map((f) => f.name).join(" + ")} da sacola`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="size-4" aria-hidden="true" />
                   </button>
                 </div>
 
@@ -92,12 +115,12 @@ export function CartSheet({
                 )}
                 {item.removals && item.removals.length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Obs.: {item.removals.join(", ")}
+                    Retirar: {item.removals.join(", ")}
                   </p>
                 )}
                 {item.observation && (
                   <p className="text-xs text-muted-foreground">
-                    Nota: {item.observation}
+                    Obs.: {item.observation}
                   </p>
                 )}
 
@@ -106,19 +129,19 @@ export function CartSheet({
                     <button
                       type="button"
                       onClick={() => onUpdateQty(idx, -1)}
-                      className="h-11 w-11 text-sm font-bold hover:bg-secondary"
-                      aria-label="Diminuir item"
+                      className="flex size-10 items-center justify-center text-sm font-bold text-foreground transition-colors hover:bg-secondary"
+                      aria-label={`Diminuir quantidade de ${item.flavors.map((f) => f.name).join(" + ")}`}
                     >
                       −
                     </button>
-                    <span className="w-8 text-center font-mono text-xs font-semibold tabular-nums">
+                    <span className="w-9 text-center font-mono text-xs font-semibold tabular-nums">
                       {item.qty}
                     </span>
                     <button
                       type="button"
                       onClick={() => onUpdateQty(idx, 1)}
-                      className="h-11 w-11 text-sm font-bold hover:bg-secondary"
-                      aria-label="Aumentar item"
+                      className="flex size-10 items-center justify-center text-sm font-bold text-foreground transition-colors hover:bg-secondary"
+                      aria-label={`Aumentar quantidade de ${item.flavors.map((f) => f.name).join(" + ")}`}
                     >
                       +
                     </button>
@@ -134,23 +157,50 @@ export function CartSheet({
         )}
 
         {cart.length > 0 && (
-          <div className="space-y-3 border-t border-border pt-4">
+          <div className="space-y-3 border-t border-border bg-background px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="text-sm text-muted-foreground">
+                Subtotal (taxa calculada na entrega)
+              </span>
               <span className="font-mono text-lg font-semibold text-foreground tabular-nums">
                 R$ {formatPrice(subtotal)}
               </span>
             </div>
 
+            {confirmingClear ? (
+              <div className="flex items-center justify-between gap-2 border border-foreground bg-secondary p-2.5 text-xs">
+                <span className="font-semibold text-foreground">
+                  Esvaziar toda a sacola?
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingClear(false)}
+                    className="min-h-9 border border-border bg-background px-3 font-semibold text-foreground"
+                    style={{ borderRadius: "2px" }}
+                  >
+                    Manter
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClear();
+                      setConfirmingClear(false);
+                    }}
+                    className="min-h-9 bg-primary px-3 font-semibold text-primary-foreground"
+                    style={{ borderRadius: "2px" }}
+                  >
+                    Sim, limpar
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  if (window.confirm("Limpar todos os itens da sacola?")) {
-                    onClear();
-                  }
-                }}
-                className="h-11 border border-border bg-secondary px-4 text-xs font-semibold text-foreground transition-colors hover:bg-background"
+                onClick={() => setConfirmingClear(true)}
+                className="min-h-11 border border-border bg-secondary px-4 text-xs font-semibold text-foreground transition-colors hover:border-foreground hover:bg-background"
                 style={{ borderRadius: "2px" }}
               >
                 Limpar
@@ -158,15 +208,15 @@ export function CartSheet({
               <button
                 type="button"
                 onClick={onCheckout}
-                className="h-11 flex-1 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                className="min-h-11 flex-1 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.985]"
                 style={{ borderRadius: "2px" }}
               >
-                Finalizar pedido
+                Continuar para entrega
               </button>
             </div>
           </div>
         )}
-      </DialogContent>
+      </DialogDrawerContent>
     </Dialog>
   );
 }
