@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f8f5ef" />
+    <title>Sem conexão | Don Luydd Pizzaria</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #f8f5ef;
+        color: #1f1b18;
+        font-family:
+          "Roboto",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        line-height: 1.55;
+      }
+      main {
+        width: 100%;
+        max-width: 420px;
+        background: #fffdf9;
+        border: 1px solid rgba(31, 27, 24, 0.16);
+        padding: 28px 24px;
+      }
+      .mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 4px solid #962413;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0 0 20px;
+        font-size: 15px;
+        color: #534b43;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      button,
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 2px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      button {
+        border: 0;
+        background: #962413;
+        color: #ffffff;
+      }
+      a {
+        border: 1px solid rgba(31, 27, 24, 0.22);
+        background: #f8f5ef;
+        color: #1f1b18;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true"></div>
+      <h1>Você está sem internet</h1>
+      <p>
+        Assim que a conexão voltar, toque em tentar novamente para abrir o
+        cardápio da Don Luydd Pizzaria.
+      </p>
+      <div class="actions">
+        <button type="button" onclick="window.location.reload()">
+          Tentar novamente
+        </button>
+        <a href="/cardapio">Voltar ao cardápio</a>
+      </div>
+    </main>
+  </body>
+</html>

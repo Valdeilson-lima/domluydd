@@ -38,11 +38,11 @@ export function SearchBar({
   return (
     <section
       aria-label="Busca e categorias do cardápio"
-      className="sticky top-16 z-20 border-b border-border bg-background/95 py-4 backdrop-blur-sm"
+      className="border-b border-border bg-background/95 py-3 backdrop-blur-sm md:sticky md:top-16 md:z-20 md:py-3.5"
     >
-      <div className="mx-auto max-w-6xl space-y-3 px-4 sm:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative flex-1 max-w-md">
+      <div className="mx-auto max-w-6xl space-y-2.5 px-4 sm:px-6">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-3">
+          <div className="relative flex-1 md:max-w-md">
             <label htmlFor="catalog-search" className="sr-only">
               Buscar sabores, combos ou ingredientes
             </label>
@@ -74,7 +74,7 @@ export function SearchBar({
           </div>
 
           <div
-            className="flex flex-wrap items-center gap-2"
+            className="no-scrollbar -mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-0.5 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
             role="tablist"
             aria-label="Categorias do cardápio"
           >
@@ -87,7 +87,7 @@ export function SearchBar({
                   role="tab"
                   aria-selected={selected}
                   onClick={() => onTabChange(tab.id)}
-                  className={`inline-flex min-h-11 items-center gap-1.5 px-3.5 text-xs font-semibold uppercase tracking-wider transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] sm:min-h-10 ${
+                  className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] sm:px-3.5 ${
                     selected
                       ? "bg-primary text-primary-foreground"
                       : "border border-border bg-card text-foreground hover:bg-secondary"
@@ -108,9 +108,12 @@ export function SearchBar({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           {availableTags.length > 0 ? (
-            <div className="flex flex-wrap gap-2" aria-label="Subfiltros">
+            <div
+              className="no-scrollbar -mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 pb-0.5 md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0 md:pb-0"
+              aria-label="Subfiltros"
+            >
               {["Todas", ...availableTags].map((tag) => {
                 const selected = activeTag === tag;
                 return (
@@ -119,7 +122,7 @@ export function SearchBar({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => onTagChange(tag)}
-                    className={`min-h-9 border px-3 text-xs font-medium transition-[background-color,color,border-color] duration-150 ${
+                    className={`min-h-9 shrink-0 border px-3 text-xs font-medium transition-[background-color,color,border-color] duration-150 ${
                       selected
                         ? "border-foreground bg-secondary font-semibold text-foreground"
                         : "border-border bg-transparent text-muted-foreground hover:border-foreground/50 hover:text-foreground"
@@ -136,7 +139,7 @@ export function SearchBar({
           )}
 
           <p
-            className="font-mono text-xs font-medium text-muted-foreground tabular-nums"
+            className="shrink-0 font-mono text-xs font-medium text-muted-foreground tabular-nums"
             aria-live="polite"
           >
             {totalResults}{" "}

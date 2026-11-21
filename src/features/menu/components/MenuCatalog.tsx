@@ -25,6 +25,7 @@ import { CartBar } from "@/features/menu/components/CartBar";
 import { CartSheet } from "@/features/menu/components/CartSheet";
 import { CheckoutModal } from "@/features/menu/components/CheckoutModal";
 import { MenuFooter } from "@/features/menu/components/MenuFooter";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import type { CartItem, Combo, Drink, Pizza } from "@/types";
 
 const SALGADA_TAGS = [
@@ -310,6 +311,7 @@ export function MenuCatalog() {
                 Ver 4 combos
                 <ArrowRight className="size-4" aria-hidden="true" />
               </button>
+              <InstallAppButton />
             </div>
           </div>
 

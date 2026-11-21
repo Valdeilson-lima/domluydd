@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
-import { SITE_URL, STORE_NAME } from "@/lib/store-config";
+import { PwaRegistrar } from "@/components/pwa/PwaRegistrar";
+import { SITE_URL, STORE_NAME, STORE_SHORT_NAME } from "@/lib/store-config";
 import "./app.css";
 
 const roboto = Roboto({
@@ -25,8 +26,20 @@ export const metadata: Metadata = {
   },
   description:
     "Escolha entre 38 sabores de pizzas salgadas e doces, monte meio a meio, adicione bordas e acompanhe seu pedido na Don Luydd Pizzaria.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: STORE_SHORT_NAME,
+    statusBarStyle: "default",
+  },
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -44,6 +57,7 @@ export default function AppGroupLayout({
         >
           Pular para o conteúdo principal
         </a>
+        <PwaRegistrar />
         {children}
       </body>
     </html>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import {
   STORE_HOURS_LABEL,
   STORE_NAME,
@@ -34,7 +35,8 @@ export function MenuFooter() {
           </p>
         </div>
 
-        <div className="space-y-2 text-sm sm:text-right">
+        <div className="space-y-3 text-sm sm:flex sm:flex-col sm:items-end sm:text-right">
+          <InstallAppButton compact />
           <p>
             <Link
               href="/"

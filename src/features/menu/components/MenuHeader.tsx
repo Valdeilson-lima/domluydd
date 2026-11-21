@@ -34,7 +34,7 @@ export function MenuHeader({
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 sm:gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:h-16 sm:gap-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href={backHref}
